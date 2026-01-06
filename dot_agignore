@@ -1,0 +1,10 @@
+build/
+images/
+*.min.js*
+*.pack.js
+*.old
+*.pdf
+_tmp
+.git
+.newt-cache
+Library/

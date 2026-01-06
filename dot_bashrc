@@ -1,0 +1,18 @@
+# ~/.bashrc
+
+[ -z "$BASH_VERSION" ] && { echo "Source this in bash only"; return 1; }
+
+mkdir -p ~/.cache/bash
+
+shopt -s checkwinsize cmdhist histappend histverify no_empty_cmd_completion
+HISTIGNORE="[ ]*:&:[bf]g:clear:exit"
+HISTCONTROL=ignoreboth
+HISTSIZE=1000
+HISTFILESIZE=$HISTSIZE
+HISTFILE=~/.cache/bash/history.log
+
+export BASH_SILENCE_DEPRECATION_WARNING=1
+export INPUTRC=~/.inputrc
+
+[ -r "$HOME/.config/shell-settings.sh" ] && source "$HOME/.config/shell-settings.sh"
+. "$HOME/.cargo/env"

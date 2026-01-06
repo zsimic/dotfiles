@@ -1,0 +1,69 @@
+# ~/.zshrc
+
+[ -z "$ZSH_VERSION" ] && { echo "Source this in zsh only"; return 1; }
+
+mkdir -p ~/.cache/zsh
+
+# History
+HISTFILE=~/.cache/zsh/zsh_history
+HISTSIZE=1500               # How many lines of history to keep in memory
+SAVEHIST=1000               # Number of history entries to save to disk
+#LISTMAX=-1
+setopt HIST_VERIFY
+setopt EXTENDED_HISTORY
+setopt INC_APPEND_HISTORY_TIME
+setopt HIST_FIND_NO_DUPS
+setopt HIST_IGNORE_ALL_DUPS
+setopt HIST_IGNORE_DUPS
+setopt HIST_IGNORE_SPACE
+setopt HIST_EXPIRE_DUPS_FIRST
+setopt HIST_SAVE_NO_DUPS
+setopt HIST_REDUCE_BLANKS
+setopt HIST_LEX_WORDS
+setopt HIST_NO_FUNCTIONS
+
+# setopt CORRECT
+# setopt CORRECT_ALL
+
+autoload -U select-word-style
+select-word-style bash
+
+# --- zsh line editor keybindings (portable) ---
+bindkey -e  # emacs-style, matches readline defaults
+
+# Ensure $terminfo is available
+zmodload zsh/terminfo 2>/dev/null
+
+# Ctrl+Left / Ctrl+Right: use terminfo when available, fall back to common sequences
+[[ -n ${terminfo[kLFT5]} ]] && bindkey "${terminfo[kLFT5]}" backward-word
+[[ -n ${terminfo[kRIT5]} ]] && bindkey "${terminfo[kRIT5]}" forward-word
+bindkey '^[[1;5D' backward-word   # fallback
+bindkey '^[[1;5C' forward-word    # fallback
+
+# Home / End (begin/end of line): terminfo + common fallbacks
+[[ -n ${terminfo[khome]} ]] && bindkey "${terminfo[khome]}" beginning-of-line
+[[ -n ${terminfo[kend]}  ]] && bindkey "${terminfo[kend]}"  end-of-line
+bindkey '^[[H' beginning-of-line
+bindkey '^[[F' end-of-line
+bindkey '^[[1~' beginning-of-line
+bindkey '^[[4~' end-of-line
+
+# Ctrl+Delete: commonly ^[[3;5~  (delete to end of line)
+bindkey '^[[3;5~' kill-line
+
+# Ctrl+Backspace: on many systems this is actually ^H (C-h)
+bindkey '^H' backward-kill-word
+
+# Some terminals/tmux setups may send CSI-u-ish sequences for ctrl+backspace
+bindkey '^[[127;5u' backward-kill-word
+
+
+[ -r "$HOME/.config/shell-settings.sh" ] && source "$HOME/.config/shell-settings.sh"
+
+#setopt AUTO_MENU  overriden by MENU_COMPLETE
+# setopt AUTO_CD
+
+#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
+export SDKMAN_DIR="$HOME/.sdkman"
+[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+return 0  # Needed when sdkman is missing
