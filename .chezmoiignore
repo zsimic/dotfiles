@@ -1,6 +1,7 @@
+README.md
 {{- if ne .chezmoi.os "darwin" }}
-private_Library/KeyBindings/DefaultKeyBinding.dict
+Library/KeyBindings/DefaultKeyBinding.dict
 {{- end }}
 {{- if ne .chezmoi.username "zoran" }}
-got_gitconfig
+.gitconfig
 {{- end }}
