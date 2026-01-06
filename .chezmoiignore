@@ -1,3 +1,6 @@
 {{- if ne .chezmoi.os "darwin" }}
-Library/KeyBindings/DefaultKeyBinding.dict
+private_Library/KeyBindings/DefaultKeyBinding.dict
+{{- end }}
+{{- if ne .chezmoi.username "zoran" }}
+got_gitconfig
 {{- end }}

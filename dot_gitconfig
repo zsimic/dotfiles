@@ -1,0 +1,48 @@
+[user]
+    name = Zoran Simic
+    email = zoran@simicweb.com
+
+[core]
+    # trustctime = false
+    # See https://dandavison.github.io/delta/get-started.html
+    pager = delta
+
+[merge]
+    conflictstyle = diff3
+
+[diff]
+    colorMoved = default
+
+# [interactive]
+#     diffFilter = delta --color-only --features=interactive
+
+[delta]
+    features = line-numbers decorations
+    # hyperlinks = true
+    # hyperlinks-file-link-format = "file-line://{path}:{line}"
+    light = false      # set to true if you're in a terminal w/ a light background color (e.g. the default macOS terminal)
+    navigate = true    # use n and N to move between diff sections
+    # side-by-side = true
+    # line-numbers-right-format = "│ "
+
+[delta "decorations"]
+    commit-decoration-style = bold yellow
+    file-style = omit  # bold orange
+    file-decoration-style = none
+    hunk-header-style = file line-number
+    hunk-header-decoration-style = omit
+
+[delta "line-numbers"]
+    line-numbers-left-style = cyan
+    line-numbers-right-style = cyan
+    line-numbers-minus-style = 124
+    line-numbers-plus-style = 28
+
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+
+[url "git@github.com:"]
+	insteadOf = https://github.com/
