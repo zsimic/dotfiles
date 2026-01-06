@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+unset TMUX
+unset TMUX_PANE
+open -na Ghostty --args --font-size=22 --window-width=160 --window-height=45 \
+  -e bash -c "$HOME/bin/ztmux.sh demo"
