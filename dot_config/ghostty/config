@@ -29,7 +29,7 @@ resize-overlay = after-first
 resize-overlay-position = top-right
 resize-overlay-duration = 10s
 scrollback-limit = 1
-# scrollbar = never
+scrollbar = never
 
 macos-window-buttons = hidden
 macos-titlebar-style = native
@@ -37,7 +37,6 @@ macos-titlebar-proxy-icon = hidden
 macos-option-as-alt = true
 
 # Theme
-# Ayu, Blue Matrix. Box. Bright Lights, Carbonfox, Cutie Pro
 theme = Deep
 window-theme = dark
 background = #000000
@@ -46,14 +45,11 @@ cursor-color = #ffffff
 cursor-text = #000000
 selection-background = #a5c5ef
 selection-foreground = #000000
-# background-image = netflix-n.png
 background-image = python-small.png
 background-image-opacity = 0.5
 background-image-position = top-right
 background-image-fit = none
 background-image-repeat = false
-# custom-shader = shaders/just-snow.glsl
-# custom-shader = shaders/cubes.glsl
 custom-shader = shaders/hot-cursor.glsl
 cursor-style = block
 cursor-style-blink = true
