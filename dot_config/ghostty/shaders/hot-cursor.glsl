@@ -1,0 +1,112 @@
+float getSdfRectangle(in vec2 p, in vec2 xy, in vec2 b)
+{
+    vec2 d = abs(p - xy) - b;
+    return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
+}
+float seg(in vec2 p, in vec2 a, in vec2 b, inout float s, float d) {
+    vec2 e = b - a;
+    vec2 w = p - a;
+    vec2 proj = a + e * clamp(dot(w, e) / dot(e, e), 0.0, 1.0);
+    float segd = dot(p - proj, p - proj);
+    d = min(d, segd);
+    float c0 = step(0.0, p.y - a.y);
+    float c1 = 1.0 - step(0.0, p.y - b.y);
+    float c2 = 1.0 - step(0.0, e.x * w.y - e.y * w.x);
+    float allCond = c0 * c1 * c2;
+    float noneCond = (1.0 - c0) * (1.0 - c1) * (1.0 - c2);
+    float flip = mix(1.0, -1.0, step(0.5, allCond + noneCond));
+    s *= flip;
+    return d;
+}
+float getSdfParallelogram(in vec2 p, in vec2 v0, in vec2 v1, in vec2 v2, in vec2 v3) {
+    float s = 1.0;
+    float d = dot(p - v0, p - v0);
+    d = seg(p, v0, v3, s, d);
+    d = seg(p, v1, v0, s, d);
+    d = seg(p, v2, v1, s, d);
+    d = seg(p, v3, v2, s, d);
+    return s * sqrt(d);
+}
+vec2 normalize(vec2 value, float isPosition) {
+    // Normalize fragCoord to a space of -1 to 1
+    return (value * 2.0 - (iResolution.xy * isPosition)) / iResolution.y;
+}
+float blend(float t)
+{
+    float sqr = t * t;
+    return sqr / (2.0 * (sqr - t) + 1.0);
+}
+float antialising(float distance) {
+    return 1. - smoothstep(0., normalize(vec2(2., 2.), 0.).x, distance);
+}
+float determineStartVertexFactor(vec2 a, vec2 b) {
+    float condition1 = step(b.x, a.x) * step(a.y, b.y);
+    float condition2 = step(a.x, b.x) * step(b.y, a.y);
+    return 1.0 - max(condition1, condition2);
+}
+vec2 getRectangleCenter(vec4 rectangle) {
+    return vec2(rectangle.x + (rectangle.z / 2.), rectangle.y - (rectangle.w / 2.));
+}
+vec4 heatUpColor(vec4 base, float heat)
+{
+    // heat = clamp(heat, 0.0, 1.0);
+    float bright = mix(0.75, 1.2, heat);  // brightness ramp
+    float whiteMix = mix(0.00, 0.18, heat);   // "white hot" ramp (subtle; increases perceived glow)
+    vec3 rgb = base.rgb * bright;
+    rgb = mix(rgb, vec3(1.0), whiteMix);
+    float a = base.a * mix(0.35, 1.00, heat);  // alpha ramp (optional: make short moves more transparent)
+    return vec4(clamp(rgb, 0.0, 1.0), clamp(a, 0.0, 1.0));
+}
+
+// const vec4 TRAIL_COLOR = vec4(1.0, 0.725, 0.161, 1.0);
+const vec4 TRAIL_COLOR = vec4(1.0, 0.56, 0.18, 1.0);
+
+void mainImage(out vec4 fragColor, in vec2 fragCoord)
+{
+    fragColor = texture(iChannel0, fragCoord.xy / iResolution.xy);
+    float linesMoved = abs(iCurrentCursor.y - iPreviousCursor.y) / max(iCurrentCursor.w, 1.0);
+    float heat = smoothstep(2.0, 40.0, linesMoved);
+    // heat = pow(heat, 1.3);  // bias: keep small moves warm longer; big moves get hot quickly
+    float duration = mix(0.1, 0.2, heat);
+    float coreIn = mix(-0.005, -0.009, heat);
+    float coreOut = mix(0.001, 0.002, heat);
+    float trailThickness = mix(0.04, 0.06, heat);
+    vec2 vu = normalize(fragCoord, 1.);
+    vec4 currentCursor = vec4(normalize(iCurrentCursor.xy, 1.), normalize(iCurrentCursor.zw, 0.));
+    vec4 previousCursor = vec4(normalize(iPreviousCursor.xy, 1.), normalize(iPreviousCursor.zw, 0.));
+
+    // Parellelogram between cursors for the trail
+    float vertexFactor = determineStartVertexFactor(currentCursor.xy, previousCursor.xy);
+    float invertedVertexFactor = 1.0 - vertexFactor;
+    float trailW = currentCursor.z * trailThickness;
+    float trailH = currentCursor.w * trailThickness;
+    float curLeft = currentCursor.x + (currentCursor.z - trailW) * 0.5;  // Center trail
+    float prevLeft = previousCursor.x + (previousCursor.z - trailW) * 0.5;
+    float curTop = currentCursor.y - (currentCursor.w - trailH) * 0.5;
+    float prevTop = previousCursor.y - (previousCursor.w - trailH) * 0.5;
+    vec2 v0 = vec2(curLeft  + trailW * vertexFactor,         curTop - trailH);
+    vec2 v1 = vec2(curLeft  + trailW * invertedVertexFactor, curTop);
+    vec2 v2 = vec2(prevLeft + trailW * invertedVertexFactor, prevTop);
+    vec2 v3 = vec2(prevLeft + trailW * vertexFactor,         prevTop - trailH);
+
+    float progress = blend(clamp((iTime - iTimeCursorChange) / duration, 0.0, 1.0));
+    // Distance between cursors determines total length of parallelogram
+    vec2 centerCC = getRectangleCenter(currentCursor);
+    vec2 centerCP = getRectangleCenter(previousCursor);
+    float lineLength = distance(centerCC, centerCP);
+    float distanceToEnd = distance(vu.xy, centerCC);
+    float alphaModifier = clamp(distanceToEnd / max(lineLength * (1.0 - progress), 1e-5), 0.0, 1.0);
+    vec2 offsetFactor = vec2(-0.5, 0.5);
+    float sdfCursor = getSdfRectangle(vu, currentCursor.xy - (currentCursor.zw * offsetFactor), currentCursor.zw * 0.5);
+    float sdfTrail = getSdfParallelogram(vu, v0, v1, v2, v3);
+    float glow = (1.0 - smoothstep(sdfCursor, -0.000, 0.001 * (1.0 - progress))) * 0.7;
+
+    vec4 trailColor  = heatUpColor(TRAIL_COLOR, heat);
+    vec4 newColor = vec4(fragColor);
+    newColor = mix(newColor, trailColor, 1.0 - smoothstep(coreIn, coreOut, sdfTrail));
+    newColor = mix(newColor, trailColor, 1.0 - smoothstep(sdfTrail, coreIn, coreOut));
+    newColor = mix(newColor, trailColor, antialising(sdfTrail));
+    newColor = mix(fragColor, newColor, 1.0 - alphaModifier);
+    newColor = mix(newColor, trailColor, glow);
+    fragColor = mix(newColor, fragColor, step(sdfCursor, 0.));
+}

@@ -4,10 +4,19 @@
 chezmoi init --apply zsimic
 ```
 
-# Terminal
+
+# Terminals
 
 - https://iterm2.com/
 - https://ghostty.org/
+
+
+# Ghostty
+
+- Default config: `ghostty +show-config --default --docs > ghostty-default.conf`
+- http://shadertoy.com/
+- https://github.com/linkarzu/dotfiles-latest/tree/main/ghostty/shaders
+
 
 # Seldom used
 
@@ -15,6 +24,7 @@ chezmoi init --apply zsimic
 - https://dev.yorhel.nl/ncdu
 - https://github.com/bensadeh/tailspin
 - https://github.com/imsnif/bandwhich
+
 
 # Older tools
 

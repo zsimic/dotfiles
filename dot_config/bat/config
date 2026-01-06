@@ -1,0 +1,12 @@
+# See `bat --list-themes`
+#--theme="DarkNeon"         # Not great for man pages, good otherwise
+--theme="Monokai Extended"  # Not great for .md, good otherwise
+
+# Already configured in ~/.config/lesskey
+#--pager="less -SRFWJ -z-2 -#.5 --no-histdups --mouse --wheel-lines=3"
+
+# See `bat -L`
+--map-syntax ".*ignore*:Git Ignore"
+
+--style=numbers,changes,snip
+--wrap=never

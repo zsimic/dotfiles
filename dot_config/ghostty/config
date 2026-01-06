@@ -1,0 +1,59 @@
+# See https://ghostty.org/docs/config
+
+initial-command = ~/bin/ztmux.sh
+
+font-family = Menlo
+font-size = 16
+font-thicken = true
+window-width = 220
+window-height = 72
+
+# Key bindings
+keybind = super+r=reload_config
+keybind = cmd+left=csi:1;3D
+keybind = cmd+right=csi:1;3C
+
+title = main
+clipboard-paste-protection = true
+clipboard-trim-trailing-spaces = true
+confirm-close-surface = false
+shell-integration-features = no-cursor,no-title
+quit-after-last-window-closed = true
+window-position-x = 0
+window-position-y = 0
+
+mouse-hide-while-typing = true
+mouse-shift-capture = never
+mouse-scroll-multiplier = 3
+resize-overlay = after-first
+resize-overlay-position = top-right
+resize-overlay-duration = 10s
+scrollback-limit = 1
+# scrollbar = never
+
+macos-window-buttons = hidden
+macos-titlebar-style = native
+macos-titlebar-proxy-icon = hidden
+macos-option-as-alt = true
+
+# Theme
+# Ayu, Blue Matrix. Box. Bright Lights, Carbonfox, Cutie Pro
+theme = Deep
+window-theme = dark
+background = #000000
+foreground = #d0ffd0
+cursor-color = #ffffff
+cursor-text = #000000
+selection-background = #a5c5ef
+selection-foreground = #000000
+# background-image = netflix-n.png
+background-image = python-small.png
+background-image-opacity = 0.5
+background-image-position = top-right
+background-image-fit = none
+background-image-repeat = false
+# custom-shader = shaders/just-snow.glsl
+# custom-shader = shaders/cubes.glsl
+custom-shader = shaders/hot-cursor.glsl
+cursor-style = block
+cursor-style-blink = true
