@@ -1,0 +1,11 @@
+#command
+
+#line-edit
+
+#env
+LESS=-SFWJ --no-histdups --mouse --wheel-lines=3
+#LESS=-SFWJ --window=-2 --shift=.5 --no-histdups --mouse --wheel-lines=3
+# -S --chop-long-lines
+# -F --quit-if-one-screen
+# -W --HILITE-UNREAD
+# -J --status-column
