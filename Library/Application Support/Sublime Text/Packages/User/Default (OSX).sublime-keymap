@@ -1,0 +1,22 @@
+[
+    // Make alt/super behave identically on mac for up/down keys
+    { "keys": ["ctrl+up"], "command": "scroll_lines", "args": {"amount": 1.0} },
+    { "keys": ["ctrl+down"], "command": "scroll_lines", "args": {"amount": -1.0} },
+
+    { "keys": ["f3"], "command": "find_next" },
+    { "keys": ["shift+f3"], "command": "find_prev" },
+
+    { "keys": ["super+l"], "command": "show_overlay", "args": {"overlay": "goto", "text": ":"} },
+
+    { "keys": ["ctrl+left"], "command": "move", "args": {"by": "words", "forward": false} },
+    { "keys": ["ctrl+right"], "command": "move", "args": {"by": "word_ends", "forward": true} },
+    { "keys": ["ctrl+shift+left"], "command": "move", "args": {"by": "words", "forward": false, "extend": true} },
+    { "keys": ["ctrl+shift+right"], "command": "move", "args": {"by": "word_ends", "forward": true, "extend": true} },
+
+    { "keys": ["alt+left"], "command": "move", "args": {"by": "subwords", "forward": false} },
+    { "keys": ["alt+right"], "command": "move", "args": {"by": "subword_ends", "forward": true} },
+    { "keys": ["alt+shift+left"], "command": "move", "args": {"by": "subwords", "forward": false, "extend": true} },
+    { "keys": ["alt+shift+right"], "command": "move", "args": {"by": "subword_ends", "forward": true, "extend": true} },
+
+    { "keys": ["shift+f11"], "command": "toggle_distraction_free" }
+]
