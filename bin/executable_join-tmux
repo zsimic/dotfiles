@@ -16,7 +16,7 @@ if [[ "$OPENER" == "ghostty" ]]; then
     _CF=~/.config/ghostty/$SESSION_NAME.conf
     [[ -f $_CF ]] || abort "File $_CF does not exist"
     unset TMUX TMUX_PANE
-    $RUNNER exec open -na Ghostty --args --config-file=$_CF
+    $RUNNER exec open -na Ghostty --args --class=$SESSION_NAME --config-file=$_CF
     exit 0
 fi
 

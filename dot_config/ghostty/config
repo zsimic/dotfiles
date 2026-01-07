@@ -3,6 +3,7 @@
 initial-command = ~/bin/join-tmux main
 
 title = main
+macos-icon = official
 font-size = 16
 font-family = Menlo
 font-thicken = true
