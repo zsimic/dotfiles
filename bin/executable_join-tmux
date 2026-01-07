@@ -1,0 +1,37 @@
+#!/usr/bin/env zsh
+
+set -e
+
+abort() {
+    echo "$*" >&2
+    exit 1
+}
+dryrun() { echo Would run: "$@"; }
+
+[[ "$1" == "--dryrun" ]] && { RUNNER=dryrun; shift; } || RUNNER=
+[[ "$1" == "-g" ]] && { OPENER=ghostty; shift; }
+SESSION_NAME=${1:-temporary}
+
+if [[ "$OPENER" == "ghostty" ]]; then
+    _CF=~/.config/ghostty/$SESSION_NAME.conf
+    [[ -f $_CF ]] || abort "File $_CF does not exist"
+    unset TMUX TMUX_PANE
+    $RUNNER exec open -na Ghostty --args --config-file=$_CF
+    exit 0
+fi
+
+[[ -z "$TMUX" ]] || abort "Already in tmux"
+
+_TMUX_EXE=$(command -v tmux || echo /opt/homebrew/bin/tmux)
+[[ -x "$_TMUX_EXE" ]] || abort "tmux is not installed"
+
+if ! $_TMUX_EXE has-session -t $SESSION_NAME 2> /dev/null; then
+    $RUNNER $_TMUX_EXE new-session -d -s $SESSION_NAME -c ~
+    if [ -f ~/.local/tmux.$SESSION_NAME.cfg ]; then
+        for ss in $(cat ~/.local/tmux.$SESSION_NAME.cfg | sed "s#~#$HOME#"); do
+            sleep 0.0001
+            $RUNNER $_TMUX_EXE new-window -c $ss
+        done
+    fi
+fi
+$RUNNER exec $_TMUX_EXE attach-session -t $SESSION_NAME
