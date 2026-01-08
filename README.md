@@ -1,7 +1,7 @@
 # Zoran's dotfiles
 
 ```shell
-chezmoi init --apply zsimic
+chezmoi init zsimic --apply
 ```
 
 
