@@ -1,7 +1,7 @@
 [ -z "$ZSH_VERSION" ] && { echo "Source this in zsh only"; return 1; }
 
 # History
-HISTFILE=~/.cache/zsh_history.log
+HISTFILE=~/.cache/zsh/history.log
 HISTSIZE=1500               # How many lines of history to keep in memory
 SAVEHIST=1000               # Number of history entries to save to disk
 #LISTMAX=-1
@@ -20,6 +20,11 @@ setopt HIST_NO_FUNCTIONS
 
 # setopt CORRECT
 # setopt CORRECT_ALL
+
+ZSH_COMPLETIONS_DIR="$HOME/.cache/zsh/completions"
+fpath=("$ZSH_COMPLETIONS_DIR" $fpath)
+autoload -Uz compinit
+compinit
 
 autoload -U select-word-style
 select-word-style bash

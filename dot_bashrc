@@ -5,7 +5,7 @@ HISTIGNORE="[ ]*:&:[bf]g:clear:exit"
 HISTCONTROL=ignoreboth
 HISTSIZE=1000
 HISTFILESIZE=$HISTSIZE
-HISTFILE=~/.cache/bash_history.log
+HISTFILE=~/.cache/bash/history.log
 
 export INPUTRC=~/.inputrc
 

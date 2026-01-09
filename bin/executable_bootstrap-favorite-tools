@@ -7,7 +7,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-HOME = os.path.expanduser("~")
+HOME = Path(os.path.expanduser("~"))
 DRYRUN = True
 PACKAGES = [
     "bat",  # https://github.com/sharkdp/bat
@@ -50,7 +50,7 @@ def red(text):
 
 
 def short(text):
-    return str(text).replace(HOME, "~")
+    return str(text).replace(str(HOME), "~")
 
 
 def hdry(message, dryrun=None):
@@ -172,6 +172,11 @@ class BrewBased(Installer):
         run_program("brew", "install", package_name)
 
 
+def ensure_dir(path):
+    if not os.path.isdir(path):
+        os.makedirs(path)
+
+
 def main(args=None):
     """Auto-install favorite tools"""
     global DRYRUN
@@ -183,6 +188,10 @@ def main(args=None):
     DRYRUN = not args.commit
     if DRYRUN:
         print(f"{highlighted('Dryrun')} {dim('by default, use')} {highlighted('--commit')} {dim('to effectively install')}\n")
+
+    else:
+        ensure_dir(HOME / ".cache/bash/completions")
+        ensure_dir(HOME / ".cache/zsh/completions")
 
     installer = Installer.for_current_platform()
     if not installer:
