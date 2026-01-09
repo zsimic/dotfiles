@@ -7,8 +7,8 @@ esac
 
 if [ "$interactive" -eq 1 ]; then
     if [ -n "$BASH_VERSION" ]; then
-        [ -r "$HOME/.bashrc" ] && source "$HOME/.bashrc"
+        [ -r "$HOME/.bashrc" ] && . "$HOME/.bashrc"
     elif [ -n "$ZSH_VERSION" ]; then
-        [ -r "$HOME/.zshrc" ] && source "$HOME/.zshrc"
+        [ -r "$HOME/.zshrc" ] && . "$HOME/.zshrc"
     fi
 fi

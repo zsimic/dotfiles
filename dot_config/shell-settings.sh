@@ -48,14 +48,14 @@ zz() {  # Toggle python venv
     [ -n "$VIRTUAL_ENV" ] && { deactivate; return $?; }
     [ ! -d .venv ] && { echo "No .venv folder"; return 1; }
     [ ! -r .venv/bin/activate ] && { echo ".venv was not successfully built"; return 1; }
-    source .venv/bin/activate
+    . .venv/bin/activate
 }
 
-[ -r ~/.local/aliases ] && source ~/.local/aliases
+[ -r ~/.local/aliases ] && . ~/.local/aliases
 
 if [ -d ~/.sdkman/bin ]; then
     export SDKMAN_DIR="$HOME/.sdkman"
-    source "$SDKMAN_DIR/bin/sdkman-init.sh"
+    . "$SDKMAN_DIR/bin/sdkman-init.sh"
 fi
 
 # Minimalistic shell prompt
