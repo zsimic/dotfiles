@@ -1,45 +1,41 @@
 [ -z "$ZSH_VERSION" ] && { echo "Source this in zsh only"; return 1; }
+[[ -o interactive ]] || return 0
 
-# History
-HISTFILE=~/.cache/zsh/history.log
-HISTSIZE=1500               # How many lines of history to keep in memory
-SAVEHIST=1000               # Number of history entries to save to disk
-#LISTMAX=-1
+HISTFILE=$HOME/.cache/zsh/history.log
+HISTSIZE=50000
+SAVEHIST=50000
+WORDCHARS='._~'
+
 setopt HIST_VERIFY
 setopt EXTENDED_HISTORY
-setopt INC_APPEND_HISTORY_TIME
-setopt HIST_FIND_NO_DUPS
+setopt INC_APPEND_HISTORY
 setopt HIST_IGNORE_ALL_DUPS
-setopt HIST_IGNORE_DUPS
 setopt HIST_IGNORE_SPACE
 setopt HIST_EXPIRE_DUPS_FIRST
 setopt HIST_SAVE_NO_DUPS
 setopt HIST_REDUCE_BLANKS
-setopt HIST_LEX_WORDS
-setopt HIST_NO_FUNCTIONS
+setopt HIST_LEX_WORDS  # shell-lexer word splitting for history (!$, !^, etc.)
+setopt HIST_NO_FUNCTIONS  # don't store function definitions in history
+setopt AUTO_LIST  # list on ambiguous completion
+setopt NO_MENU_COMPLETE  # never enter menu mode
+setopt NO_AUTO_MENU
 
-# setopt CORRECT
-# setopt CORRECT_ALL
+zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}'
+zstyle ':completion:*' verbose yes
+zstyle ':completion:*' list-max 40
 
 typeset -U path PATH fpath
 fpath=("$HOME/.cache/zsh/completions" /opt/homebrew/share/zsh/site-functions $fpath)
 autoload -Uz compinit
-compinit -d ~/.cache/zsh/zcompdump
+compinit -d $HOME/.cache/zsh/zcompdump
 
-autoload -U select-word-style
-select-word-style bash
-
-# --- zsh line editor keybindings (portable) ---
-bindkey -e  # emacs-style, matches readline defaults
-
-# Ensure $terminfo is available
-zmodload zsh/terminfo 2>/dev/null
+zmodload zsh/terminfo 2>/dev/null  # Ensure $terminfo is available
 
 # Ctrl+Left / Ctrl+Right: use terminfo when available, fall back to common sequences
 [[ -n ${terminfo[kLFT5]} ]] && bindkey "${terminfo[kLFT5]}" backward-word
 [[ -n ${terminfo[kRIT5]} ]] && bindkey "${terminfo[kRIT5]}" forward-word
-bindkey '^[[1;5D' backward-word   # fallback
-bindkey '^[[1;5C' forward-word    # fallback
+bindkey '^[[1;5D' backward-word
+bindkey '^[[1;5C' forward-word
 
 # Home / End (begin/end of line): terminfo + common fallbacks
 [[ -n ${terminfo[khome]} ]] && bindkey "${terminfo[khome]}" beginning-of-line
@@ -48,17 +44,8 @@ bindkey '^[[H' beginning-of-line
 bindkey '^[[F' end-of-line
 bindkey '^[[1~' beginning-of-line
 bindkey '^[[4~' end-of-line
-
-# Ctrl+Delete: commonly ^[[3;5~  (delete to end of line)
-bindkey '^[[3;5~' kill-line
-
-# Ctrl+Backspace: on many systems this is actually ^H (C-h)
-bindkey '^H' backward-kill-word
-
-# Some terminals/tmux setups may send CSI-u-ish sequences for ctrl+backspace
-bindkey '^[[127;5u' backward-kill-word
+bindkey '^[[3;5~' kill-line  # ctrl+delete
+bindkey '^H' backward-kill-word  # Ctrl+Backspace
+bindkey '^[[127;5u' backward-kill-word  # CSI-u for ctrl+backspace
 
 [ -f "$HOME/.config/shell-settings.sh" ] && source "$HOME/.config/shell-settings.sh"
-
-#setopt AUTO_MENU  overriden by MENU_COMPLETE
-# setopt AUTO_CD
