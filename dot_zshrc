@@ -21,10 +21,10 @@ setopt HIST_NO_FUNCTIONS
 # setopt CORRECT
 # setopt CORRECT_ALL
 
-ZSH_COMPLETIONS_DIR="$HOME/.cache/zsh/completions"
-fpath=("$ZSH_COMPLETIONS_DIR" $fpath)
+typeset -U path PATH fpath
+fpath=("$HOME/.cache/zsh/completions" /opt/homebrew/share/zsh/site-functions $fpath)
 autoload -Uz compinit
-compinit
+compinit -d ~/.cache/zsh/zcompdump
 
 autoload -U select-word-style
 select-word-style bash

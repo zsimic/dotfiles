@@ -10,3 +10,18 @@ HISTFILE=~/.cache/bash/history.log
 export INPUTRC=~/.inputrc
 
 [ -f "$HOME/.config/shell-settings.sh" ] && source "$HOME/.config/shell-settings.sh"
+
+dedupe_colon_list() {
+  local input=$1 out="" seen=":" p
+  local IFS=:
+  for p in $input; do
+    [[ -z $p ]] && continue
+    case "$seen" in
+      *":$p:"*) ;;                    # already present
+      *) seen+="$p:"; out+="${out:+:}$p" ;;
+    esac
+  done
+  printf '%s' "$out"
+}
+
+export PATH="$(dedupe_colon_list "$PATH")"

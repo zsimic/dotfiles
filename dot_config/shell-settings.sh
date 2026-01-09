@@ -12,9 +12,6 @@ append_to_path ~/.local/bin
 append_to_path /opt/homebrew/bin
 append_to_path ~/.cargo/bin
 
-# remove duplicates in PATH (but keep order)
-export PATH="$(echo -n $PATH | awk -vRS=: '(!a[$0]++){if(b++)printf(RS);printf($0)}')"
-
 if command -v eza > /dev/null; then
     alias ls='eza -F --color-scale --time-style iso'
 else
