@@ -1,9 +1,11 @@
+# Used by bash (not zsh)
+
 $include /etc/inputrc
 
 "\C-h": backward-kill-word  # Ctrl+Backspace often arrives as C-h
-"\e[3;5~": kill-line                # ctrl+delete
-"\e[1;5C": forward-word             # ctrl+right
-"\e[1;5D": backward-word            # ctrl+left
+"\e[3;5~": kill-line        # ctrl+delete
+"\e[1;5C": forward-word     # ctrl+right
+"\e[1;5D": backward-word    # ctrl+left
 
 "\e[H": beginning-of-line
 "\e[1~": beginning-of-line
@@ -11,18 +13,6 @@ $include /etc/inputrc
 "\e[F": end-of-line
 "\e[4~": end-of-line
 "\e[8~": end-of-line
-
-# Cleaned up:
-#"\e[13;2u": "\n"                    # shift+enter
-#"\e[13;5u": "\n"                    # ctrl+enter
-#"\e[32;2u": " "                     # shift+space
-#"\e[32;5u": " "                     # ctrl+space
-
-
-# Possible zsh-like auto-complete:
-#"\t": menu-complete                # enable single-tab completions through a series of completions inline
-#set show-all-if-ambiguous on
-#set show-all-if-unmodified on
 
 set bell-style none
 set bind-tty-special-chars on
@@ -37,5 +27,3 @@ set match-hidden-files off
 set revert-all-at-newline
 set skip-completed-text on
 set visible-stats on
-
-# ctrl-delete: send hex 0x15 -> esc [127;3u

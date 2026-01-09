@@ -173,7 +173,7 @@ class BrewBased(Installer):
 
 
 def main(args=None):
-    """Bootstrap pickley"""
+    """Auto-install favorite tools"""
     global DRYRUN
 
     parser = argparse.ArgumentParser(description=main.__doc__)
@@ -181,10 +181,9 @@ def main(args=None):
     args = parser.parse_args(args=args)
 
     DRYRUN = args.dryrun
-
     installer = Installer.for_current_platform()
     if not installer:
-        sys.exit("No installer found for current platform")
+        sys.exit("No installer defined for current platform")
 
     installer.update()
     for package in PACKAGES:

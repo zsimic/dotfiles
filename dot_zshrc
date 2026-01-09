@@ -1,11 +1,7 @@
-# ~/.zshrc
-
 [ -z "$ZSH_VERSION" ] && { echo "Source this in zsh only"; return 1; }
 
-mkdir -p ~/.cache/zsh
-
 # History
-HISTFILE=~/.cache/zsh/zsh_history
+HISTFILE=~/.cache/zsh_history.log
 HISTSIZE=1500               # How many lines of history to keep in memory
 SAVEHIST=1000               # Number of history entries to save to disk
 #LISTMAX=-1
@@ -57,13 +53,7 @@ bindkey '^H' backward-kill-word
 # Some terminals/tmux setups may send CSI-u-ish sequences for ctrl+backspace
 bindkey '^[[127;5u' backward-kill-word
 
-
-[ -r "$HOME/.config/shell-settings.sh" ] && source "$HOME/.config/shell-settings.sh"
+[ -f "$HOME/.config/shell-settings.sh" ] && source "$HOME/.config/shell-settings.sh"
 
 #setopt AUTO_MENU  overriden by MENU_COMPLETE
 # setopt AUTO_CD
-
-#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
-export SDKMAN_DIR="$HOME/.sdkman"
-[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
-return 0  # Needed when sdkman is missing

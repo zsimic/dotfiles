@@ -2,10 +2,7 @@
 
 set -e
 
-abort() {
-    echo "$*" >&2
-    exit 1
-}
+abort() { echo "$*" >&2; exit 1; }
 dryrun() { echo Would run: "$@"; }
 
 [[ "$1" == "--dryrun" ]] && { RUNNER=dryrun; shift; } || RUNNER=
