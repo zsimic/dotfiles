@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 HOME = os.path.expanduser("~")
-DRYRUN = False
+DRYRUN = True
 PACKAGES = [
     "bat",  # https://github.com/sharkdp/bat
     "curlie",  # https://github.com/rs/curlie
@@ -177,10 +177,13 @@ def main(args=None):
     global DRYRUN
 
     parser = argparse.ArgumentParser(description=main.__doc__)
-    parser.add_argument("--dryrun", "-n", action="store_true", help="Perform a dryrun")
+    parser.add_argument("--commit", "-c", action="store_true", help="Effectively install tools")
     args = parser.parse_args(args=args)
 
-    DRYRUN = args.dryrun
+    DRYRUN = not args.commit
+    if DRYRUN:
+        print(f"{highlighted('Dryrun')} {dim('by default, use')} {highlighted('--commit')} {dim('to effectively install')}\n")
+
     installer = Installer.for_current_platform()
     if not installer:
         sys.exit("No installer defined for current platform")
