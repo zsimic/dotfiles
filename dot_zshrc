@@ -48,4 +48,4 @@ bindkey '^[[3;5~' kill-line  # ctrl+delete
 bindkey '^H' backward-kill-word  # Ctrl+Backspace
 bindkey '^[[127;5u' backward-kill-word  # CSI-u for ctrl+backspace
 
-[ -f "$HOME/.config/shell-settings.sh" ] && source "$HOME/.config/shell-settings.sh"
+[ -r "$HOME/.config/shell-settings.sh" ] && source "$HOME/.config/shell-settings.sh"

@@ -11,7 +11,7 @@ SESSION_NAME=${1:-temporary}
 
 if [[ "$OPENER" == "ghostty" ]]; then
     _CF=~/.config/ghostty/$SESSION_NAME.conf
-    [[ -f $_CF ]] || abort "File $_CF does not exist"
+    [[ -r $_CF ]] || abort "File $_CF does not exist"
     unset TMUX TMUX_PANE
     $RUNNER exec open -na Ghostty --args --class=$SESSION_NAME --config-file=$_CF
     exit 0
@@ -24,7 +24,7 @@ _TMUX_EXE=$(command -v tmux || echo /opt/homebrew/bin/tmux)
 
 if ! $_TMUX_EXE has-session -t $SESSION_NAME 2> /dev/null; then
     $RUNNER $_TMUX_EXE new-session -d -s $SESSION_NAME -c ~
-    if [ -f ~/.local/tmux.$SESSION_NAME.cfg ]; then
+    if [ -r ~/.local/tmux.$SESSION_NAME.cfg ]; then
         for ss in $(cat ~/.local/tmux.$SESSION_NAME.cfg | sed "s#~#$HOME#"); do
             sleep 0.0001
             $RUNNER $_TMUX_EXE new-window -c $ss

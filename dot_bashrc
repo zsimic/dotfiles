@@ -1,4 +1,5 @@
 [ -z "$BASH_VERSION" ] && { echo "Source this in bash only"; return 1; }
+[[ $- != *i* ]] && return
 
 shopt -s checkwinsize cmdhist histappend histverify no_empty_cmd_completion
 HISTIGNORE="[ ]*:&:[bf]g:clear:exit"
@@ -9,7 +10,7 @@ HISTFILE=~/.cache/bash/history.log
 
 export INPUTRC=~/.inputrc
 
-[ -f "$HOME/.config/shell-settings.sh" ] && source "$HOME/.config/shell-settings.sh"
+[ -r "$HOME/.config/shell-settings.sh" ] && source "$HOME/.config/shell-settings.sh"
 
 dedupe_colon_list() {
   local input=$1 out="" seen=":" p

@@ -47,11 +47,11 @@ edit() {
 zz() {  # Toggle python venv
     [ -n "$VIRTUAL_ENV" ] && { deactivate; return $?; }
     [ ! -d .venv ] && { echo "No .venv folder"; return 1; }
-    [ ! -f .venv/bin/activate ] && { echo ".venv was not successfully built"; return 1; }
+    [ ! -r .venv/bin/activate ] && { echo ".venv was not successfully built"; return 1; }
     source .venv/bin/activate
 }
 
-[ -f ~/.local/aliases ] && source ~/.local/aliases
+[ -r ~/.local/aliases ] && source ~/.local/aliases
 
 if [ -d ~/.sdkman/bin ]; then
     export SDKMAN_DIR="$HOME/.sdkman"
@@ -73,7 +73,7 @@ _update_custom_prompt() {
     fi
 }
 
-if [ -f "$__ps1s" ]; then
+if [ -r "$__ps1s" ]; then
     if [ -n "$ZSH_VERSION" ]; then
         __shell="zsh"; precmd() { _update_custom_prompt; }
     elif [ -n "$BASH_VERSION" ]; then
