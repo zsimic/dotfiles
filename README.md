@@ -1,10 +1,9 @@
 # Zoran's dotfiles
 
-Currently trying `chezmoi`, but it is super annoying with its permission handling...
-Looking for alternatives.
-`chezmoi` has some nice sides, but it is misguidedly trying to use
+Currently trying `chezmoi`, it has some nice sides, but it is trying to use
 naming conventions as file permission management...
-You ironically end up with silly `private_` prefixes in a **public** repo 😅
+Open/looking for alternatives, ideal utility would be simpler and not
+overcomplicate things with file permissions.
 
 ```shell
 chezmoi init zsimic --apply
