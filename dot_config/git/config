@@ -10,25 +10,11 @@
 
 [delta]
     features = line-numbers decorations
-    # hyperlinks = true
-    # hyperlinks-file-link-format = "file-line://{path}:{line}"
     light = false    # dark mode
     navigate = true  # use n and N to move between diff sections
-    # side-by-side = true
-    # line-numbers-right-format = "│ "
 
 [delta "decorations"]
-    # commit-decoration-style = bold yellow
     file-style = omit
     file-decoration-style = none
     hunk-header-style = file line-number
     hunk-header-decoration-style = omit
-
-# [delta "line-numbers"]
-#     line-numbers-left-style = cyan
-#     line-numbers-right-style = cyan
-#     line-numbers-minus-style = 124
-#     line-numbers-plus-style = 28
-
-# [url "git@github.com:"]
-#     insteadOf = https://github.com/

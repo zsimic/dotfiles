@@ -150,8 +150,8 @@ class Installer:
 class AptBased(Installer):
 
     packager = "apt-get"
-    command_names = {"bat": "batcat"}
-    package_names = {"curlie": None, "delta": None, "dua": None, "fd": "fd-find", "tokei": None}
+    command_names = {"bat": "batcat", "fd": "fd-find"}
+    package_names = {"curlie": None, "delta": None, "dua": None, "eza": None, "fd": "fd-find", "tokei": None}
 
     def update(self):
         run_program("sudo", "apt-get", "update")
