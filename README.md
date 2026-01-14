@@ -6,7 +6,7 @@ Open/looking for alternatives, ideal utility would be simpler and not
 overcomplicate things with file permissions.
 
 ```shell
-chezmoi init zsimic --apply
+chezmoi init git@github.com:zsimic/dotfiles.git
 ```
 
 
