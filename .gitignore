@@ -3,6 +3,7 @@
 .tox
 .venv
 .vscode
+__pycache__
 
 build
 dist

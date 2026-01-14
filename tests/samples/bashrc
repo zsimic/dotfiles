@@ -1,0 +1,9 @@
+# example bashrc file
+alias ls='ls -FGh'
+## -- Added by my-test-app -- DO NOT MODIFY THIS SECTION
+local_bin=~/.local/bin
+if [[ $PATH != *"$local_bin"* && -d $1 ]]; then
+    export PATH=$local_bin:$PATH
+fi
+## -- end of addition by my-test-app --
+alias foo=~/bar

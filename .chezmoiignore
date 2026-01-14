@@ -1,4 +1,8 @@
+**/__pycache__
+pyproject.toml
 README.md
+tests/
+tox.ini
 {{- if ne .chezmoi.os "darwin" }}
 Library
 {{- end }}

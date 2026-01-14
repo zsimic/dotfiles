@@ -11,7 +11,6 @@ from pathlib import Path
 
 
 class Logger:
-
     log_location = "~/.cache/shrinky.log"
     logger = None
 
@@ -119,7 +118,7 @@ class ColorSet:
 
     @classmethod
     def tty_color_set(cls, name="tty-colors"):
-        codes = dict(bold=1, blue=34, green=32, yellow=33, red=31, cyan=36)
+        codes = {"bold": 1, "blue": 34, "green": 32, "yellow": 33, "red": 31, "cyan": 36}
         code_format = "\x1b[%sm"
         clear = code_format % ""
         wrapper_fmt = None
@@ -176,13 +175,11 @@ def folder_parts(folder: Path):
 
 
 class CommandRenderer:
-
     flags = {}
 
 
 class PathCleaner(CommandRenderer):
-
-    flags = dict(p="path")
+    flags = {"p": "path"}
     path = ""
 
     def cmd_clean_path(self):
@@ -198,10 +195,9 @@ class PathCleaner(CommandRenderer):
 
 
 class Ps1Renderer(CommandRenderer):
-
     dockerenv = "/.dockerenv"
     example = "ps1 -szsh -ozsimic,zoran -p.. -ufoo"
-    flags = dict(s="shell", o="owner", u="user", x="exit_code", p="pwd", v="venv", w="window")
+    flags = {"s": "shell", "o": "owner", "u": "user", "x": "exit_code", "p": "pwd", "v": "venv", "w": "window"}
 
     exit_code = "0"
     owner = ""
@@ -278,7 +274,6 @@ class TmuxBranchSpec:
 
 
 class TmuxBranchSpecs:
-
     def __init__(self, specs):
         specs = specs or TmuxRenderer.branch_spec
         self.specs = specs.split("+")
@@ -298,12 +293,11 @@ class TmuxBranchSpecs:
 
 
 class TmuxRenderer(CommandRenderer):
-
     # Other icons: 🔀🧐🚨🚧📌🔧📄💡🍻🏷️💫🩹🎨
     branch_spec = "📌yellow+✨blue:master,main+🧐green:release,publish"
     path = ""
     window = ""
-    flags = dict(b="branch_spec", p="path", w="window")
+    flags = {"b": "branch_spec", "p": "path", "w": "window"}
 
     @staticmethod
     def tmux_colored(text, fg: str, max_size: int):
@@ -352,7 +346,7 @@ class TmuxRenderer(CommandRenderer):
         stdout = run_program("uptime")
         if stdout and "up" in stdout:
             i = stdout.index("up")
-            stdout = stdout[i + 2:].strip()
+            stdout = stdout[i + 2 :].strip()
             if stdout:
                 up = list(self.uptime_bits(stdout))[:2]
                 if up:
@@ -442,7 +436,6 @@ class CommandDef:
 
 
 class CommandParser:
-
     __ttyc = None  # type: ColorSet
 
     def __init__(self):

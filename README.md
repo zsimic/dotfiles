@@ -29,3 +29,9 @@ chezmoi init zsimic --apply
 - https://dev.yorhel.nl/ncdu
 - https://github.com/bensadeh/tailspin
 - https://github.com/imsnif/bandwhich
+
+
+# Tests
+
+Some scripts have [tests](./tests), run `tox` to exercise the tests.
+`tox -e venv` can be used to conveniently get a `.venv/`.
