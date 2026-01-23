@@ -17,12 +17,14 @@ PACKAGES = [
     "duf",  # https://github.com/muesli/duf
     "eza",  # https://github.com/eza-community/eza
     "fd",  # https://github.com/sharkdp/fd
+    "fzf",  # https://github.com/junegunn/fzf
     "htop",  # https://htop.dev/
     "ripgrep",  # https://github.com/BurntSushi/ripgrep
     "tre",  # https://github.com/dduan/tre
     "tmux",  # https://github.com/tmux/tmux
     "tokei",  # https://github.com/XAMPPRocky/tokei
     "wget",  # https://www.gnu.org/software/wget/
+    "zoxide",  # https://github.com/ajeetdsouza/zoxide
 ]
 COMMAND_NAMES = {
     "ripgrep": "rg",
@@ -138,6 +140,7 @@ class Installer:
 
         actual_package = self.resolved_package_name(package_name)
         if not actual_package:
+            # TODO: support "yolo" installs, a-la `curl ... | sh`
             print(f"{bold(package_name)} {red('not available')} with {highlighted(self.packager)}, skipping")
             return
 
@@ -164,9 +167,6 @@ class BrewBased(Installer):
 
     packager = "brew"
     package_names = {"dua": "dua-cli"}
-
-    # def update(self):
-    #     run_program("brew", "update")
 
     def _install(self, package_name):
         run_program("brew", "install", package_name)
