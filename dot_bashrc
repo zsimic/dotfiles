@@ -26,9 +26,5 @@ dedupe_colon_list() {
 }
 
 export PATH="$(dedupe_colon_list "$PATH")"
-if command -v fzf >/dev/null; then
-    eval "$(fzf --bash)"
-fi
-if command -v zoxide >/dev/null; then
-    eval "$(zoxide init bash)"
-fi
+type -p fzf >/dev/null && eval "$(fzf --bash)"
+type -p zoxide >/dev/null && eval "$(zoxide init --cmd cd bash)"

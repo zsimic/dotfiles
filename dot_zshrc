@@ -49,9 +49,5 @@ bindkey '^H' backward-kill-word  # Ctrl+Backspace
 bindkey '^[[127;5u' backward-kill-word  # CSI-u for ctrl+backspace
 
 [ -r "$HOME/.config/shell-settings.sh" ] && . "$HOME/.config/shell-settings.sh"
-if command -v fzf >/dev/null; then
-    source <(fzf --zsh)
-fi
-if command -v zoxide >/dev/null; then
-    eval "$(zoxide init zsh)"
-fi
+(( $+commands[fzf] )) && source <(fzf --zsh)
+(( $+commands[zoxide] )) && eval "$(zoxide init --cmd cd zsh)"
