@@ -10,6 +10,7 @@ append_to_path() { [ -d "$1" ] && export PATH=$PATH:$1; }
 
 append_to_path ~/.local/bin
 append_to_path /opt/homebrew/bin
+append_to_path /home/linuxbrew/.linuxbrew/bin
 append_to_path ~/.cargo/bin
 
 if command -v eza > /dev/null; then
