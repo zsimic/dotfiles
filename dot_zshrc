@@ -50,4 +50,10 @@ bindkey '^[[127;5u' backward-kill-word  # CSI-u for ctrl+backspace
 
 [ -r "$HOME/.config/shell-settings.sh" ] && . "$HOME/.config/shell-settings.sh"
 (( $+commands[fzf] )) && source <(fzf --zsh)
-(( $+commands[zoxide] )) && eval "$(zoxide init --cmd cd zsh)"
+if [[ $+commands[zoxide] ]]; then
+    eval "$(zoxide init --cmd cd zsh)"
+    if [[ "$DISTRIB_RELEASE" = "22.04" ]]; then
+        # Old zoxide on jammy is buggy, use builtin cd to stop a recursion loop it is running into
+        _z_cd() { builtin cd "$@" || return "$?"; }
+    fi
+fi
