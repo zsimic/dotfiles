@@ -221,6 +221,9 @@ class Ps1Renderer(CommandRenderer):
         elif self.user == "root":
             yield "❕ "
 
+        elif os.environ.get("SSH_TTY"):
+            yield "📡 "
+
         if self.venv:
             venv = get_path(self.venv)
             activate = venv / "bin/activate"
