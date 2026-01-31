@@ -61,6 +61,7 @@ fi
 
 # Minimalistic shell prompt
 __ps1s=~/bin/shrinky.py
+__l_ps1h=""
 _update_custom_prompt() {
     local ps1h=( -s$__shell -w$TMUX_PANE -u$USER -x$? -ozsimic,zoran -p"$PWD" -v"$VIRTUAL_ENV" )
     [[ "${ps1h[@]}" == "$__l_ps1h" ]] && return;

@@ -5,7 +5,6 @@ Must work fast, with system python, std libs only
 """
 
 import os
-import re
 import sys
 from pathlib import Path
 
@@ -63,19 +62,46 @@ def get_path(path):
     return Path(path or ".")
 
 
-def scm_root(folder: Path):
-    if (folder / ".git").is_dir():
-        return folder
+def get_py_venv_version(venv_path):
+    """Fast Python Version detection without subprocess calls, looking for lib/pythonM.m"""
+    lib_path = venv_path / "lib"
+    if lib_path.exists():
+        py_dirs = [d.name for d in lib_path.iterdir() if d.name.startswith("python")]
+        if py_dirs:
+            return py_dirs[0].replace("python", "")
 
-    folder = folder.parent
-    if len(folder.parts) > 1:
-        return scm_root(folder)
+
+def git_branch_name(folder):
+    git_folder = git_root(folder)
+    if git_folder:
+        head_file = git_folder / "HEAD"
+        if head_file.exists():
+            try:
+                content = head_file.read_text().strip()
+                if content.startswith("ref: "):
+                    return content.rpartition("/")[2]  # "ref: refs/heads/<branch-name>"
+
+                return content[:5]  # Detached HEAD (SHA)
+
+            except Exception:
+                return None
+
+
+def git_root(folder: Path):
+    for parent in [folder] + list(folder.parents):
+        folder = parent / ".git"
+        if folder.is_dir():
+            return folder
+
+
+def scm_root(folder: Path):
+    folder = git_root(folder)
+    if folder:
+        return folder.parent
 
 
 def capped_text(text: str, max_size: int):
     if max_size and text and len(text) > max_size:
-        # some-long-path-𓈓
-        # some-long-path-that-got-truncated
         text = "𓈓%s" % text[-max_size:]
 
     return text
@@ -227,15 +253,11 @@ class Ps1Renderer(CommandRenderer):
         if self.venv:
             venv = get_path(self.venv)
             activate = venv / "bin/activate"
-            python = venv / "bin/python"
-            py_version = run_program(str(python), "--version") if python.exists() else None
-            if py_version:
-                m = re.search(r"(\d+\.\d+)", py_version)
-                if m:
-                    py_version = m.group(1)
-
+            py_version = get_py_venv_version(venv)
             venv_name = None
             if activate.exists():
+                import re
+
                 regex = re.compile(r"""^\s*PS1="\(([\w-]+).+""")
                 for line in activate.read_text().splitlines():
                     m = regex.match(line)
@@ -312,7 +334,7 @@ class TmuxRenderer(CommandRenderer):
 
     def rendered_branch(self, folder):
         if folder:
-            branch_name = run_program("git", "-C", folder, "branch", "--no-color", "--show-current")
+            branch_name = git_branch_name(folder)
             if branch_name:
                 specs = TmuxBranchSpecs(self.branch_spec)
                 spec = specs.get_spec(branch_name)
@@ -363,7 +385,7 @@ class TmuxRenderer(CommandRenderer):
           set -g status-right '#(/usr/bin/python3 shrinky.py tmux_status -p"#{pane_current_path}")'
         """
         folder = get_path(self.path)
-        yield self.rendered_branch(scm_root(folder))
+        yield self.rendered_branch(folder)
         yield self.rendered_uptime()
 
     def cmd_tmux_short(self):
