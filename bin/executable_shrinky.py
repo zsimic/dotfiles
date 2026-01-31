@@ -247,7 +247,7 @@ class Ps1Renderer(CommandRenderer):
             yield "❕ "
 
         elif os.environ.get("SSH_TTY"):
-            yield colors.cyan("󰢹 ")  # 📡   󰑔  󰢹
+            yield colors.cyan(" ")  # 📡   󰑔  󰢹
 
         if self.venv:
             venv = get_path(self.venv)
