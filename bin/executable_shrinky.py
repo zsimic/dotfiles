@@ -32,10 +32,10 @@ class Logger:
             cls.logger.debug(message, *args)
 
     @classmethod
-    def fail(cls, msg, exit_code=1):
+    def fail(cls, msg, exit_code=1, exc_info=None):
         print(msg, file=sys.stderr)
         if cls.logger:
-            cls.logger.error(msg)
+            cls.logger.error(msg, exc_info=exc_info)
 
         sys.exit(exit_code)
 
@@ -160,6 +160,8 @@ class ColorSet:
         if func:
             return func()
 
+        Logger.fail("Shell '%s' not supported" % shell)
+
     @classmethod
     def bash_ps1_color_set(cls):
         return cls.tty_color_set(name="bash-ps1-colors")
@@ -238,9 +240,6 @@ class Ps1Renderer(CommandRenderer):
         PS1 minimalistic prompt
         """
         colors = ColorSet.ps1_for_shell(self.shell)
-        if not colors:
-            Logger.fail("Shell '%s' not supported" % self.shell)
-
         if os.path.exists(self.dockerenv):
             yield "🐳 "
 
@@ -522,11 +521,7 @@ class CommandParser:
             cmd.run_with_args(args)
 
         except Exception as e:
-            msg = "'%s()' crashed: %s" % (cmd.name, e)
-            if Logger.logger:
-                Logger.logger.error(msg, exc_info=e)
-
-            Logger.fail(msg)
+            Logger.fail("'%s()' crashed: %s" % (cmd.name, e), exc_info=e)
 
 
 def main(args=None):
