@@ -16,4 +16,4 @@ brew "tre-command"  # https://github.com/dduan/tre
 brew "wget"         # https://www.gnu.org/software/wget/
 brew "zoxide"       # https://github.com/ajeetdsouza/zoxide
 
-cask "font-jetbrains-mono-nerd-font"
+# cask "font-jetbrains-mono-nerd-font"
