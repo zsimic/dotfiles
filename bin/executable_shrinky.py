@@ -155,7 +155,7 @@ class ColorSet:
         return cls(name, codes)
 
     @classmethod
-    def ps1_for_shell(cls, shell):
+    def ps1_for_shell(cls, shell) -> "ColorSet":
         func = getattr(cls, "%s_ps1_color_set" % shell, None)
         if func:
             return func()
@@ -247,7 +247,7 @@ class Ps1Renderer(CommandRenderer):
             yield "❕ "
 
         elif os.environ.get("SSH_TTY"):
-            yield "📡 "
+            yield colors.cyan("󰢹 ")  # 📡 󰣀   󰑔  󰢹
 
         if self.venv:
             venv = get_path(self.venv)
