@@ -240,14 +240,17 @@ class Ps1Renderer(CommandRenderer):
         PS1 minimalistic prompt
         """
         colors = ColorSet.ps1_for_shell(self.shell)
-        if os.path.exists(self.dockerenv):
-            yield "🐳 "
-
-        elif self.user == "root":
+        if self.user == "root":
             yield "❕ "
+
+        elif os.environ.get("CODER"):
+            yield colors.cyan(" ")  #   
 
         elif os.environ.get("SSH_TTY"):
             yield colors.cyan(" ")  # 📡   󰑔  󰢹
+
+        elif os.path.exists(self.dockerenv):
+            yield "🐳 "
 
         if self.venv:
             venv = get_path(self.venv)
