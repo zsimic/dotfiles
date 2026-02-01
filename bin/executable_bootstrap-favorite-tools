@@ -2,6 +2,8 @@
 
 SCRIPT_DIR="$(cd $(dirname $0); pwd)"
 
+[ ! -d ~/.cache/zsh ] && mkdir -p ~/.cache/zsh
+
 typeset -U path
 path+=(/opt/homebrew/bin)
 path+=(/home/linuxbrew/.linuxbrew/bin)
