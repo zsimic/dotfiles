@@ -4,7 +4,7 @@ import argparse
 import os
 import sys
 
-PROGRAM_NAME = "updateshellrc.py"
+PROGRAM_NAME = "injectrc.py"
 
 
 class ShellRc:
@@ -17,7 +17,7 @@ class ShellRc:
         Args:
             target_path (str): Target file to modify (ex: ~/.bash_profile)
             snippet_contents (str): Example: "file:some-path" or "<some inlined content>"
-            marker (str | None): Custom section marker to use in the file (by default: "updateshellrc.py")
+            marker (str | None): Custom section marker to use in the file (by default: "injectrc.py")
             comment (str | None): Optional additional comment to add on the section marker line
             dryrun (bool): If True, no changes are done, a "Would update ..." is printed on stderr instead
             verbose (bool): If True, show all chatter on stderr
