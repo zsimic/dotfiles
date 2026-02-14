@@ -44,7 +44,7 @@ def run_program(*args: str):
     import subprocess  # nosec B404
 
     Logger.debug("Running: %s", args)
-    p = subprocess.run(args, stdout=subprocess.PIPE, shell=False)  # nosec B603
+    p = subprocess.run(args, stdout=subprocess.PIPE, shell=False)  # noqa: S603
     if p.returncode == 0 and p.stdout:
         return p.stdout.decode("utf-8").strip()
 
@@ -88,7 +88,7 @@ def git_branch_name(folder):
 
 
 def git_root(folder: Path):
-    for parent in [folder] + list(folder.parents):
+    for parent in (folder, *folder.parents):
         folder = parent / ".git"
         if folder.is_dir():
             return folder
@@ -193,7 +193,7 @@ def shortened_path(prefix, parts, max_parts=6):
     pivot = len(parts) - 2
     for i, part in enumerate(parts):
         if i < pivot:
-            yield part[0]
+            yield part[0] if part[0] != "." else part[0:2]
 
         else:
             yield part
@@ -291,15 +291,16 @@ class Ps1Renderer(CommandRenderer):
             prefix, parts = folder_parts(folder)
             yield colors.yellow("/".join(shortened_path(prefix, parts)))
 
-        color = colors.green if self.exit_code == "0" else colors.red
-        char = color(" #" if self.user == "root" else ":")
-        yield "%s " % char
+        if self.exit_code:
+            color = colors.green if self.exit_code == "0" else colors.red
+            char = color(" #" if self.user == "root" else ":")
+            yield "%s " % char
 
 
 class TmuxBranchSpec:
     def __init__(self, spec):
         self.spec = spec
-        visual, _, branches = spec.partition(":")
+        _, _, branches = spec.partition(":")
         self.icon = spec[0] if spec else None
         self.color = spec[1:] if spec else None
         self.branches = branches.split(",") if branches else None
@@ -408,12 +409,7 @@ class TmuxRenderer(CommandRenderer):
             return
 
         root = scm_root(folder)
-        if root and folder != root:
-            folder = "%s/%s" % (root.name, folder.relative_to(root).name)
-
-        else:
-            folder = folder.name
-
+        folder = folder.name if not root or folder == root else "%s/%s" % (root.name, folder.relative_to(root).name)
         yield capped_text(folder, max_size=20)
 
 

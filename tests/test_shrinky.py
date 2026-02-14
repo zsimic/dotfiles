@@ -80,8 +80,20 @@ def test_deep_ps1(cli, monkeypatch):
     # Simulate docker
     monkeypatch.setattr(shrinky.Ps1Renderer, "dockerenv", ".")
     cli.run("ps1 -szsh", main=shrinky.main)
-    assert cli
+    assert cli.succeeded
     assert cli.logged.stdout.contents() == "🐳 %F{green}:%f \n"
+
+    # Simulate ssh
+    monkeypatch.setenv("SSH_TTY", "foo")
+    cli.run("ps1 -szsh", main=shrinky.main)
+    assert cli.succeeded
+    assert cli.logged.stdout.contents() == "%F{cyan} %f%F{green}:%f \n"
+
+    # Simulate coder
+    monkeypatch.setenv("CODER", "foo")
+    cli.run("ps1 -szsh", main=shrinky.main)
+    assert cli.succeeded
+    assert cli.logged.stdout.contents() == "%F{cyan} %f%F{green}:%f \n"
 
 
 def test_get_path():
@@ -140,6 +152,19 @@ def test_tmux(cli, monkeypatch):
     cli.run("tmux_short -p~/dev/foo/bar", main=shrinky.main)
     assert cli.succeeded
     assert cli.logged.stdout.contents() == "bar\n"
+
+    runez.write(".git/HEAD", "g123", logger=None)
+    cli.run("tmux_status", main=shrinky.main)
+    assert cli.succeeded
+    assert "#[fg=yellow]g123#[default]📌" in cli.logged.stdout
+
+    runez.delete(".git/HEAD", logger=None)
+    runez.touch(".git/HEAD/foo", logger=None)
+    cli.run("tmux_status", main=shrinky.main)
+    assert cli.succeeded
+    logged = cli.logged.stdout.contents().strip()
+    assert "|" not in logged
+    assert logged.endswith("#[default]🔌")
 
     cli.run("tmux_status -p%s" % project_path, main=shrinky.main)
     assert cli.succeeded
