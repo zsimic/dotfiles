@@ -163,22 +163,33 @@ class ColorSet:
         return cls(name, codes)
 
     @classmethod
-    def color_set_by_name(cls, shell) -> "ColorSet":
-        if shell == "zsh":
+    def plain_color_set(cls):
+        bits = {}
+        for color in cls.available:
+            bits[color] = ColorBit(color, "", "")
+
+        return cls("plain", bits)
+
+    @classmethod
+    def color_set_by_name(cls, color_set_name) -> "ColorSet":
+        if color_set_name == "zsh":
             bits = {}
-            for name in cls.available:
-                cb = ColorBit(name, "%B", "%b") if name == "bold" else ColorBit(name, "%%F{%s}" % name, "%f")
+            for color in cls.available:
+                cb = ColorBit(color, "%B", "%b") if color == "bold" else ColorBit(color, "%%F{%s}" % color, "%f")
                 bits[cb.name] = cb
 
             return cls("zsh-ps1", bits)
 
-        if shell == "tty":
+        if color_set_name == "tty":
             return cls.ttyc()
 
-        if shell == "bash":
+        if color_set_name == "bash":
             return cls.tty_color_set(name="bash-ps1", ps1=True)
 
-        Logger.fail("Shell '%s' not supported" % shell)
+        if not color_set_name or color_set_name == "plain":
+            return cls.plain_color_set()
+
+        Logger.fail("No color set for '%s'" % color_set_name)
 
     def __repr__(self):
         return self.name
@@ -229,13 +240,13 @@ class PathCleaner(CommandRenderer):
 
 class Ps1Renderer(CommandRenderer):
     dockerenv = "/.dockerenv"
-    example = "ps1 -szsh -ozsimic,zoran -p.. -ufoo"
-    flags = {"s": "shell", "o": "owner", "u": "user", "x": "exit_code", "p": "pwd", "v": "venv"}
+    example = "ps1 -czsh -p.. -ozsimic,zoran -ufoo"
+    flags = {"c": "color", "o": "owner", "p": "pwd", "u": "user", "v": "venv", "x": "exit_code"}
 
+    color = ""
     exit_code = "0"
     owner = ""
     pwd = ""
-    shell = ""
     user = ""
     venv = ""
 
@@ -243,7 +254,7 @@ class Ps1Renderer(CommandRenderer):
         """
         PS1 minimalistic prompt
         """
-        colors = ColorSet.color_set_by_name(self.shell)
+        colors = ColorSet.color_set_by_name(self.color)
         if self.user == "root":
             yield "❕ "
 

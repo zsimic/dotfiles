@@ -60,12 +60,12 @@ def test_invalid(cli, monkeypatch):
     assert cli.logged.stderr.contents() == "Unrecognized argument 'foo'\n"
 
     cli.run("ps1", main=shrinky.main)
-    assert cli.failed
-    assert cli.logged.stderr.contents() == "Shell '' not supported\n"
+    assert cli.succeeded
+    assert cli.logged.stdout.contents() == ": \n"
 
-    cli.run("ps1 -sfoo", main=shrinky.main)
+    cli.run("ps1 -cfoo", main=shrinky.main)
     assert cli.failed
-    assert cli.logged.stderr.contents() == "Shell 'foo' not supported\n"
+    assert cli.logged.stderr.contents() == "No color set for 'foo'\n"
 
     cli.run("ps1 -z5", main=shrinky.main)
     assert cli.failed
@@ -73,37 +73,37 @@ def test_invalid(cli, monkeypatch):
 
     # Simple message on stderr on crash
     monkeypatch.setattr(shrinky, "folder_parts", lambda *_: None)
-    cli.run("-v ps1 -szsh -pfoo/bar", main=shrinky.main)
+    cli.run("-v ps1 -czsh -pfoo/bar", main=shrinky.main)
     assert cli.failed
     assert "'ps1()' crashed: cannot unpack non-iterable NoneType object\n" in cli.logged.stderr
     assert "in cmd_ps1" in cli.logged.stderr
 
 
 def test_ps1(cli):
-    cli.run("ps1 -szsh -uroot -x0 -p/tmp/foo/bar/baz -v", main=shrinky.main)
+    cli.run("ps1 -czsh -uroot -x0 -p/tmp/foo/bar/baz -v", main=shrinky.main)
     assert cli.succeeded
     assert cli.logged.stdout.contents() == "❕ %F{yellow}/t/f/bar/baz%f%F{green} #%f \n"
 
     # User shown when not matching stated owner
-    cli.run("ps1 -szsh -uuser1 -ouser2,user3 -x1", main=shrinky.main)
+    cli.run("ps1 -czsh -uuser1 -ouser2,user3 -x1", main=shrinky.main)
     assert cli.succeeded
     assert cli.logged.stdout.contents() == "%F{blue}user1%f@%F{red}:%f \n"
 
     # This test's own venv
     venv_path = os.path.dirname(os.path.dirname(sys.executable))
     py_version = ".".join(str(x) for x in sys.version_info[:2])
-    cli.run("ps1", "-szsh", "-x1", "-v%s" % venv_path, main=shrinky.main)
+    cli.run("ps1", "-czsh", "-x1", "-v%s" % venv_path, main=shrinky.main)
     assert cli.succeeded
     output = cli.logged.stdout.contents()
     assert py_version in output
 
     # A fictional venv
-    cli.run("ps1", "-szsh", "-vfoo/bar/.venv", main=shrinky.main)
+    cli.run("ps1", "-czsh", "-vfoo/bar/.venv", main=shrinky.main)
     assert cli.succeeded
     assert cli.logged.stdout.contents() == "(%F{cyan}bar%f %F{blue}None%f) %F{green}:%f \n"
 
     # Minimal args
-    cli.run("ps1 -sbash", main=shrinky.main)
+    cli.run("ps1 -cbash", main=shrinky.main)
     assert cli.succeeded
     assert cli.logged.stdout.contents() == "\\[\x1b[32m\\]:\\[\x1b[m\\] \n"
 
@@ -114,26 +114,26 @@ def test_ps1_deep(cli, monkeypatch):
     full_path = os.path.abspath("%s/foo/bar/baz/even/more/tests" % sample)
     venv = "%s/.venv" % full_path
     runez.write("%s/bin/activate" % venv, '\nPS1="(some-very-long-venv-prompt) ${PS1:-}"')
-    cli.run('ps1 -szsh -p"%s" -v"%s/.venv"' % (full_path, full_path), main=shrinky.main)
+    cli.run('ps1 -czsh -p"%s" -v"%s/.venv"' % (full_path, full_path), main=shrinky.main)
     assert cli.succeeded
     expected = "(%F{cyan}𓈓me-very-long-venv-prompt%f %F{blue}None%f) %F{yellow}/𓈓/f/b/b/e/more/tests%f%F{green}:%f \n"
     assert cli.logged.stdout.contents() == expected
 
     # Simulate docker
     monkeypatch.setattr(shrinky.Ps1Renderer, "dockerenv", ".")
-    cli.run("ps1 -szsh", main=shrinky.main)
+    cli.run("ps1 -czsh", main=shrinky.main)
     assert cli.succeeded
     assert cli.logged.stdout.contents() == "🐳 %F{green}:%f \n"
 
     # Simulate ssh
     monkeypatch.setenv("SSH_TTY", "foo")
-    cli.run("ps1 -szsh", main=shrinky.main)
+    cli.run("ps1 -czsh", main=shrinky.main)
     assert cli.succeeded
     assert cli.logged.stdout.contents() == "%F{cyan} %f%F{green}:%f \n"
 
     # Simulate coder
     monkeypatch.setenv("CODER", "foo")
-    cli.run("ps1 -szsh", main=shrinky.main)
+    cli.run("ps1 -czsh", main=shrinky.main)
     assert cli.succeeded
     assert cli.logged.stdout.contents() == "%F{cyan} %f%F{green}:%f \n"
 

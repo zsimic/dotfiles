@@ -63,7 +63,7 @@ fi
 __ps1s=~/bin/shrinky.py
 __l_ps1h=""
 _update_custom_prompt() {
-    local ps1h=( -s$__shell -u$USER -x$? -ozsimic,zoran -p"$PWD" -v"$VIRTUAL_ENV" )
+    local ps1h=( -c$__shell -ozsimic,zoran -p"$PWD" -u$USER -v"$VIRTUAL_ENV" -x$? )
     [[ "${ps1h[@]}" == "$__l_ps1h" ]] && return;
     local v=$(/usr/bin/python3 $__ps1s ps1 "${ps1h[@]}")
     [ -z "$v" ] && return;
