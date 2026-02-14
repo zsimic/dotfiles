@@ -23,12 +23,12 @@ def test_colors():
 
 
 def test_get_path():
-    cwd = Path(".")
+    cwd = Path(".").resolve()
     assert shrinky.get_path(None) == cwd
     assert shrinky.get_path("") == cwd
-    assert shrinky.get_path(".") == cwd
-    assert shrinky.get_path('"."') == cwd
-    assert shrinky.get_path(Path(".")) == cwd
+    assert shrinky.get_path(".") == Path(".")
+    assert shrinky.get_path('"."') == Path(".")
+    assert shrinky.get_path(Path(".")) == Path(".")
 
     user_dir = Path(os.path.expanduser("~"))
     assert shrinky.get_path("~") == user_dir
@@ -144,20 +144,22 @@ def test_tmux(cli, monkeypatch):
     assert cli.succeeded
     assert cli.logged.stdout.contents() == "~\n"
 
-    project_path = runez.DEV.project_path("bin")
-    cli.run("tmux_short -p%s" % project_path, main=shrinky.main)
-    assert cli.succeeded
-    assert cli.logged.stdout.contents() == "chezmoi/bin\n"
-
     cli.run("tmux_short -p~/dev/foo/bar", main=shrinky.main)
     assert cli.succeeded
     assert cli.logged.stdout.contents() == "bar\n"
 
+    # No git folder, no branch shown in tmux status
+    cli.run("tmux_status", main=shrinky.main)
+    assert cli.succeeded
+    assert "fg=yellow" not in cli.logged.stdout.contents()
+
+    # Simulate git detached head
     runez.write(".git/HEAD", "g123", logger=None)
     cli.run("tmux_status", main=shrinky.main)
     assert cli.succeeded
-    assert "#[fg=yellow]g123#[default]📌" in cli.logged.stdout
+    assert cli.logged.stdout.contents().startswith("#[fg=yellow]g123#[default]📌┆")
 
+    # Simulate invalid .git folder
     runez.delete(".git/HEAD", logger=None)
     runez.touch(".git/HEAD/foo", logger=None)
     cli.run("tmux_status", main=shrinky.main)
@@ -166,12 +168,23 @@ def test_tmux(cli, monkeypatch):
     assert "|" not in logged
     assert logged.endswith("#[default]🔌")
 
+
+def test_tmux_here(cli):
+    # Exercise real case (this repo)
+    project_path = runez.DEV.project_path("bin")
+    cli.run("tmux_short -p%s" % project_path, main=shrinky.main)
+    assert cli.succeeded
+    assert cli.logged.stdout.contents() == "chezmoi/bin\n"
+
     cli.run("tmux_status -p%s" % project_path, main=shrinky.main)
     assert cli.succeeded
     assert "#[default]🔌" in cli.logged.stdout
 
 
 def test_uptime():
+    x = shrinky.rendered_uptime("up")
+    assert x == "#[fg=dim]-no-up?-#[default]🔌"
+
     x = shrinky.rendered_uptime("14:12 up 4 days, 7:06, 2 users, load averages: 0.23 0.19 0.20")
     assert x == "#[fg=dim]4d 7h#[default]🔌"
 

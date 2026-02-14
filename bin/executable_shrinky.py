@@ -44,9 +44,10 @@ def run_program(*args: str):
     import subprocess
 
     Logger.debug("Running: %s", args)
-    p = subprocess.run(args, stdout=subprocess.PIPE, shell=False)  # noqa: S603
-    if p.returncode == 0 and p.stdout:
-        return p.stdout.decode("utf-8").strip()
+    p = subprocess.run(args, stdout=subprocess.PIPE, shell=False, text=True)  # noqa: S603
+    output = p.stdout and p.stdout.strip()
+    Logger.debug("  stdout: %s", output)
+    return output
 
 
 def get_path(path):
@@ -59,32 +60,34 @@ def get_path(path):
     if path == "~":
         return Path(os.path.expanduser("~"))
 
-    return Path(path or ".")
+    return Path(path or os.getcwd())
 
 
 def get_py_venv_version(venv_path):
     """Fast Python Version detection without subprocess calls, looking for lib/pythonM.m"""
     lib_path = venv_path / "lib"
-    if lib_path.exists():
-        py_dirs = [d.name for d in lib_path.iterdir() if d.name.startswith("python")]
-        if py_dirs:
-            return py_dirs[0].replace("python", "")
+    if not lib_path.exists():
+        return None
+
+    py_dirs = [d.name for d in lib_path.iterdir() if d.name.startswith("python")]
+    return (py_dirs and py_dirs[0].replace("python", "")) or None
 
 
 def git_branch_name(folder):
     git_folder = git_root(folder)
-    if git_folder:
-        head_file = git_folder / "HEAD"
-        if head_file.exists():
-            try:
-                content = head_file.read_text().strip()
-                if content.startswith("ref: "):
-                    return content.rpartition("/")[2]  # "ref: refs/heads/<branch-name>"
+    head_file = git_folder and git_folder / "HEAD"
+    if not head_file or not head_file.exists():
+        return None
 
-                return content[:5]  # Detached HEAD (SHA)
+    try:
+        content = head_file.read_text().strip()
+        if content.startswith("ref: "):
+            return content.rpartition("/")[2]  # "ref: refs/heads/<branch-name>"
 
-            except Exception:
-                return None
+        return content[:5]  # Detached HEAD (SHA)
+
+    except OSError:
+        return None
 
 
 def git_root(folder: Path):
@@ -96,8 +99,7 @@ def git_root(folder: Path):
 
 def scm_root(folder: Path):
     folder = git_root(folder)
-    if folder:
-        return folder.parent
+    return folder and folder.parent
 
 
 def capped_text(text: str, max_size: int):
@@ -164,23 +166,10 @@ class ColorSet:
         return cls(name, bits)
 
     @classmethod
-    def plain_color_set(cls):
-        bits = {}
-        for color in cls.available:
-            bits[color] = ColorBit(color, "", "")
-
-        return cls("plain", bits)
-
-    @classmethod
-    def color_set_by_name(cls, color_set_name) -> "ColorSet":
+    def color_set_by_name(cls, color_set_name):
         if color_set_name == "zsh":
             codes = {"bold": ("%B", "%b"), "dim": ("%{\x1b[2m%}", "%{\x1b[22m%}")}
-            bits = {}
-            for color in cls.available:
-                color_codes = codes.get(color, ("%%F{%s}" % color, "%f"))
-                cb = ColorBit(color, *color_codes)
-                bits[cb.name] = cb
-
+            bits = {k: ColorBit(k, *codes.get(k, ("%%F{%s}" % k, "%f"))) for k in cls.available}
             return cls("zsh-ps1", bits)
 
         if color_set_name == "tty":
@@ -190,7 +179,7 @@ class ColorSet:
             return cls.tty_color_set(name="bash-ps1", wrapper_fmt="\\[%s\\]")
 
         if not color_set_name or color_set_name == "plain":
-            return cls.plain_color_set()
+            return cls("plain", {k: ColorBit(k, "", "") for k in cls.available})
 
         Logger.fail("No color set for '%s'" % color_set_name)
 
@@ -318,9 +307,9 @@ class Ps1Renderer(CommandRenderer):
 class TmuxBranchSpec:
     def __init__(self, spec):
         self.spec = spec
-        _, _, branches = spec.partition(":")
-        self.icon = spec[0] if spec else None
-        self.color = spec[1:] if spec else None
+        color, _, branches = spec.partition(":")
+        self.icon = color and color[0]
+        self.color = color and color[1:]
         self.branches = branches.split(",") if branches else None
 
 
@@ -344,13 +333,11 @@ class TmuxBranchSpecs:
 
 
 def rendered_uptime(stdout):
-    if stdout and "up" in stdout:
-        i = stdout.index("up")
-        stdout = stdout[i + 2 :].strip()
-        if stdout:
-            up = list(uptime_bits(stdout))[:2]
-            if up:
-                return "%s🔌" % tmux_colored(" ".join(up), "dim", 10)  # 🕤⏳🪫🔋🔌
+    i = stdout.index("up")
+    stdout = stdout[i + 2 :].strip()
+    up = list(uptime_bits(stdout))
+    up = " ".join(up[:2])
+    return "%s🔌" % tmux_colored(up or "-no-up?-", "dim", 10)  # 🕤⏳🪫🔋🔌
 
 
 def tmux_colored(text, fg: str, max_size: int):
@@ -386,13 +373,13 @@ class TmuxRenderer(CommandRenderer):
     flags = {"b": "branch_spec", "p": "path"}
 
     def rendered_branch(self, folder):
-        if folder:
-            branch_name = git_branch_name(folder)
-            if branch_name:
-                specs = TmuxBranchSpecs(self.branch_spec)
-                spec = specs.get_spec(branch_name)
-                if spec:
-                    return "%s%s" % (tmux_colored(branch_name, spec.color, 20), spec.icon)
+        branch_name = git_branch_name(folder)
+        if not branch_name:
+            return None
+
+        specs = TmuxBranchSpecs(self.branch_spec)
+        spec = specs.get_spec(branch_name)
+        return spec and "%s%s" % (tmux_colored(branch_name, spec.color, 20), spec.icon)
 
     def cmd_tmux_status(self):
         """
@@ -401,8 +388,13 @@ class TmuxRenderer(CommandRenderer):
         Example:
           set -g status-right '#(/usr/bin/python3 shrinky.py tmux_status -p"#{pane_current_path}")'
         """
-        yield self.rendered_branch(get_path(self.path))
-        yield rendered_uptime(run_program("uptime"))
+        folder = get_path(self.path)
+        if folder:
+            yield self.rendered_branch(folder)
+
+        uptime = run_program("uptime")
+        if uptime and "up" in uptime:
+            yield rendered_uptime(uptime)
 
     def cmd_tmux_short(self):
         """
