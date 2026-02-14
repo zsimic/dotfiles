@@ -307,7 +307,7 @@ class Ps1Renderer(CommandRenderer):
 
         if self.exit_code:
             color = colors.green if self.exit_code == "0" else colors.red
-            char = color(" #" if self.user == "root" else ":")
+            char = color("#" if self.user == "root" else "$")
             yield "%s " % char
 
 
