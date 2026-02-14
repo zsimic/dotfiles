@@ -131,6 +131,7 @@ class ColorBit:
 
 class ColorSet:
     available = ("bold", "blue", "green", "yellow", "red", "cyan")  # magenta
+    __ttyc = None  # type: ColorSet
 
     def __init__(self, name, bits):
         self.name = name
@@ -143,37 +144,41 @@ class ColorSet:
         self.cyan = self.bits["cyan"]
 
     @classmethod
-    def tty_color_set(cls, name="tty-colors"):
+    def ttyc(cls):
+        if cls.__ttyc is None:
+            cls.__ttyc = cls.tty_color_set()
+
+        return cls.__ttyc
+
+    @classmethod
+    def tty_color_set(cls, name="tty-colors", ps1=False):
         codes = {"bold": 1, "blue": 34, "green": 32, "yellow": 33, "red": 31, "cyan": 36}
         code_format = "\x1b[%sm"
         clear = code_format % ""
         wrapper_fmt = None
-        if "ps1" in name:
+        if ps1:
             wrapper_fmt = "\\[%s\\]"
 
         codes = {k: ColorBit(k, code_format % v, clear, wrapper_fmt=wrapper_fmt) for k, v in codes.items()}
         return cls(name, codes)
 
     @classmethod
-    def ps1_for_shell(cls, shell) -> "ColorSet":
-        func = getattr(cls, "%s_ps1_color_set" % shell, None)
-        if func:
-            return func()
+    def color_set_for_shell(cls, shell) -> "ColorSet":
+        if shell == "zsh":
+            bits = {}
+            for name in cls.available:
+                cb = ColorBit(name, "%B", "%b") if name == "bold" else ColorBit(name, "%%F{%s}" % name, "%f")
+                bits[cb.name] = cb
+
+            return cls("zsh-ps1", bits)
+
+        if shell == "tty":
+            return cls.ttyc()
+
+        if shell == "bash":
+            return cls.tty_color_set(name="bash-ps1", ps1=True)
 
         Logger.fail("Shell '%s' not supported" % shell)
-
-    @classmethod
-    def bash_ps1_color_set(cls):
-        return cls.tty_color_set(name="bash-ps1-colors")
-
-    @classmethod
-    def zsh_ps1_color_set(cls):
-        bits = {}
-        for name in cls.available:
-            cb = ColorBit(name, "%B", "%b") if name == "bold" else ColorBit(name, "%%F{%s}" % name, "%f")
-            bits[cb.name] = cb
-
-        return cls("zsh-ps1-colors", bits)
 
     def __repr__(self):
         return self.name
@@ -239,7 +244,7 @@ class Ps1Renderer(CommandRenderer):
         """
         PS1 minimalistic prompt
         """
-        colors = ColorSet.ps1_for_shell(self.shell)
+        colors = ColorSet.color_set_for_shell(self.shell)
         if self.user == "root":
             yield "❕ "
 
@@ -463,8 +468,6 @@ class CommandDef:
 
 
 class CommandParser:
-    __ttyc = None  # type: ColorSet
-
     def __init__(self):
         self.available_commands = {}
 
@@ -474,13 +477,6 @@ class CommandParser:
                 name = k[4:]
                 cmd_def = CommandDef(cmd, name, delimiter)
                 self.available_commands[name] = cmd_def
-
-    @classmethod
-    def ttyc(cls):
-        if cls.__ttyc is None:
-            cls.__ttyc = ColorSet.tty_color_set()
-
-        return cls.__ttyc
 
     def get_command(self, name, fatal=True):
         cmd = self.available_commands.get(name)
@@ -497,7 +493,7 @@ class CommandParser:
         print(__doc__, file=sys.stderr)
         print("\nCommands:", file=sys.stderr)
         for name, cmd in sorted(self.available_commands.items()):
-            print("  %s%s" % (self.ttyc().bold("%-18s" % name), cmd.summary()), file=sys.stderr)
+            print("  %s%s" % (ColorSet.ttyc().bold("%-18s" % name), cmd.summary()), file=sys.stderr)
 
         if exit_code is not None:
             sys.exit(exit_code)

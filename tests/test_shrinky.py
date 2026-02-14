@@ -14,9 +14,12 @@ def test_clean_path(cli):
 
 
 def test_colors():
-    x = shrinky.ColorSet.zsh_ps1_color_set()
-    assert str(x) == "zsh-ps1-colors"
+    x = shrinky.ColorSet.color_set_for_shell("zsh")
+    assert str(x) == "zsh-ps1"
     assert str(x.bold) == "%Bbold%b"
+
+    x = shrinky.ColorSet.color_set_for_shell("tty")
+    assert str(x) == "tty-colors"
 
 
 def test_help(cli):
