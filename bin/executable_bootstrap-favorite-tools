@@ -13,4 +13,4 @@ if ! command -v brew > /dev/null; then
     hash -r
 fi
 
-brew bundle upgrade --file "$SCRIPT_DIR/Brewfile"
+HOMEBREW_NO_ENV_HINTS=1 brew bundle upgrade --file "$SCRIPT_DIR/Brewfile"
