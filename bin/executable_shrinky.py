@@ -41,7 +41,7 @@ class Logger:
 
 
 def run_program(*args: str):
-    import subprocess  # nosec B404
+    import subprocess
 
     Logger.debug("Running: %s", args)
     p = subprocess.run(args, stdout=subprocess.PIPE, shell=False)  # noqa: S603
@@ -230,13 +230,12 @@ class PathCleaner(CommandRenderer):
 class Ps1Renderer(CommandRenderer):
     dockerenv = "/.dockerenv"
     example = "ps1 -szsh -ozsimic,zoran -p.. -ufoo"
-    flags = {"s": "shell", "o": "owner", "u": "user", "x": "exit_code", "p": "pwd", "v": "venv", "w": "window"}
+    flags = {"s": "shell", "o": "owner", "u": "user", "x": "exit_code", "p": "pwd", "v": "venv"}
 
     exit_code = "0"
     owner = ""
-    pwd = ""  # nosec B105
+    pwd = ""
     shell = ""
-    window = ""
     user = ""
     venv = ""
 
@@ -329,8 +328,7 @@ class TmuxRenderer(CommandRenderer):
     # Other icons: 🔀🧐🚨🚧📌🔧📄💡🍻🏷️💫🩹🎨
     branch_spec = "📌yellow+✨blue:master,main+🧐green:release,publish"
     path = ""
-    window = ""
-    flags = {"b": "branch_spec", "p": "path", "w": "window"}
+    flags = {"b": "branch_spec", "p": "path"}
 
     @staticmethod
     def tmux_colored(text, fg: str, max_size: int):
@@ -398,7 +396,7 @@ class TmuxRenderer(CommandRenderer):
 
     def cmd_tmux_short(self):
         """
-        Short name to show for a given window
+        Short name to show for a given tmux window
 
         Example:
           setw -g automatic-rename-format '#(/usr/bin/python3 shrinky.py tmux_short -b📌yellow+✨blue,master,main -p"#{pane_current_path}")'
