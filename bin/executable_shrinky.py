@@ -174,7 +174,7 @@ class ColorSet:
     @classmethod
     def color_set_by_name(cls, color_set_name) -> "ColorSet":
         if color_set_name == "zsh":
-            codes = {"bold": ("%B", "%b"), "dim": ("%2m%", "%22m%")}
+            codes = {"bold": ("%B", "%b"), "dim": ("%{\x1b[2m%}", "%{\x1b[22m%}")}
             bits = {}
             for color in cls.available:
                 color_codes = codes.get(color, ("%%F{%s}" % color, "%f"))

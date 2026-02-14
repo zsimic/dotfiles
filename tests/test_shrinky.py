@@ -82,7 +82,7 @@ def test_invalid(cli, monkeypatch):
 def test_ps1(cli):
     cli.run("ps1 -czsh -uroot -x0 -p/tmp/foo/bar/baz -v", main=shrinky.main)
     assert cli.succeeded
-    assert cli.logged.stdout.contents() == "❕ %F{yellow}%2m%/t/f/bar/%22m%baz%f%F{green} #%f \n"
+    assert cli.logged.stdout.contents() == "❕ %F{yellow}%{\x1b[2m%}/t/f/bar/%{\x1b[22m%}baz%f%F{green} #%f \n"
 
     # User shown when not matching stated owner
     cli.run("ps1 -czsh -uuser1 -ouser2,user3 -x1", main=shrinky.main)
@@ -114,9 +114,9 @@ def test_ps1_deep(cli, monkeypatch):
     full_path = os.path.abspath("%s/foo/bar/baz/even/more/tests" % sample)
     venv = "%s/.venv" % full_path
     runez.write("%s/bin/activate" % venv, '\nPS1="(some-very-long-venv-prompt) ${PS1:-}"')
-    cli.run('ps1 -czsh -p"%s" -v"%s/.venv"' % (full_path, full_path), main=shrinky.main)
+    cli.run('ps1 -cplain -p"%s" -v"%s/.venv"' % (full_path, full_path), main=shrinky.main)
     assert cli.succeeded
-    expected = "(%F{cyan}𓈓me-very-long-venv-prompt%f %F{blue}None%f) %F{yellow}%2m%/𓈓/f/b/b/e/more/%22m%tests%f%F{green}:%f \n"
+    expected = "(𓈓me-very-long-venv-prompt None) /𓈓/f/b/b/e/more/tests: \n"
     assert cli.logged.stdout.contents() == expected
 
     # Simulate docker
