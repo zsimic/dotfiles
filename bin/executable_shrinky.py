@@ -324,19 +324,47 @@ class TmuxBranchSpecs:
         return self.by_branch.get(branch, self.default)
 
 
+def rendered_uptime(stdout):
+    if stdout and "up" in stdout:
+        i = stdout.index("up")
+        stdout = stdout[i + 2 :].strip()
+        if stdout:
+            up = list(uptime_bits(stdout))[:2]
+            if up:
+                return "%s🔌" % tmux_colored(" ".join(up), "dim", 10)  # 🕤⏳🪫🔋🔌
+
+
+def tmux_colored(text, fg: str, max_size: int):
+    text = capped_text(text, max_size)
+    if fg:
+        text = "#[fg=%s]%s#[default]" % (fg, text)
+
+    return text
+
+
+def uptime_bits(text):
+    for bit in text.split(","):
+        bit = bit.strip()
+        if bit:
+            if "user" in bit or "session" in bit or "load" in bit:
+                return
+
+            if ":" in bit:
+                h, _, m = bit.partition(":")
+                yield "%sh" % int(h)
+                yield "%sm" % int(m)
+                continue
+
+            n, _, unit = bit.partition(" ")
+            if n and unit:
+                yield "%s%s" % (int(n), unit[0])
+
+
 class TmuxRenderer(CommandRenderer):
     # Other icons: 🔀🧐🚨🚧📌🔧📄💡🍻🏷️💫🩹🎨
     branch_spec = "📌yellow+✨blue:master,main+🧐green:release,publish"
     path = ""
     flags = {"b": "branch_spec", "p": "path"}
-
-    @staticmethod
-    def tmux_colored(text, fg: str, max_size: int):
-        text = capped_text(text, max_size)
-        if fg:
-            text = "#[fg=%s]%s#[default]" % (fg, text)
-
-        return text
 
     def rendered_branch(self, folder):
         if folder:
@@ -345,43 +373,7 @@ class TmuxRenderer(CommandRenderer):
                 specs = TmuxBranchSpecs(self.branch_spec)
                 spec = specs.get_spec(branch_name)
                 if spec:
-                    return "%s%s" % (self.tmux_colored(branch_name, spec.color, 20), spec.icon)
-
-    @staticmethod
-    def uptime_bits(text):
-        for bit in text.split(","):
-            bit = bit.strip()
-            if bit:
-                if "user" in bit or "session" in bit or "load" in bit:
-                    return
-
-                if ":" in bit:
-                    h, _, m = bit.partition(":")
-                    yield "%sh" % h
-                    yield "%sm" % m
-                    continue
-
-                n, _, unit = bit.partition(" ")
-                unit = unit.strip()
-                if n and unit:
-                    bit = "%s%s" % (n, unit[0])
-
-                yield bit
-
-    def rendered_uptime(self):
-        """
-        12:41  up 1 day, 46 mins, 1 user, load averages: 4.79 3.38 2.84
-        4:12pm  up 23 days,  2:03, 3 sessions , load average: 0.00, 0.00, 0.00
-        4:13pm  up  7:00, 1 session , load average: 0.00, 0.00, 0.00
-        """
-        stdout = run_program("uptime")
-        if stdout and "up" in stdout:
-            i = stdout.index("up")
-            stdout = stdout[i + 2 :].strip()
-            if stdout:
-                up = list(self.uptime_bits(stdout))[:2]
-                if up:
-                    return "%s🔌" % self.tmux_colored(" ".join(up), "dim", 10)  # 🕤⏳🪫🔋🔌
+                    return "%s%s" % (tmux_colored(branch_name, spec.color, 20), spec.icon)
 
     def cmd_tmux_status(self):
         """
@@ -390,9 +382,8 @@ class TmuxRenderer(CommandRenderer):
         Example:
           set -g status-right '#(/usr/bin/python3 shrinky.py tmux_status -p"#{pane_current_path}")'
         """
-        folder = get_path(self.path)
-        yield self.rendered_branch(folder)
-        yield self.rendered_uptime()
+        yield self.rendered_branch(get_path(self.path))
+        yield rendered_uptime(run_program("uptime"))
 
     def cmd_tmux_short(self):
         """
