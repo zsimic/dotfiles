@@ -44,10 +44,17 @@ def run_program(*args: str):
     import subprocess
 
     Logger.debug("Running: %s", args)
-    p = subprocess.run(args, stdout=subprocess.PIPE, shell=False, text=True)  # noqa: S603
-    output = p.stdout and p.stdout.strip()
-    Logger.debug("  stdout: %s", output)
-    return output
+    output = None
+    try:
+        p = subprocess.run(args, capture_output=True, shell=False, text=True)  # noqa: S603
+        output = p.stdout and p.stdout.strip()
+        Logger.debug("  stdout: %s", output)
+
+    except Exception:
+        return None
+
+    else:
+        return output
 
 
 def get_path(path):
@@ -337,7 +344,7 @@ def rendered_uptime(stdout):
     stdout = stdout[i + 2 :].strip()
     up = list(uptime_bits(stdout))
     up = " ".join(up[:2])
-    return "%s🔌" % tmux_colored(up or "-no-up?-", "dim", 10)  # 🕤⏳🪫🔋🔌
+    return "%s🔌" % tmux_colored(up or "-uptime?-", "default,dim", 10)  # 🕤⏳🪫🔋🔌
 
 
 def tmux_colored(text, fg: str, max_size: int):

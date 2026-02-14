@@ -46,6 +46,8 @@ def test_help(cli):
 
 
 def test_invalid(cli, monkeypatch):
+    assert shrinky.run_program("~does-not-exist") is None
+
     cli.run("", main=shrinky.main)
     assert cli.failed
     assert "No command provided" in cli.logged.stderr
@@ -183,13 +185,13 @@ def test_tmux_here(cli):
 
 def test_uptime():
     x = shrinky.rendered_uptime("up")
-    assert x == "#[fg=dim]-no-up?-#[default]🔌"
+    assert x == "#[fg=default,dim]-uptime?-#[default]🔌"
 
     x = shrinky.rendered_uptime("14:12 up 4 days, 7:06, 2 users, load averages: 0.23 0.19 0.20")
-    assert x == "#[fg=dim]4d 7h#[default]🔌"
+    assert x == "#[fg=default,dim]4d 7h#[default]🔌"
 
     x = shrinky.rendered_uptime("4:12pm  up 23 days,  2:03, 3 sessions , load average: 0.00, 0.00, 0.00")
-    assert x == "#[fg=dim]23d 2h#[default]🔌"
+    assert x == "#[fg=default,dim]23d 2h#[default]🔌"
 
     x = shrinky.rendered_uptime("4:13pm  up  7:00, 1 session , load average: 0.00, 0.00, 0.00")
-    assert x == "#[fg=dim]7h 0m#[default]🔌"
+    assert x == "#[fg=default,dim]7h 0m#[default]🔌"
