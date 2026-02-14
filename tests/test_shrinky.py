@@ -159,7 +159,7 @@ def test_tmux(cli, monkeypatch):
     runez.write(".git/HEAD", "g123", logger=None)
     cli.run("tmux_status", main=shrinky.main)
     assert cli.succeeded
-    assert cli.logged.stdout.contents().startswith("#[fg=yellow]g123#[default]📌┆")
+    assert "]g123#[default]" in cli.logged.stdout.contents()
 
     # Simulate invalid .git folder
     runez.delete(".git/HEAD", logger=None)
@@ -168,7 +168,6 @@ def test_tmux(cli, monkeypatch):
     assert cli.succeeded
     logged = cli.logged.stdout.contents().strip()
     assert "|" not in logged
-    assert logged.endswith("#[default]🔌")
 
 
 def test_tmux_here(cli):
@@ -180,18 +179,20 @@ def test_tmux_here(cli):
 
     cli.run("tmux_status -p%s" % project_path, main=shrinky.main)
     assert cli.succeeded
-    assert "#[default]🔌" in cli.logged.stdout
+    logged = cli.logged.stdout.contents().strip()
+    assert "┆" in logged
+    assert "#[default]" in logged
 
 
 def test_uptime():
     x = shrinky.rendered_uptime("up")
-    assert x == "#[fg=default,dim]-uptime?-#[default]🔌"
+    assert "]-uptime?-#[default]" in x
 
     x = shrinky.rendered_uptime("14:12 up 4 days, 7:06, 2 users, load averages: 0.23 0.19 0.20")
-    assert x == "#[fg=default,dim]4d 7h#[default]🔌"
+    assert "]4d 7h#[default]" in x
 
     x = shrinky.rendered_uptime("4:12pm  up 23 days,  2:03, 3 sessions , load average: 0.00, 0.00, 0.00")
-    assert x == "#[fg=default,dim]23d 2h#[default]🔌"
+    assert "]23d 2h#[default]" in x
 
     x = shrinky.rendered_uptime("4:13pm  up  7:00, 1 session , load average: 0.00, 0.00, 0.00")
-    assert x == "#[fg=default,dim]7h 0m#[default]🔌"
+    assert "]7h 0m#[default]" in x

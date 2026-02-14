@@ -375,7 +375,7 @@ def uptime_bits(text):
 
 class TmuxRenderer(CommandRenderer):
     # Other icons: 🔀🧐🚨🚧📌🔧📄💡🍻🏷️💫🩹🎨
-    branch_spec = "📌yellow+✨blue:master,main+🧐green:release,publish"
+    branch_spec = "🔧magenta+✨cyan:main+🚨green:release,publish"
     path = ""
     flags = {"b": "branch_spec", "p": "path"}
 
@@ -386,7 +386,7 @@ class TmuxRenderer(CommandRenderer):
 
         specs = TmuxBranchSpecs(self.branch_spec)
         spec = specs.get_spec(branch_name)
-        return spec and "%s%s" % (tmux_colored(branch_name, spec.color, 20), spec.icon)
+        return spec and "%s%s" % (tmux_colored(branch_name, spec.color, 24), spec.icon)
 
     def cmd_tmux_status(self):
         """
