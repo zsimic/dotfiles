@@ -163,7 +163,7 @@ class ColorSet:
         return cls(name, codes)
 
     @classmethod
-    def color_set_for_shell(cls, shell) -> "ColorSet":
+    def color_set_by_name(cls, shell) -> "ColorSet":
         if shell == "zsh":
             bits = {}
             for name in cls.available:
@@ -243,7 +243,7 @@ class Ps1Renderer(CommandRenderer):
         """
         PS1 minimalistic prompt
         """
-        colors = ColorSet.color_set_for_shell(self.shell)
+        colors = ColorSet.color_set_by_name(self.shell)
         if self.user == "root":
             yield "❕ "
 

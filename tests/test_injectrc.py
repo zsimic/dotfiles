@@ -3,21 +3,6 @@ import os
 import executable_injectrc as injectrc
 import runez
 
-
-def test_dryrun(cli):
-    # Snippet given as positional arg
-    cli.run("-n", "my-bash.rc", "some\ncontent", main=injectrc.main)
-    assert cli.succeeded
-    assert "[DRYRUN] Would update my-bash.rc, contents:" in cli.logged.stderr
-    assert "## -- Added by injectrc.py -- DO NOT MODIFY THIS SECTION" in cli.logged.stderr
-    assert "some\ncontent\n## -- end of addition" in cli.logged.stderr
-
-    # Multi-line comment is not accepted
-    cli.run("-n", "my-bash.rc", "some\ncontent", "-c", "multiple\n\nlines", main=injectrc.main)
-    assert cli.failed
-    assert "Provide maximum one line of comment, got 3 lines:\nmultiple\n\nlines" in cli.logged.stderr.contents()
-
-
 EXPECTED_REGEN = """
 Updating samples/bashrc
 Contents:
@@ -53,6 +38,20 @@ fi
 
 def last_n_lines(n, text):
     return text.splitlines()[-n:]
+
+
+def test_dryrun(cli):
+    # Snippet given as positional arg
+    cli.run("-n", "my-bash.rc", "some\ncontent", main=injectrc.main)
+    assert cli.succeeded
+    assert "[DRYRUN] Would update my-bash.rc, contents:" in cli.logged.stderr
+    assert "## -- Added by injectrc.py -- DO NOT MODIFY THIS SECTION" in cli.logged.stderr
+    assert "some\ncontent\n## -- end of addition" in cli.logged.stderr
+
+    # Multi-line comment is not accepted
+    cli.run("-n", "my-bash.rc", "some\ncontent", "-c", "multiple\n\nlines", main=injectrc.main)
+    assert cli.failed
+    assert "Provide maximum one line of comment, got 3 lines:\nmultiple\n\nlines" in cli.logged.stderr.contents()
 
 
 def test_samples(cli):

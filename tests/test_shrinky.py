@@ -14,12 +14,25 @@ def test_clean_path(cli):
 
 
 def test_colors():
-    x = shrinky.ColorSet.color_set_for_shell("zsh")
+    x = shrinky.ColorSet.color_set_by_name("zsh")
     assert str(x) == "zsh-ps1"
     assert str(x.bold) == "%Bbold%b"
 
-    x = shrinky.ColorSet.color_set_for_shell("tty")
+    x = shrinky.ColorSet.color_set_by_name("tty")
     assert str(x) == "tty-colors"
+
+
+def test_get_path():
+    cwd = Path(".")
+    assert shrinky.get_path(None) == cwd
+    assert shrinky.get_path("") == cwd
+    assert shrinky.get_path(".") == cwd
+    assert shrinky.get_path('"."') == cwd
+    assert shrinky.get_path(Path(".")) == cwd
+
+    user_dir = Path(os.path.expanduser("~"))
+    assert shrinky.get_path("~") == user_dir
+    assert shrinky.get_path('"~"') == user_dir
 
 
 def test_help(cli):
@@ -66,49 +79,6 @@ def test_invalid(cli, monkeypatch):
     assert "in cmd_ps1" in cli.logged.stderr
 
 
-def test_deep_ps1(cli, monkeypatch):
-    sample = "sample/some/very/deep/folder/with/way/too/many/characters/tests"
-    runez.touch("%s/.git" % sample)
-    full_path = os.path.abspath("%s/foo/bar/baz/even/more/tests" % sample)
-    venv = "%s/.venv" % full_path
-    runez.write("%s/bin/activate" % venv, '\nPS1="(some-very-long-venv-prompt) ${PS1:-}"')
-    cli.run('ps1 -szsh -p"%s" -v"%s/.venv"' % (full_path, full_path), main=shrinky.main)
-    assert cli.succeeded
-    expected = "(%F{cyan}𓈓me-very-long-venv-prompt%f %F{blue}None%f) %F{yellow}/𓈓/f/b/b/e/more/tests%f%F{green}:%f \n"
-    assert cli.logged.stdout.contents() == expected
-
-    # Simulate docker
-    monkeypatch.setattr(shrinky.Ps1Renderer, "dockerenv", ".")
-    cli.run("ps1 -szsh", main=shrinky.main)
-    assert cli.succeeded
-    assert cli.logged.stdout.contents() == "🐳 %F{green}:%f \n"
-
-    # Simulate ssh
-    monkeypatch.setenv("SSH_TTY", "foo")
-    cli.run("ps1 -szsh", main=shrinky.main)
-    assert cli.succeeded
-    assert cli.logged.stdout.contents() == "%F{cyan} %f%F{green}:%f \n"
-
-    # Simulate coder
-    monkeypatch.setenv("CODER", "foo")
-    cli.run("ps1 -szsh", main=shrinky.main)
-    assert cli.succeeded
-    assert cli.logged.stdout.contents() == "%F{cyan} %f%F{green}:%f \n"
-
-
-def test_get_path():
-    cwd = Path(".")
-    assert shrinky.get_path(None) == cwd
-    assert shrinky.get_path("") == cwd
-    assert shrinky.get_path(".") == cwd
-    assert shrinky.get_path('"."') == cwd
-    assert shrinky.get_path(Path(".")) == cwd
-
-    user_dir = Path(os.path.expanduser("~"))
-    assert shrinky.get_path("~") == user_dir
-    assert shrinky.get_path('"~"') == user_dir
-
-
 def test_ps1(cli):
     cli.run("ps1 -szsh -uroot -x0 -p/tmp/foo/bar/baz -v", main=shrinky.main)
     assert cli.succeeded
@@ -136,6 +106,36 @@ def test_ps1(cli):
     cli.run("ps1 -sbash", main=shrinky.main)
     assert cli.succeeded
     assert cli.logged.stdout.contents() == "\\[\x1b[32m\\]:\\[\x1b[m\\] \n"
+
+
+def test_ps1_deep(cli, monkeypatch):
+    sample = "sample/some/very/deep/folder/with/way/too/many/characters/tests"
+    runez.touch("%s/.git" % sample)
+    full_path = os.path.abspath("%s/foo/bar/baz/even/more/tests" % sample)
+    venv = "%s/.venv" % full_path
+    runez.write("%s/bin/activate" % venv, '\nPS1="(some-very-long-venv-prompt) ${PS1:-}"')
+    cli.run('ps1 -szsh -p"%s" -v"%s/.venv"' % (full_path, full_path), main=shrinky.main)
+    assert cli.succeeded
+    expected = "(%F{cyan}𓈓me-very-long-venv-prompt%f %F{blue}None%f) %F{yellow}/𓈓/f/b/b/e/more/tests%f%F{green}:%f \n"
+    assert cli.logged.stdout.contents() == expected
+
+    # Simulate docker
+    monkeypatch.setattr(shrinky.Ps1Renderer, "dockerenv", ".")
+    cli.run("ps1 -szsh", main=shrinky.main)
+    assert cli.succeeded
+    assert cli.logged.stdout.contents() == "🐳 %F{green}:%f \n"
+
+    # Simulate ssh
+    monkeypatch.setenv("SSH_TTY", "foo")
+    cli.run("ps1 -szsh", main=shrinky.main)
+    assert cli.succeeded
+    assert cli.logged.stdout.contents() == "%F{cyan} %f%F{green}:%f \n"
+
+    # Simulate coder
+    monkeypatch.setenv("CODER", "foo")
+    cli.run("ps1 -szsh", main=shrinky.main)
+    assert cli.succeeded
+    assert cli.logged.stdout.contents() == "%F{cyan} %f%F{green}:%f \n"
 
 
 def test_tmux(cli, monkeypatch):
