@@ -130,13 +130,14 @@ class ColorBit:
 
 
 class ColorSet:
-    available = ("bold", "blue", "green", "yellow", "red", "cyan")  # magenta
+    available = ("bold", "dim", "blue", "green", "yellow", "red", "cyan")  # magenta
     __ttyc = None  # type: ColorSet
 
     def __init__(self, name, bits):
         self.name = name
         self.bits = bits  # type: dict[str, ColorBit]
         self.bold = self.bits["bold"]
+        self.dim = self.bits["dim"]
         self.blue = self.bits["blue"]
         self.green = self.bits["green"]
         self.yellow = self.bits["yellow"]
@@ -151,16 +152,16 @@ class ColorSet:
         return cls.__ttyc
 
     @classmethod
-    def tty_color_set(cls, name="tty-colors", ps1=False):
-        codes = {"bold": 1, "blue": 34, "green": 32, "yellow": 33, "red": 31, "cyan": 36}
+    def tty_color_set(cls, name="tty-colors", wrapper_fmt=None):
+        codes = {"bold": 1, "dim": 2, "blue": 34, "green": 32, "yellow": 33, "red": 31, "cyan": 36}
         code_format = "\x1b[%sm"
-        clear = code_format % ""
-        wrapper_fmt = None
-        if ps1:
-            wrapper_fmt = "\\[%s\\]"
+        bits = {}
+        for color_name in cls.available:
+            code = codes[color_name]
+            clear = code_format % (39 if code > 9 else 22)
+            bits[color_name] = ColorBit(color_name, code_format % code, clear, wrapper_fmt=wrapper_fmt)
 
-        codes = {k: ColorBit(k, code_format % v, clear, wrapper_fmt=wrapper_fmt) for k, v in codes.items()}
-        return cls(name, codes)
+        return cls(name, bits)
 
     @classmethod
     def plain_color_set(cls):
@@ -173,9 +174,11 @@ class ColorSet:
     @classmethod
     def color_set_by_name(cls, color_set_name) -> "ColorSet":
         if color_set_name == "zsh":
+            codes = {"bold": ("%B", "%b"), "dim": ("%2m%", "%22m%")}
             bits = {}
             for color in cls.available:
-                cb = ColorBit(color, "%B", "%b") if color == "bold" else ColorBit(color, "%%F{%s}" % color, "%f")
+                color_codes = codes.get(color, ("%%F{%s}" % color, "%f"))
+                cb = ColorBit(color, *color_codes)
                 bits[cb.name] = cb
 
             return cls("zsh-ps1", bits)
@@ -184,7 +187,7 @@ class ColorSet:
             return cls.ttyc()
 
         if color_set_name == "bash":
-            return cls.tty_color_set(name="bash-ps1", ps1=True)
+            return cls.tty_color_set(name="bash-ps1", wrapper_fmt="\\[%s\\]")
 
         if not color_set_name or color_set_name == "plain":
             return cls.plain_color_set()
@@ -299,7 +302,12 @@ class Ps1Renderer(CommandRenderer):
         if self.pwd:
             folder = get_path(self.pwd)
             prefix, parts = folder_parts(folder)
-            yield colors.yellow("/".join(shortened_path(prefix, parts)))
+            short = "/".join(shortened_path(prefix, parts))
+            dirname, _, basename = short.rpartition("/")
+            if dirname:
+                dirname += "/"
+
+            yield colors.yellow(f"{colors.dim(dirname)}{basename}")
 
         if self.exit_code:
             color = colors.green if self.exit_code == "0" else colors.red
