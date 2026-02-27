@@ -1268,7 +1268,7 @@
 			<key>Window Type</key>
 			<integer>0</integer>
 			<key>Working Directory</key>
-			<string>/%H/zsimic</string>
+			<string>/%H</string>
 		</dict>
 		<dict>
 			<key>ASCII Anti Aliased</key>
@@ -1807,7 +1807,7 @@
 			<key>Window Type</key>
 			<integer>0</integer>
 			<key>Working Directory</key>
-			<string>/%H/zsimic</string>
+			<string>/%H</string>
 		</dict>
 		<dict>
 			<key>ASCII Anti Aliased</key>
@@ -2405,7 +2405,7 @@
 			<key>Window Type</key>
 			<integer>0</integer>
 			<key>Working Directory</key>
-			<string>/%H/zsimic</string>
+			<string>/%H</string>
 		</dict>
 	</array>
 	<key>NotifyOnlyForCriticalShellIntegrationUpdates</key>
