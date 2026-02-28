@@ -63,7 +63,7 @@ def test_invalid(cli, monkeypatch):
 
     cli.run("ps1", main=shrinky.main)
     assert cli.succeeded
-    assert cli.logged.stdout.contents() == ": \n"
+    assert cli.logged.stdout.contents() == "$ \n"
 
     cli.run("ps1 -cfoo", main=shrinky.main)
     assert cli.failed
@@ -84,12 +84,12 @@ def test_invalid(cli, monkeypatch):
 def test_ps1(cli):
     cli.run("ps1 -czsh -uroot -x0 -p/tmp/foo/bar/baz -v", main=shrinky.main)
     assert cli.succeeded
-    assert cli.logged.stdout.contents() == "❕ %F{yellow}%{\x1b[2m%}/t/f/bar/%{\x1b[22m%}baz%f%F{green} #%f \n"
+    assert cli.logged.stdout.contents() == "❕ %F{yellow}%{\x1b[2m%}/t/f/bar/%{\x1b[22m%}baz%f%F{green}#%f \n"
 
     # User shown when not matching stated owner
     cli.run("ps1 -czsh -uuser1 -ouser2,user3 -x1", main=shrinky.main)
     assert cli.succeeded
-    assert cli.logged.stdout.contents() == "%F{blue}user1%f@%F{red}:%f \n"
+    assert cli.logged.stdout.contents() == "%F{blue}user1%f@%F{red}$%f \n"
 
     # This test's own venv
     venv_path = os.path.dirname(os.path.dirname(sys.executable))
@@ -102,12 +102,12 @@ def test_ps1(cli):
     # A fictional venv
     cli.run("ps1", "-czsh", "-vfoo/bar/.venv", main=shrinky.main)
     assert cli.succeeded
-    assert cli.logged.stdout.contents() == "(%F{cyan}bar%f %F{blue}None%f) %F{green}:%f \n"
+    assert cli.logged.stdout.contents() == "(%F{cyan}bar%f %F{blue}None%f) %F{green}$%f \n"
 
     # Minimal args
     cli.run("ps1 -cbash", main=shrinky.main)
     assert cli.succeeded
-    assert cli.logged.stdout.contents() == "\\[\x1b[32m\\]:\\[\x1b[39m\\] \n"
+    assert cli.logged.stdout.contents() == "\\[\x1b[32m\\]$\\[\x1b[39m\\] \n"
 
 
 def test_ps1_deep(cli, monkeypatch):
@@ -118,26 +118,26 @@ def test_ps1_deep(cli, monkeypatch):
     runez.write("%s/bin/activate" % venv, '\nPS1="(some-very-long-venv-prompt) ${PS1:-}"')
     cli.run('ps1 -cplain -p"%s" -v"%s/.venv"' % (full_path, full_path), main=shrinky.main)
     assert cli.succeeded
-    expected = "(𓈓me-very-long-venv-prompt None) /𓈓/f/b/b/e/more/tests: \n"
+    expected = "(𓈓me-very-long-venv-prompt None) /𓈓/f/b/b/e/more/tests$ \n"
     assert cli.logged.stdout.contents() == expected
 
     # Simulate docker
     monkeypatch.setattr(shrinky.Ps1Renderer, "dockerenv", ".")
     cli.run("ps1 -czsh", main=shrinky.main)
     assert cli.succeeded
-    assert cli.logged.stdout.contents() == "🐳 %F{green}:%f \n"
+    assert cli.logged.stdout.contents() == "🐳 %F{green}$%f \n"
 
     # Simulate ssh
     monkeypatch.setenv("SSH_TTY", "foo")
     cli.run("ps1 -czsh", main=shrinky.main)
     assert cli.succeeded
-    assert cli.logged.stdout.contents() == "%F{cyan} %f%F{green}:%f \n"
+    assert cli.logged.stdout.contents() == "%F{cyan} %f%F{green}$%f \n"
 
     # Simulate coder
     monkeypatch.setenv("CODER", "foo")
     cli.run("ps1 -czsh", main=shrinky.main)
     assert cli.succeeded
-    assert cli.logged.stdout.contents() == "%F{cyan} %f%F{green}:%f \n"
+    assert cli.logged.stdout.contents() == "%F{cyan} %f%F{green}$%f \n"
 
 
 def test_tmux(cli, monkeypatch):
