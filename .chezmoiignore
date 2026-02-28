@@ -5,6 +5,7 @@ README.md
 tests/
 tox.ini
 {{- if ne .chezmoi.os "darwin" }}
+.scripts/macos
 Library
 {{- end }}
 {{- if ne .chezmoi.username "zoran" }}

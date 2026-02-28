@@ -1,0 +1,9 @@
+#!/bin/zsh -e
+
+# hash: {{ include "dot_config/iterm2/com.googlecode.iterm2.plist" | sha256sum }}
+
+if pgrep -x "iTerm2" > /dev/null; then
+  osascript -e 'quit app "iTerm2"'
+  sleep 1
+  open -a iTerm2
+fi
