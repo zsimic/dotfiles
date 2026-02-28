@@ -1,6 +1,6 @@
 **/__pycache__
 {{- if ne .chezmoi.os "darwin" }}
-.scripts/macos
+.chezmoiscripts/darwin
 Library
 {{- end }}
 {{- if ne .chezmoi.username "zoran" }}

@@ -1,9 +1,6 @@
 # Zoran's dotfiles
 
-Currently trying `chezmoi`, it has some nice sides, but it is trying to use
-naming conventions as file permission management...
-Open/looking for alternatives, ideal utility would be simpler and not
-overcomplicate things with file permissions.
+Zoran's dotfiles, managed with [chezmoi](https://github.com/twpayne/chezmoi).
 
 ```shell
 chezmoi init git@github.com:zsimic/dotfiles.git
