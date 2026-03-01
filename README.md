@@ -1,6 +1,6 @@
 # Zoran's dotfiles
 
-Zoran's dotfiles, managed with [chezmoi](https://github.com/twpayne/chezmoi).
+My dotfiles, managed with [chezmoi](https://github.com/twpayne/chezmoi).
 
 ```shell
 chezmoi init git@github.com:zsimic/dotfiles.git

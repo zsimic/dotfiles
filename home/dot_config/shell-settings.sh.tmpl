@@ -19,7 +19,7 @@ else
     alias ls='ls -GFh --color=auto'
 fi
 
-export RIPGREP_CONFIG_PATH=~/.config/ripgrep.conf
+{{ template "env_vars" . }}
 
 if command -v bat > /dev/null; then
     export MANPAGER="sh -c 'col -bx | bat -l man -p'"

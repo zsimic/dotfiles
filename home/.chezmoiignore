@@ -3,6 +3,3 @@
 .chezmoiscripts/darwin
 Library
 {{- end }}
-{{- if ne .chezmoi.username "zoran" }}
-.gitconfig
-{{- end }}
