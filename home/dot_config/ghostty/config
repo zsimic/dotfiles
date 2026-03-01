@@ -22,6 +22,9 @@ keybind = super+r=reload_config
 keybind = cmd+left=csi:1;3D
 keybind = cmd+right=csi:1;3C
 
+# Python 3.14+ pyrepl doesn't read .editrc, so map Ctrl+Delete to Ctrl+K.
+keybind = ctrl+delete=text:\x0b
+
 clipboard-paste-protection = true
 clipboard-trim-trailing-spaces = true
 confirm-close-surface = false

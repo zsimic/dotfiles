@@ -1,4 +1,10 @@
+# Cleanup `~`, move to more XDG-like setup
+/.agignore
 /.curlrc
 /.gitconfig
 /.gitignore
 /.lesshst
+/.python_history
+
+# Clean old ripgrep location
+/.config/ripgrep.conf

@@ -1,3 +1,5 @@
+# Used by libedit/editline programs such as the Python REPL on macOS.
+
 bind "^r" em-inc-search-prev
 bind "^s" em-inc-search-next
 
@@ -11,4 +13,5 @@ bind "\e\e[D" ed-prev-word
 bind "\e[1~" ed-move-to-beg
 bind "\e[4~" ed-move-to-end
 bind "\e[3~" ed-delete-next-char
+bind "\e[3;5~" ed-kill-line
 bind "\e[2~" ed-quoted-insert

@@ -1,0 +1,12 @@
+#!/usr/bin/env zsh
+
+set -e
+
+# Applies only to personal machines
+[[ $USER != "zoran" ]] && exit 0
+
+if ! command -v pickley > /dev/null; then
+    # Grab pickley in ~/.local/bin/
+    zsh -c "$(curl -fsSL https://raw.githubusercontent.com/codrsquad/pickley/main/get-pickley)"
+fi
+pickley install ansible mgit portable-python tox-uv

@@ -1,0 +1,6 @@
+#!/usr/bin/env zsh
+
+set -e
+
+[ -x "/Library/Developer/CommandLineTools/usr/bin/git" ] || xcode-select --install
+[ -f "/Library/Apple/usr/share/rosetta/rosetta" ] || softwareupdate --install-rosetta --agree-to-license

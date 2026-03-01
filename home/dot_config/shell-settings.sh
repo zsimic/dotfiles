@@ -13,7 +13,8 @@ append_to_path /opt/homebrew/bin
 append_to_path /home/linuxbrew/.linuxbrew/bin
 append_to_path ~/.cargo/bin
 
-export RIPGREP_CONFIG_PATH="$XDG_CONFIG_HOME/ripgrep.conf"
+export RIPGREP_CONFIG_PATH="$XDG_CONFIG_HOME/ripgrep/config"
+export PYTHON_HISTORY="$XDG_STATE_HOME/python_history"
 
 if command -v eza > /dev/null; then
     alias ls='eza -F --color-scale --time-style iso'
