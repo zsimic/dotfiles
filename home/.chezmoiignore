@@ -4,6 +4,6 @@
 Library
 {{- end }}
 {{- if .headless }}
-dot_config/ghostty
-dot_config/kitty
+.config/ghostty
+.config/kitty
 {{- end }}
