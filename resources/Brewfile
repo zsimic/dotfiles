@@ -18,5 +18,5 @@ brew "zoxide"       # https://github.com/ajeetdsouza/zoxide
 
 # {{- if not .headless }}
     cask "font-symbols-only-nerd-font"
-    cask "iterm2"
+#     cask "iterm2"
 # {{- end }}
