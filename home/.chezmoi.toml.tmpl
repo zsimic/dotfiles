@@ -15,9 +15,12 @@ umask = 0o077
 {{-   $osID = printf "%s-%s" .chezmoi.os .chezmoi.osRelease.id -}}
 {{- end -}}
 
+{{- if (eq $osID "linux-debian") -}}
+{{-   $ephemeral = true -}}
+{{- end -}}
+
 [data]
 email = "zoran@simicweb.com"
 ephemeral = {{ $ephemeral }}
 headless = {{ $headless }}
 osid = {{ $osID | quote }}
-
