@@ -1,2 +1,0 @@
-export LESSHISTFILE="{{ .chezmoi.homeDir }}/.cache/lesshst"
-export RIPGREP_CONFIG_PATH="{{ .chezmoi.homeDir }}/.config/ripgrep.conf"

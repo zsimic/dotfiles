@@ -1,7 +1,7 @@
 [ -z "$ZSH_VERSION" ] && { echo "Source this in zsh only"; return 1; }
 [[ -o interactive ]] || return 0
 
-HISTFILE=$HOME/.cache/zsh/history.log
+HISTFILE="$XDG_STATE_HOME/zsh/history"
 HISTSIZE=50000
 SAVEHIST=50000
 WORDCHARS='._~'
@@ -24,10 +24,11 @@ zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}'
 zstyle ':completion:*' verbose yes
 zstyle ':completion:*' list-max 40
 
+# Minor: using $XDG_STATE_HOME for cache-like things... in the name of simplicity
 typeset -U path PATH fpath
-fpath=("$HOME/.cache/zsh/completions" /opt/homebrew/share/zsh/site-functions $fpath)
+fpath=("$XDG_STATE_HOME/zsh/completions" /opt/homebrew/share/zsh/site-functions $fpath)
 autoload -Uz compinit
-compinit -d $HOME/.cache/zsh/zcompdump
+compinit -d "$XDG_STATE_HOME/zsh/zcompdump"
 
 zmodload zsh/terminfo 2>/dev/null  # Ensure $terminfo is available
 
@@ -48,6 +49,6 @@ bindkey '^[[3;5~' kill-line  # ctrl+delete
 bindkey '^H' backward-kill-word  # Ctrl+Backspace
 bindkey '^[[127;5u' backward-kill-word  # CSI-u for ctrl+backspace
 
-[ -r "$HOME/.config/shell-settings.sh" ] && . "$HOME/.config/shell-settings.sh"
+[ -r "$XDG_CONFIG_HOME/shell-settings.sh" ] && . "$XDG_CONFIG_HOME/shell-settings.sh"
 (( $+commands[fzf] )) && source <(fzf --zsh)
 (( $+commands[zoxide] )) && eval "$(zoxide init --cmd cd zsh)"

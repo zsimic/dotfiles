@@ -2,11 +2,6 @@
 
 My dotfiles, managed with [chezmoi](https://github.com/twpayne/chezmoi).
 
-```shell
-chezmoi init git@github.com:zsimic/dotfiles.git
-```
-
-
 # Terminals
 
 - https://ghostty.org/

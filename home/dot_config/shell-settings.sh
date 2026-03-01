@@ -13,13 +13,13 @@ append_to_path /opt/homebrew/bin
 append_to_path /home/linuxbrew/.linuxbrew/bin
 append_to_path ~/.cargo/bin
 
+export RIPGREP_CONFIG_PATH="$XDG_CONFIG_HOME/ripgrep.conf"
+
 if command -v eza > /dev/null; then
     alias ls='eza -F --color-scale --time-style iso'
 else
     alias ls='ls -GFh --color=auto'
 fi
-
-{{ template "env_vars" . }}
 
 if command -v bat > /dev/null; then
     export MANPAGER="sh -c 'col -bx | bat -l man -p'"

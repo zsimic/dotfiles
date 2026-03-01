@@ -1,0 +1,12 @@
+#!/usr/bin/env zsh
+
+# hash: {{ include "../resources/darwin/iterm/com.googlecode.iterm2.plist" | sha256sum }}
+
+if pgrep -x iTerm > /dev/null; then
+    osascript -e 'quit app "iTerm"'
+    sleep 1
+    while pgrep -x iTerm > /dev/null; do sleep 0.5; done
+    killall -u $USER cfprefsd
+    unset TMUX_PANE
+    open -g -a iTerm
+fi

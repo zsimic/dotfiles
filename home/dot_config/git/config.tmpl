@@ -1,6 +1,6 @@
 [user]
     name = Zoran Simic
-    email = {{ .email }}
+    email = {{ .email | quote }}
 
 [core]
     # See https://dandavison.github.io/delta/get-started.html
@@ -14,7 +14,7 @@
 
 [delta]
     features = line-numbers decorations
-    light = false    # dark mode
+    light = false
     navigate = true  # use n and N to move between diff sections
 
 [delta "decorations"]
