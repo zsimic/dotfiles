@@ -16,7 +16,7 @@ umask = 0o077
 {{- end -}}
 
 {{- if (eq $osID "linux-debian") -}}
-{{-   $ephemeral = true -}}
+{{-   $headless = true -}}
 {{- end -}}
 
 [data]
