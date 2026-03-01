@@ -16,4 +16,7 @@ brew "tre-command"  # https://github.com/dduan/tre
 brew "wget"         # https://www.gnu.org/software/wget/
 brew "zoxide"       # https://github.com/ajeetdsouza/zoxide
 
-cask "font-symbols-only-nerd-font"
+# {{- if not .headless }}
+    cask "font-symbols-only-nerd-font"
+    cask "iterm2"
+# {{- end }}

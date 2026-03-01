@@ -26,7 +26,7 @@ zstyle ':completion:*' list-max 40
 
 # Minor: using $XDG_STATE_HOME for cache-like things... in the name of simplicity
 typeset -U path PATH fpath
-fpath=("$XDG_STATE_HOME/zsh/completions" /opt/homebrew/share/zsh/site-functions $fpath)
+fpath=("$XDG_STATE_HOME/zsh/completions" "$(brew --prefix)/share/zsh/site-functions" $fpath)
 autoload -Uz compinit
 compinit -d "$XDG_STATE_HOME/zsh/zcompdump"
 
