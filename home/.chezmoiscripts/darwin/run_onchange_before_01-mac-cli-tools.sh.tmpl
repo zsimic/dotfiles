@@ -3,4 +3,6 @@
 set -e
 
 [ -x "/Library/Developer/CommandLineTools/usr/bin/git" ] || xcode-select --install
+{{ if not .personal -}}
 [ -f "/Library/Apple/usr/share/rosetta/rosetta" ] || softwareupdate --install-rosetta --agree-to-license
+{{- end }}
