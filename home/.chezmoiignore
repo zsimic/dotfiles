@@ -1,6 +1,6 @@
 **/__pycache__
 {{- if ne .chezmoi.os "darwin" }}
-**/darwin
+.chezmoiscripts/darwin/**
 Library
 {{- end }}
 {{- if .headless }}
