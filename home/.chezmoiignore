@@ -7,3 +7,6 @@ Library
 .config/ghostty
 .config/kitty
 {{- end }}
+{{- if not .personal }}
+.gitconfig
+{{- end }}
