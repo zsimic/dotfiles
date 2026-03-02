@@ -2,12 +2,6 @@
 
 set -eu
 
+# hash: {{ include "../resources/Brewfile.tmpl" | sha256sum }}
 BREW_CONTENT=$(chezmoi execute-template < "$CHEZMOI_WORKING_TREE/resources/Brewfile.tmpl")
-
-brewfile=$(mktemp "${TMPDIR:-/tmp}/brew-bundle.XXXXXX")
-trap 'rm -f "$brewfile"' EXIT
-
-echo chezmoi execute-template --file "$CHEZMOI_WORKING_TREE/resources/Brewfile.tmpl" --output "$brewfile"
-echo HOMEBREW_NO_ENV_HINTS=1 brew bundle install --file "$brewfile"
-
-echo $BREW_CONTENT
+echo "$BREW_CONTENT" | brew bundle install --file /dev/stdin
