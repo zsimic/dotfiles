@@ -8,4 +8,7 @@ ensure_folders() {
     done
 }
 
-ensure_folders ~/dev ~/github ~/tmp ~/.local/bin ~/.local/state/zsh/completions
+ensure_folders ~/.local/bin ~/.local/state/zsh/completions
+{{ if not .headless -}}
+ensure_folders ~/dev ~/github ~/tmp
+{{- end }}
