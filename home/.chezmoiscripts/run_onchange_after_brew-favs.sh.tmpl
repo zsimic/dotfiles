@@ -1,6 +1,12 @@
 #!/usr/bin/env zsh
 
-set -e
+set -eu
 
-# hash: {{ include "../resources/Brewfile" | sha256sum }}
-HOMEBREW_NO_ENV_HINTS=1 brew bundle install --file "$CHEZMOI_WORKING_TREE/resources/Brewfile"
+BREW_CONTENT=$(chezmoi execute-template < "$CHEZMOI_WORKING_TREE/resources/Brewfile.tmpl")
+
+brewfile_hash='{{ include "../resources/Brewfile.tmpl" | sha256sum }}'
+brewfile=$(mktemp "${TMPDIR:-/tmp}/brew-bundle.$brewfile_hash")
+trap 'rm -f "$brewfile"' EXIT
+
+chezmoi execute-template --file "$CHEZMOI_WORKING_TREE/resources/Brewfile.tmpl" --output "$brewfile"
+HOMEBREW_NO_ENV_HINTS=1 brew bundle install --file "$brewfile"

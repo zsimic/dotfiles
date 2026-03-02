@@ -16,7 +16,10 @@ brew "tre-command"  # https://github.com/dduan/tre
 brew "wget"         # https://www.gnu.org/software/wget/
 brew "zoxide"       # https://github.com/ajeetdsouza/zoxide
 
-# {{- if not .headless }}
+{{ if not .headless -}}
     cask "font-symbols-only-nerd-font"
-#     cask "iterm2"
-# {{- end }}
+{{- end }}
+
+#{{ if eq .chezmoi.os "darwin" -}}
+#    cask "iterm2"
+#{{- end }}

@@ -8,15 +8,15 @@
 ## Layout
 - `home/` mirrors the target home directory as expected by `chezmoi`.
 - Keep platform-specific files grouped in platform-specific directories when possible.
-- Prefer whole-file platform splits plus `home/.chezmoiignore` over scattering OS conditionals through many template files.
+- Prefer whole-file platform splits plus `home/.chezmoiignore` when that keeps the layout simpler, but do not force extra file splits when a single `.tmpl` is clearer.
 - `home/.chezmoiscripts/` contains lifecycle scripts. Darwin-only scripts belong under `home/.chezmoiscripts/darwin/`.
 - `tests/` contains automated tests for Python helpers and similar logic.
 - `resources/` is for checked-in supporting material, not generated output.
 
 ## Implementation Preferences
-- Prefer plain tracked files over `chezmoi` `.tmpl` files when static files work.
-- Use `.tmpl` only when the file truly needs `chezmoi` data or template logic that would otherwise duplicate content.
-- If templating is necessary, keep the templated portion minimal and obvious.
+- Prefer plain tracked files over `chezmoi` `.tmpl` files when static files work, but use a `.tmpl` when it makes the overall design simpler or more extensible.
+- A single clear template is preferable to multiple plain files plus glue when the template stays readable.
+- If templating is necessary, keep the rendered outcome and the template structure obvious.
 - Prefer Python for non-trivial logic, parsing, or anything that benefits from tests.
 - Use shell for very small wrappers or lifecycle hooks that would gain little from a Python implementation.
 - Favor simple, standard-library-heavy solutions over extra dependencies.
@@ -40,11 +40,11 @@
 - Keep test fixtures small and readable.
 
 ## Chezmoi Conventions
-- Prefer directory layout over template conditionals for OS-specific content.
+- Prefer directory layout over template conditionals for OS-specific content when it materially simplifies the repo, but a single template is fine when that is the cleaner shape.
 - If something is macOS-only, keep it under a macOS-specific path that can be ignored as a group.
 - Avoid embedding secrets in templates or data values.
 - Use `[data]` for small non-secret values shared across files, such as name or email.
-- Prefer plain files with runtime shell expansion over templates when that keeps files easier to edit.
+- Prefer plain files with runtime shell expansion over templates when that keeps files easier to edit, but do not avoid a `.tmpl` if it removes duplication or extra indirection.
 - Keep `chezmoi` scripts idempotent when possible.
 - Default to `run_onchange_` script variants for `chezmoi` hooks.
 - Assume `chezmoi` scripts should be idempotent and safe to re-run.
@@ -55,7 +55,7 @@
 - Use `.chezmoiremove` to clean up files that should disappear from target machines after layout changes.
 - Keep files under `home/` only when they are meant to be materialized into `$HOME` on the target machine.
 - Keep repo-only source assets outside `home/` when they do not need to exist separately on the target system.
-- Prefer files that remain pleasant to edit in normal IDEs without `chezmoi` template syntax.
+- Prefer files that remain pleasant to edit in normal IDEs; `.tmpl` files are fine when they stay readable and simplify the surrounding structure.
 
 ## Change Discipline
 - Make the smallest coherent change that improves the repo.
