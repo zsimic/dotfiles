@@ -3,7 +3,10 @@
 /.curlrc
 /.gitignore
 /.lesshst
+/.profile
 /.python_history
+/.tmux.conf
 
 # Clean old ripgrep location
+/.config/lesskey
 /.config/ripgrep.conf
