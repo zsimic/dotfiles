@@ -29,5 +29,5 @@ if (( ${#MESSAGE} == 0 )); then
 fi
 echo "[$TITLE] ${(j:, :)MESSAGE}"
 if [ "$PENDING" -gt 0 ]; then
-    git status --short
+    git -C "$FOLDER" status --short
 fi
