@@ -42,6 +42,7 @@ alias l='ls -lA'
 alias ..='cd ..'
 alias ...='cd ../..'
 alias grep='grep --color=auto'
+alias wget='wget --hsts-file="$XDG_DATA_HOME/wget-hsts"'
 
 edit() {
     local s="/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl"

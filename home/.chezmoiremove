@@ -1,12 +1,19 @@
-# Cleanup `~`, move to more XDG-like setup
+# Cleanup old locations, moved to XDG setup
 /.agignore
+/.bash_history
 /.curlrc
 /.gitignore
 /.lesshst
 /.profile
 /.python_history
 /.tmux.conf
+/.vimrc
 
-# Clean old ripgrep location
 /.config/lesskey
 /.config/ripgrep.conf
+
+/.local/share/chezmoi-local
+
+# Apple Terminal cruft
+/.bash_sessions
+/.zsh_sessions
