@@ -1,7 +1,7 @@
 [ -z "$ZSH_VERSION" ] && { echo "Source this in zsh only"; return 1; }
 [[ -o interactive ]] || return 0
 
-HISTFILE="$XDG_STATE_HOME/zsh/history"
+HISTFILE="$XDG_STATE_HOME/history/zsh.history"
 HISTSIZE=50000
 SAVEHIST=50000
 WORDCHARS='._~'
@@ -24,11 +24,26 @@ zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}'
 zstyle ':completion:*' verbose yes
 zstyle ':completion:*' list-max 40
 
-# Minor: using $XDG_STATE_HOME for cache-like things... in the name of simplicity
 typeset -U path PATH fpath
-fpath=("$XDG_STATE_HOME/zsh/completions" /opt/homebrew/share/zsh/site-functions /home/linuxbrew/.linuxbrew/share/zsh/site-functions $fpath)
+[ -r "$XDG_CONFIG_HOME/shell-settings.sh" ] && . "$XDG_CONFIG_HOME/shell-settings.sh"
+
+fpath=("$XDG_DATA_HOME/zsh/site-functions" $fpath)
+
+if (( $+commands[brew] )); then
+    brew_prefix="$(brew --prefix 2>/dev/null)"
+    if [ -d "$brew_prefix/share/zsh/site-functions" ]; then
+        fpath=("$brew_prefix/share/zsh/site-functions" $fpath)
+    fi
+    unset brew_prefix
+fi
+
 autoload -Uz compinit
-compinit -d "$XDG_STATE_HOME/zsh/zcompdump"
+zcompdump_file="$XDG_CACHE_HOME/zsh/zcompdump-$ZSH_VERSION"
+if [ -f "$zcompdump_file" ]; then
+    compinit -C -d "$zcompdump_file"
+else
+    compinit -d "$zcompdump_file"
+fi
 
 zmodload zsh/terminfo 2>/dev/null  # Ensure $terminfo is available
 
@@ -49,6 +64,5 @@ bindkey '^[[3;5~' kill-line  # ctrl+delete
 bindkey '^H' backward-kill-word  # Ctrl+Backspace
 bindkey '^[[127;5u' backward-kill-word  # CSI-u for ctrl+backspace
 
-[ -r "$XDG_CONFIG_HOME/shell-settings.sh" ] && . "$XDG_CONFIG_HOME/shell-settings.sh"
 (( $+commands[fzf] )) && source <(fzf --zsh)
 (( $+commands[zoxide] )) && eval "$(zoxide init --cmd cd zsh)"

@@ -8,15 +8,15 @@
 
 append_to_path() { [ -d "$1" ] && export PATH=$PATH:$1; }
 
-append_to_path ~/.local/bin
+append_to_path "$HOME/.local/bin"
 append_to_path /opt/homebrew/bin
 append_to_path /home/linuxbrew/.linuxbrew/bin
-append_to_path ~/.cargo/bin
+append_to_path "$HOME/.cargo/bin"
 
 export RIPGREP_CONFIG_PATH="$XDG_CONFIG_HOME/ripgrep/config"
-export PYTHON_HISTORY="$XDG_STATE_HOME/python_history"
+export PYTHON_HISTORY="$XDG_STATE_HOME/history/python.history"
 
-alias cz=~/.local/share/chezmoi/cz.sh
+alias cz="$XDG_DATA_HOME/chezmoi/cz.sh"
 
 if command -v eza > /dev/null; then
     alias ls='eza -F --color-scale --time-style iso'
@@ -55,15 +55,15 @@ zz() {  # Toggle python venv
     . .venv/bin/activate
 }
 
-[ -r ~/.local/aliases ] && . ~/.local/aliases
+[ -r "$HOME/.local/aliases" ] && . "$HOME/.local/aliases"
 
-if [ -d ~/.sdkman/bin ]; then
+if [ -d "$HOME/.sdkman/bin" ]; then
     export SDKMAN_DIR="$HOME/.sdkman"
     . "$SDKMAN_DIR/bin/sdkman-init.sh"
 fi
 
 # Minimalistic shell prompt
-__ps1s=~/bin/shrinky.py
+__ps1s="$HOME/bin/shrinky.py"
 __l_ps1h=""
 _update_custom_prompt() {
     local ps1h=( -c$__shell -ozsimic,zoran -p"$PWD" -u$USER -v"$VIRTUAL_ENV" -x$? )

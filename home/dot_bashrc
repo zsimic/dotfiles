@@ -7,7 +7,7 @@ HISTIGNORE="[ ]*:&:[bf]g:clear:exit"
 HISTCONTROL=ignoreboth
 HISTSIZE=1000
 HISTFILESIZE=$HISTSIZE
-HISTFILE="$XDG_STATE_HOME/bash_history"
+HISTFILE="$XDG_STATE_HOME/history/bash.history"
 
 export INPUTRC=~/.inputrc
 

@@ -4,8 +4,8 @@
 
 ACTION="$1"
 
-if [[ "$ACTION" == (f|fetch) ]]; then
-    exec ~/bin/check-repo-status ~/.local/share/chezmoi
+if [[ "$ACTION" == (|f|fetch) ]]; then
+    exec ~/bin/check-repo-status "$XDG_DATA_HOME/chezmoi"
 fi
 
 if [[ "$ACTION" == (p|pull) ]]; then
