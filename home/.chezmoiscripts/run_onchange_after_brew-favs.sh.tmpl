@@ -1,8 +1,42 @@
-#!/usr/bin/env zsh
+#!/bin/zsh
 
-set -eu
+set -eufo pipefail
 
-# hash: {{ include "../resources/Brewfile.tmpl" | sha256sum }}
+{{ $casks := list -}}
+{{ $brews := list
+    "bat"
+    "chezmoi"
+    "curlie"
+    "dua-cli"
+    "duf"
+    "eza"
+    "fd"
+    "fzf"
+    "git-delta"
+    "htop"
+    "ripgrep"
+    "tmux"
+    "tokei"
+    "tre-command"
+    "zoxide"
+-}}
+
+{{- if not .headless }}
+    {{- $casks = append $casks "font-symbols-only-nerd-font" -}}
+    {{- /* $casks = append $casks "ghostty" */ -}}
+{{ end -}}
+
+{{- if eq .chezmoi.os "darwin" }}
+    {{- $brews = append $brews "wget" -}}
+    {{- /* $casks = append $casks "iterm2" */ -}}
+{{ end -}}
+
 export HOMEBREW_NO_ENV_HINTS=1
-BREW_CONTENT=$(chezmoi execute-template < "$CHEZMOI_WORKING_TREE/resources/Brewfile.tmpl")
-echo "$BREW_CONTENT" | brew bundle install --file /dev/stdin
+brew bundle install --file=/dev/stdin <<EOF
+{{ range ($brews | compact | sortAlpha | uniq) -}}
+brew "{{ . }}"
+{{ end -}}
+{{ range ($casks | compact | sortAlpha | uniq) -}}
+cask "{{ . }}"
+{{ end -}}
+EOF
