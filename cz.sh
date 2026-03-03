@@ -9,7 +9,7 @@ if [[ "$ACTION" == (f|fetch) ]]; then
 fi
 
 if [[ "$ACTION" == (p|pull) ]]; then
-    exec chezmoi git pull --rebase
+    exec chezmoi git pull
 fi
 
 exec chezmoi "$@"
