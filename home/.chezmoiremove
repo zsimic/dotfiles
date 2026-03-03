@@ -1,6 +1,7 @@
 # Cleanup old locations, moved to XDG setup
 /.agignore
 /.bash_history
+/.bash_logout
 /.curlrc
 /.gitignore
 /.lesshst
