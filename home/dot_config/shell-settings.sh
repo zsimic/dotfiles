@@ -16,6 +16,8 @@ append_to_path ~/.cargo/bin
 export RIPGREP_CONFIG_PATH="$XDG_CONFIG_HOME/ripgrep/config"
 export PYTHON_HISTORY="$XDG_STATE_HOME/python_history"
 
+alias cz=~/.local/share/chezmoi/cz.sh
+
 if command -v eza > /dev/null; then
     alias ls='eza -F --color-scale --time-style iso'
 else

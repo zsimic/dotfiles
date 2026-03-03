@@ -1,0 +1,33 @@
+#!/bin/zsh
+
+# Show status of a local git repo, how many commits it is behind origin and whether changes are pending
+
+set -eu
+
+FOLDER=${1:-$PWD}
+FOLDER=$(cd "$FOLDER" && pwd)
+TITLE=${TITLE:-$(basename "$FOLDER")}
+
+git -C "$FOLDER" fetch -q
+LOCAL=$(git -C "$FOLDER" rev-parse @)
+REMOTE=$(git -C "$FOLDER" rev-parse "@{u}")
+BEHIND=0
+if [[ "$LOCAL" != "$REMOTE" ]]; then
+    BEHIND=$(git -C "$FOLDER" rev-list --count $LOCAL..$REMOTE)
+fi
+PENDING=$(git -C "$FOLDER" status --porcelain | wc -l | xargs)
+
+MESSAGE=()
+if [ "$BEHIND" -gt 0 ]; then
+    MESSAGE+=("$BEHIND behind")
+fi
+if [ "$PENDING" -gt 0 ]; then
+    MESSAGE+=("$PENDING pending:")
+fi
+if (( ${#MESSAGE} == 0 )); then
+    MESSAGE+=("✨ Up to date")
+fi
+echo "[$TITLE] ${(j:, :)MESSAGE}"
+if [ "$PENDING" -gt 0 ]; then
+    git status --short
+fi
