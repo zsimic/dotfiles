@@ -5,6 +5,7 @@ My dotfiles, managed with [chezmoi](https://github.com/twpayne/chezmoi).
 # CLIs
 
 - [bat](https://github.com/sharkdp/bat) - A `cat(1)` clone with wings
+- [btop](https://github.com/aristocratos/btop) - Resource monitor
 - [curlie](https://github.com/rs/curlie) - The power of curl, the ease of use of httpie
 - [dua-cli](https://github.com/Byron/dua-cli) - Like `du`, but better
 - [duf](https://github.com/muesli/duf) - Disk Usage/Free utility - a better `df` alternative
