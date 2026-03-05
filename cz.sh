@@ -14,7 +14,7 @@ if [[ -z "$ACTION" ]]; then
 elif [[ "$ACTION" = "fetch" ]]; then
     exec ~/bin/check-repo-status ~/.local/share/chezmoi
 
-if [[ "$ACTION" = "pull" ]]; then
+elif [[ "$ACTION" = "pull" ]]; then
     exec chezmoi git pull
 
 else
