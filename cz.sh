@@ -7,17 +7,16 @@ set -e
 ACTION="$1"
 
 if [[ -z "$ACTION" ]]; then
-    if ! PULL=1 ~/bin/check-repo-status ~/.local/share/chezmoi; then
-        exec chezmoi status
-    fi
+    PULL=1 ~/bin/check-repo-status ~/.local/share/chezmoi
+    chezmoi status
 
 elif [[ "$ACTION" = "fetch" ]]; then
-    exec ~/bin/check-repo-status ~/.local/share/chezmoi
+    ~/bin/check-repo-status ~/.local/share/chezmoi
 
 elif [[ "$ACTION" = "pull" ]]; then
-    exec chezmoi git pull
+    PULL=1 ~/bin/check-repo-status ~/.local/share/chezmoi
 
 else
-    exec chezmoi "$@"
+    chezmoi "$@"
 
 fi

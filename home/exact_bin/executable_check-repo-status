@@ -27,17 +27,15 @@ MESSAGE=
 if [[ "$BEHIND" -gt 0 ]]; then
     MESSAGE="$BEHIND behind"
     if [[ -n "$PULL" && $PENDING = 0 ]]; then
-        git -C "$FOLDER" pull
-        echo "[$TITLE] was $MESSAGE"
-        exit $BEHIND
+        MESSAGE="was $MESSAGE"
+        git -C "$FOLDER" pull --rebase
     fi
 fi
 
 if [[ "$PENDING" -gt 0 ]]; then
     [[ -n "$MESSAGE" ]] && MESSAGE="$MESSAGE, "
     MESSAGE="$MESSAGE$PENDING pending"
-    echo "[$TITLE] $MESSAGE:"
     git -C "$FOLDER" status --short
-else
-    echo "[$TITLE] $MESSAGE"
 fi
+
+echo "[$TITLE] $MESSAGE"
