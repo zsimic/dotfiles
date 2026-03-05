@@ -1,15 +1,23 @@
 #!/bin/zsh
 
-# Small wrapper around chezmoi, adding a `fetch` command
+# Small wrapper around chezmoi, adding some subcommands
+
+set -e
 
 ACTION="$1"
 
-if [[ "$ACTION" == (|f|fetch) ]]; then
-    exec ~/bin/check-repo-status "$XDG_DATA_HOME/chezmoi"
-fi
+if [[ -z "$ACTION" ]]; then
+    if ! PULL=1 ~/bin/check-repo-status ~/.local/share/chezmoi; then
+        exec chezmoi status
+    fi
 
-if [[ "$ACTION" == (p|pull) ]]; then
+elif [[ "$ACTION" = "fetch" ]]; then
+    exec ~/bin/check-repo-status ~/.local/share/chezmoi
+
+if [[ "$ACTION" = "pull" ]]; then
     exec chezmoi git pull
-fi
 
-exec chezmoi "$@"
+else
+    exec chezmoi "$@"
+
+fi
