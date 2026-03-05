@@ -7,6 +7,7 @@ set -eu
 FOLDER=${1:-$PWD}
 FOLDER=$(cd "$FOLDER" && pwd)
 TITLE=${TITLE:-$(basename "$FOLDER")}
+PULL=${PULL:-}
 
 git -C "$FOLDER" fetch -q
 LOCAL=$(git -C "$FOLDER" rev-parse @)
@@ -17,17 +18,26 @@ if [[ "$LOCAL" != "$REMOTE" ]]; then
 fi
 PENDING=$(git -C "$FOLDER" status --porcelain | wc -l | xargs)
 
-MESSAGE=()
-if [ "$BEHIND" -gt 0 ]; then
-    MESSAGE+=("$BEHIND behind")
+if [[ $BEHIND = 0  && $PENDING = 0 ]]; then
+    echo "[$TITLE] ✨ Up to date"
+    exit 0
 fi
-if [ "$PENDING" -gt 0 ]; then
-    MESSAGE+=("$PENDING pending:")
+
+MESSAGE=
+if [[ "$BEHIND" -gt 0 ]]; then
+    MESSAGE="$BEHIND behind"
+    if [[ -n "$PULL" && $PENDING = 0 ]]; then
+        git -C "$FOLDER" pull
+        echo "[$TITLE] was $MESSAGE"
+        exit $BEHIND
+    fi
 fi
-if (( ${#MESSAGE} == 0 )); then
-    MESSAGE+=("✨ Up to date")
-fi
-echo "[$TITLE] ${(j:, :)MESSAGE}"
-if [ "$PENDING" -gt 0 ]; then
+
+if [[ "$PENDING" -gt 0 ]]; then
+    [[ -n "$MESSAGE" ]] && MESSAGE="$MESSAGE, "
+    MESSAGE="$MESSAGE$PENDING pending"
+    echo "[$TITLE] $MESSAGE:"
     git -C "$FOLDER" status --short
+else
+    echo "[$TITLE] $MESSAGE"
 fi
