@@ -7,7 +7,6 @@ umask = 0o077
 
 {{- if or (env "CODER") (env "SSH_TTY") (eq .chezmoi.username "root" "ubuntu" "vagrant" "vscode") -}}
 {{-   $ephemeral = true -}}
-{{-   $headless = true -}}
 {{- end -}}
 
 {{- $osID := .chezmoi.os -}}
