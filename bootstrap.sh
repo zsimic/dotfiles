@@ -18,7 +18,7 @@ if ! command -v brew > /dev/null; then
 fi
 
 if ! command -v chezmoi > /dev/null; then
-    brew install chezmoi
+    HOMEBREW_NO_ENV_HINTS=1 HOMEBREW_NO_INSTALL_CLEANUP=1 brew install chezmoi
 fi
 
 if [[ "$USER" == "zoran" ]]; then

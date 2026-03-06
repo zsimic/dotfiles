@@ -27,16 +27,7 @@ zstyle ':completion:*' list-max 40
 typeset -U path PATH fpath
 [ -r "$XDG_CONFIG_HOME/shell-settings.sh" ] && . "$XDG_CONFIG_HOME/shell-settings.sh"
 
-fpath=("$XDG_DATA_HOME/zsh/site-functions" $fpath)
-
-if (( $+commands[brew] )); then
-    brew_prefix="$(brew --prefix 2>/dev/null)"
-    if [ -d "$brew_prefix/share/zsh/site-functions" ]; then
-        fpath=("$brew_prefix/share/zsh/site-functions" $fpath)
-    fi
-    unset brew_prefix
-fi
-
+fpath+=("$XDG_DATA_HOME/zsh/site-functions")
 autoload -Uz compinit
 zcompdump_file="$XDG_CACHE_HOME/zsh/zcompdump-$ZSH_VERSION"
 if [ -f "$zcompdump_file" ]; then

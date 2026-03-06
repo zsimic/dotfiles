@@ -13,6 +13,10 @@ append_to_path /opt/homebrew/bin
 append_to_path /home/linuxbrew/.linuxbrew/bin
 append_to_path "$HOME/.cargo/bin"
 
+if command -v brew > /dev/null; then
+    eval "$(brew shellenv)"
+fi
+
 export RIPGREP_CONFIG_PATH="$XDG_CONFIG_HOME/ripgrep/config"
 export PYTHON_HISTORY="$XDG_STATE_HOME/history/python.history"
 
