@@ -1,6 +1,4 @@
-#!/usr/bin/env zsh
-
-set -e
+#!/bin/zsh -ef
 
 abort() { echo "$*" >&2; exit 1; }
 dryrun() { echo Would run: "$@"; }

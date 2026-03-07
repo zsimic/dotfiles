@@ -1,8 +1,6 @@
-#!/bin/zsh
+#!/bin/zsh -euf
 
 # Show status of a local git repo, how many commits it is behind origin and whether changes are pending
-
-set -eu
 
 FOLDER=${1:-$PWD}
 FOLDER=$(cd "$FOLDER" && pwd)

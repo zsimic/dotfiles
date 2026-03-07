@@ -1,4 +1,4 @@
-#!/bin/zsh -e
+#!/bin/zsh -euf
 
 # Avoid creating .DS_Store files on network or USB volumes
 defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true

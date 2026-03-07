@@ -1,6 +1,4 @@
-#!/usr/bin/env zsh
-
-set -e
+#!/bin/zsh -ef
 
 ensure_folders() {
     for folder in "$@"; do
@@ -9,7 +7,4 @@ ensure_folders() {
 }
 
 ensure_folders ~/.cache/zsh ~/.local/bin ~/.local/config ~/.local/share/zsh/site-functions ~/.local/state/history
-
-{{ if not .headless -}}
 ensure_folders ~/dev ~/github ~/tmp
-{{- end }}

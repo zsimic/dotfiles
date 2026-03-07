@@ -1,12 +1,11 @@
 **/__pycache__
 {{- if ne .chezmoi.os "darwin" }}
 .chezmoiscripts/darwin/**
-Library
-{{- end }}
-{{- if .headless }}
 .config/ghostty
 .config/kitty
+Library
 {{- end }}
-{{- if not .personal }}
+{{- if ne .chezmoi.username "zoran" }}
+.chezmoiscripts/personal/**
 .gitconfig
 {{- end }}
