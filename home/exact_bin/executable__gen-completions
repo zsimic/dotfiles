@@ -1,0 +1,23 @@
+#!/bin/zsh -eu
+
+# Regenerate completion files, script intended to fail if a tool is not present
+# Remove too mention if/when uninstalled
+
+COMP_DIR="$XDG_DATA_HOME/zsh/site-functions"
+
+set -x
+curl -fsSL https://raw.githubusercontent.com/sharkdp/bat/master/assets/completions/bat.zsh -o "$COMP_DIR/_bat"
+curl -fsSL https://raw.githubusercontent.com/dandavison/delta/master/etc/completion/completion.zsh -o "$COMP_DIR/_delta"
+dua completion zsh > "$COMP_DIR/_dua"
+curl -fsSL https://raw.githubusercontent.com/eza-community/eza/main/completions/zsh/_eza -o "$COMP_DIR/_eza"
+fd --gen-completions zsh > "$COMP_DIR/_fd"
+url -fsSL https://raw.githubusercontent.com/BurntSushi/ripgrep/master/complete/_rg -o "$COMP_DIR/_rg"
+rustup completions zsh > "$COMP_DIR/_rustup"
+curl -fsSL https://raw.githubusercontent.com/XAMPPRocky/tokei/master/completions/_tokei -o "$COMP_DIR/_tokei"
+tre --completion zsh > "$COMP_DIR/_tre"
+uv generate-shell-completion zsh > "$COMP_DIR/_uv"
+
+rm -f "$XDG_CACHE_HOME/zsh/zcompdump-*"
+set +x
+echo
+echo "Done! Start a new shell session"

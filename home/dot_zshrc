@@ -1,5 +1,9 @@
+#!/bin/zsh
+
 [ -z "$ZSH_VERSION" ] && { echo "Source this in zsh only"; return 1; }
 [[ -o interactive ]] || return 0
+
+typeset -U path PATH fpath
 
 HISTFILE="$XDG_STATE_HOME/history/zsh.history"
 HISTSIZE=50000
@@ -17,14 +21,16 @@ setopt HIST_REDUCE_BLANKS
 setopt HIST_LEX_WORDS  # shell-lexer word splitting for history (!$, !^, etc.)
 setopt HIST_NO_FUNCTIONS  # don't store function definitions in history
 setopt AUTO_LIST  # list on ambiguous completion
-setopt NO_MENU_COMPLETE  # never enter menu mode
-setopt NO_AUTO_MENU
 
-zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}'
-zstyle ':completion:*' verbose yes
-zstyle ':completion:*' list-max 40
+LISTMAX=0  # Never ask "do you want to see all X?" completions
+zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}'  # Case-insensitive fuzzy match
+zstyle ':completion:*' verbose yes  # Show command/flag descriptions
+zstyle ':completion:*' group-name ''  # Group matches by category
+zstyle ':completion:*' rehash true  # Automatically rehash when the PATH changes
+zstyle ':completion:*:descriptions' format '%F{blue}-- %d --%f'
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*' completer _extensions _complete _approximate  # Smarter completer order
 
-typeset -U path PATH fpath
 [ -r "$XDG_CONFIG_HOME/shell-settings.sh" ] && . "$XDG_CONFIG_HOME/shell-settings.sh"
 
 fpath+=("$XDG_DATA_HOME/zsh/site-functions")
@@ -35,6 +41,12 @@ if [ -f "$zcompdump_file" ]; then
 else
     compinit -d "$zcompdump_file"
 fi
+
+# Load plugins after compinit
+#source ~/.zsh/plugins/fzf-tab/fzf-tab.plugin.zsh
+#zstyle ':fzf-tab:complete:*:*' fzf-preview \
+#  'if [ -d $realpath ]; then eza --icons --color=always --tree --level=2 $realpath; else bat --color=always --style=numbers $realpath; fi'
+#source ~/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 zmodload zsh/terminfo 2>/dev/null  # Ensure $terminfo is available
 
