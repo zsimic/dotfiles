@@ -7,7 +7,7 @@ if [[ ! -x ~/.cargo/bin/rustup ]]; then
 fi
 
 if ! command -v cargo > /dev/null && [[ -f "$HOME/.cargo/env" ]]; then
-    echo source ~/.cargo/env  # Ensure cargo is in the PATH for the rest of this script
+    source ~/.cargo/env  # Ensure cargo is in the PATH for the rest of this script
 fi
 
 if [[ ! -x ~/.cargo/bin/cargo-binstall ]]; then
