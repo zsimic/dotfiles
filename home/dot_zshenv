@@ -1,7 +1,5 @@
-# Keep .zshenv minimal: it is sourced by every zsh process (and bash in our case)
-export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
-export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
-export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
-export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
+#!/bin/zsh
+# sourced by all zsh runs (interactive and non-interactive); keep this minimal
+# debug with: env -i HOME="$HOME" PATH="/usr/bin:/bin" zsh -xc 'echo "PATH=$PATH"'
 
-[ -r "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+[ -r "$HOME/.config/shell-path.sh" ] && . "$HOME/.config/shell-path.sh"

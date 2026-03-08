@@ -1,0 +1,4 @@
+#!/bin/zsh
+# sourced by login zsh runs (after /etc/zprofile), to normalize PATH order
+
+[ -r "$HOME/.config/shell-path.sh" ] && . "$HOME/.config/shell-path.sh"

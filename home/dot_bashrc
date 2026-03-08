@@ -1,5 +1,9 @@
+#!/usr/bin/env bash
+# sourced by interactive bash sessions
+
 [ -z "$BASH_VERSION" ] && { echo "Source this in bash only"; return 1; }
-[ -r "$HOME/.zshenv" ] && . "$HOME/.zshenv"
+
+[ -r "$HOME/.config/shell-path.sh" ] && . "$HOME/.config/shell-path.sh"
 [[ $- != *i* ]] && return
 
 shopt -s checkwinsize cmdhist histappend histverify no_empty_cmd_completion
@@ -12,20 +16,5 @@ HISTFILE="$XDG_STATE_HOME/history/bash.history"
 export INPUTRC=~/.inputrc
 
 [ -r "$XDG_CONFIG_HOME/shell-settings.sh" ] && . "$XDG_CONFIG_HOME/shell-settings.sh"
-
-dedupe_colon_list() {
-  local input=$1 out="" seen=":" p
-  local IFS=:
-  for p in $input; do
-    [[ -z $p ]] && continue
-    case "$seen" in
-      *":$p:"*) ;;                    # already present
-      *) seen+="$p:"; out+="${out:+:}$p" ;;
-    esac
-  done
-  printf '%s' "$out"
-}
-
-export PATH="$(dedupe_colon_list "$PATH")"
 type -p fzf >/dev/null && eval "$(fzf --bash)"
 type -p zoxide >/dev/null && eval "$(zoxide init --cmd cd bash)"

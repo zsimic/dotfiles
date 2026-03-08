@@ -1,4 +1,6 @@
 #!/bin/zsh
+# sourced by interactive zsh only (after .zshenv)
+# debug with: env -i HOME="$HOME" PATH="/usr/bin:/bin" zsh -ilxc 'echo "PATH=$PATH"'
 
 [ -z "$ZSH_VERSION" ] && { echo "Source this in zsh only"; return 1; }
 [[ -o interactive ]] || return 0

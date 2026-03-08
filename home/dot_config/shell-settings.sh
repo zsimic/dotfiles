@@ -1,21 +1,8 @@
-# zsh / bash compatible custom settings
-
-# Interactive shells only, not needed for scripts (in case this gets sourced by mistake)
-[[ $- != *i* ]] && return 0
+#!/usr/bin/env bash
+# source by interactive shells (keep compatible with bash and zsh)
 
 [ -n "$MAILCHECK" ] && unset MAILCHECK
 [ -z "$TERMINFO_DIRS" ] && export TERMINFO_DIRS=/usr/share/terminfo
-
-append_to_path() { [ -d "$1" ] && export PATH=$PATH:$1; }
-
-append_to_path "$HOME/.local/bin"
-append_to_path /opt/homebrew/bin
-append_to_path /home/linuxbrew/.linuxbrew/bin
-append_to_path "$HOME/.cargo/bin"
-
-if command -v brew > /dev/null; then
-    eval "$(brew shellenv)"
-fi
 
 export RIPGREP_CONFIG_PATH="$XDG_CONFIG_HOME/ripgrep/config"
 export PYTHON_HISTORY="$XDG_STATE_HOME/history/python.history"
