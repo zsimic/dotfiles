@@ -1,0 +1,38 @@
+#!/bin/zsh -euf
+
+echo 'Monthly upgrade: {{ now | date "2006-01" }}'
+
+if [[ ! -x ~/.cargo/bin/rustup ]]; then
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --profile minimal
+fi
+
+if ! command -v cargo > /dev/null && [[ -f "$HOME/.cargo/env" ]]; then
+    echo source ~/.cargo/env  # Ensure cargo is in the PATH for the rest of this script
+fi
+
+if [[ ! -x ~/.cargo/bin/cargo-binstall ]]; then
+    curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
+fi
+if [[ ! -x ~/.cargo/bin/cargo-install-update ]]; then
+    cargo binstall -y cargo-update
+fi
+
+cargo binstall -y bat
+cargo binstall -y dua-cli
+cargo binstall -y eza
+cargo binstall -y fd-find
+cargo binstall -y git-delta
+cargo binstall -y ripgrep
+cargo binstall -y tokei
+cargo binstall -y tre-command
+cargo binstall -y zoxide
+[[ "$USER" == "zoran" ]] && cargo binstall -y uv
+cargo install-update -a
+
+if command -v brew > /dev/null; then
+    # Avoid running brew update on the very first run (where brew may not yet have been picked up in PATH)
+    export HOMEBREW_NO_ENV_HINTS=1
+    brew update
+    brew upgrade --quiet
+    brew cleanup
+fi

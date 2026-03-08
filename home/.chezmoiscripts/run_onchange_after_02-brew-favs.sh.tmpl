@@ -1,22 +1,15 @@
 #!/bin/zsh -euf
 
+# Moved to cargo installation:
+# brew uninstall bat dua-cli eza fd git-delta ripgrep tokei tre-command zoxide
+
 {{ $casks := list -}}
 {{ $brews := list
-    "bat"
     "btop"
-    "chezmoi"
     "curlie"
-    "dua-cli"
     "duf"
-    "eza"
-    "fd"
     "fzf"
-    "git-delta"
-    "ripgrep"
     "tmux"
-    "tokei"
-    "tre-command"
-    "zoxide"
 -}}
 
 {{- if eq .chezmoi.os "darwin" }}
