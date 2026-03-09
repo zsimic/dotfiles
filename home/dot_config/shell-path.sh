@@ -43,20 +43,17 @@ PATH=$(cleanup_path "$PATH")
 
 append_path "$HOME/Library/Application Support/JetBrains/Toolbox/scripts"
 
+# Probe brew directly, as we have a chicken and egg conundrum (brew needed on PATH in order to call `brew shellenv`...)
 if [ -z "$HOMEBREW_PREFIX" ]; then
-    # Probe brew directly, as we have a chicken and egg conundrum (brew needed on PATH in order to call `brew shellenv`...)
-    if [ -x /opt/homebrew/bin/brew ]; then
-        eval "$(/opt/homebrew/bin/brew shellenv)"
-    elif [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
-        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-    fi
+    for folder in /opt/homebrew /home/linuxbrew/.linuxbrew; do
+        if [ -x "$folder/bin/brew" ]; then
+            eval "$($folder/bin/brew shellenv)"
+            break
+        fi
+    done
 fi
 
 prepend_path "$HOME/.local/bin"
 prepend_path "$HOME/.cargo/bin"
 
-PATH=$(cleanup_path "$PATH")
-export PATH
-
-# Keep the bootstrap helper namespace clean
-unset -f cleanup_path append_path prepend_path
+export PATH=$(cleanup_path "$PATH")
