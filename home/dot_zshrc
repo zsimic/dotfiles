@@ -29,9 +29,15 @@ zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}'  # Case-insensitive
 zstyle ':completion:*' verbose yes  # Show command/flag descriptions
 zstyle ':completion:*' group-name ''  # Group matches by category
 zstyle ':completion:*' rehash true  # Automatically rehash when the PATH changes
-zstyle ':completion:*:descriptions' format '%F{blue}-- %d --%f'
+zstyle ':completion:*:descriptions' format '[%d]'
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 zstyle ':completion:*' completer _extensions _complete _approximate  # Smarter completer order
+
+# fzf-tab:
+zstyle ':completion:*' menu no  # Allows fzf-tab to capture the unambiguous prefix
+zstyle ':fzf-tab:*' switch-group '<' '>'  # Switch groups using `<` and `>`
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
+zstyle ':fzf-tab:*' fzf-flags --color=fg:1,fg+:2 --bind=tab:accept
 
 [ -r "$HOME/.config/shell-settings.sh" ] && . "$HOME/.config/shell-settings.sh"
 
