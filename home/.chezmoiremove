@@ -9,10 +9,12 @@
 /.python_history
 /.tmux.conf
 /.vimrc
+/.zcompdump
 
 /.config/lesskey
 /.config/ripgrep.conf
 
+# Prev iterations
 /.local/share/chezmoi-local
 
 # Apple Terminal cruft
