@@ -9,7 +9,7 @@ COMP_DIR="$HOME/.local/share/zsh/site-functions"
 set -x
 bat --completion zsh > "$COMP_DIR/_bat"
 curl -fsSL https://raw.githubusercontent.com/dandavison/delta/HEAD/etc/completion/completion.zsh -o "$COMP_DIR/_delta"
-dua completion zsh > "$COMP_DIR/_dua"
+# dua completion zsh > "$COMP_DIR/_dua"
 curl -fsSL https://raw.githubusercontent.com/eza-community/eza/HEAD/completions/zsh/_eza -o "$COMP_DIR/_eza"
 fd --gen-completions zsh > "$COMP_DIR/_fd"
 rg --generate complete-zsh > "$COMP_DIR/_rg"
