@@ -6,6 +6,7 @@ COMP_DIR="$HOME/.local/share/zsh/site-functions"
 # Remove a line here when the tool is removed from this dotfiles set.
 # Keep instructions sorted by tool, ie: same order as in `home/.chezmoiscripts/run_onchange_after_01-monthly-upgrade.sh.tmpl`
 
+set -x
 bat --completion zsh > "$COMP_DIR/_bat"
 curl -fsSL https://raw.githubusercontent.com/dandavison/delta/HEAD/etc/completion/completion.zsh -o "$COMP_DIR/_delta"
 dua completion zsh > "$COMP_DIR/_dua"
