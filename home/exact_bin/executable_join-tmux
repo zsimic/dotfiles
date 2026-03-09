@@ -8,7 +8,7 @@ dryrun() { echo Would run: "$@"; }
 SESSION_NAME=${1:-temporary}
 
 if [[ "$OPENER" == "ghostty" ]]; then
-    _CF="$XDG_CONFIG_HOME/ghostty/$SESSION_NAME.conf"
+    _CF="$HOME/.config/ghostty/$SESSION_NAME.conf"
     [[ -r $_CF ]] || abort "File $_CF does not exist"
     unset TMUX TMUX_PANE
     $RUNNER exec open -na Ghostty --args --class=$SESSION_NAME --config-file=$_CF

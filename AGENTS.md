@@ -26,6 +26,7 @@
 
 ## Shell Conventions
 - Use best-practice shell conventions
+- Do not use XDG env vars, we are just defining them for good measure, use `"$HOME/.config"` etc. instead
 - Keep shell scripts idempotent and safe to re-run.
 - The setup aims to be more and more best-practice (not quite there yet)
 

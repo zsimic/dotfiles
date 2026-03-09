@@ -7,7 +7,7 @@
 
 typeset -U path PATH fpath
 
-HISTFILE="$XDG_STATE_HOME/history/zsh.history"
+HISTFILE="$HOME/.local/state/history/zsh.history"
 HISTSIZE=50000
 SAVEHIST=50000
 WORDCHARS='._~'
@@ -33,11 +33,11 @@ zstyle ':completion:*:descriptions' format '%F{blue}-- %d --%f'
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 zstyle ':completion:*' completer _extensions _complete _approximate  # Smarter completer order
 
-[ -r "$XDG_CONFIG_HOME/shell-settings.sh" ] && . "$XDG_CONFIG_HOME/shell-settings.sh"
+[ -r "$HOME/.config/shell-settings.sh" ] && . "$HOME/.config/shell-settings.sh"
 
-fpath+=("$XDG_DATA_HOME/zsh/site-functions")
+fpath+=("$HOME/.local/share/zsh/site-functions")
 autoload -Uz compinit
-zcompdump_file="$XDG_CACHE_HOME/zsh/zcompdump-$ZSH_VERSION"
+zcompdump_file="$HOME/.cache/zsh/zcompdump-$ZSH_VERSION"
 if [ -f "$zcompdump_file" ]; then
     compinit -C -d "$zcompdump_file"
 else
@@ -45,10 +45,10 @@ else
 fi
 
 # Load plugins after compinit
-#source ~/.zsh/plugins/fzf-tab/fzf-tab.plugin.zsh
+#source "$HOME/.local/share/zsh/plugins/fzf-tab/fzf-tab.plugin.zsh"
 #zstyle ':fzf-tab:complete:*:*' fzf-preview \
 #  'if [ -d $realpath ]; then eza --icons --color=always --tree --level=2 $realpath; else bat --color=always --style=numbers $realpath; fi'
-#source ~/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+#source "$HOME/.local/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
 
 zmodload zsh/terminfo 2>/dev/null  # Ensure $terminfo is available
 

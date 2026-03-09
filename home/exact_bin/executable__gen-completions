@@ -3,7 +3,7 @@
 # Regenerate completion files, script intended to fail if a tool is not present
 # Remove too mention if/when uninstalled
 
-COMP_DIR="$XDG_DATA_HOME/zsh/site-functions"
+COMP_DIR="$HOME/.local/share/zsh/site-functions"
 
 set -x
 curl -fsSL https://raw.githubusercontent.com/sharkdp/bat/master/assets/completions/bat.zsh -o "$COMP_DIR/_bat"
@@ -17,7 +17,7 @@ curl -fsSL https://raw.githubusercontent.com/XAMPPRocky/tokei/master/completions
 tre --completion zsh > "$COMP_DIR/_tre"
 uv generate-shell-completion zsh > "$COMP_DIR/_uv"
 
-rm -f "$XDG_CACHE_HOME/zsh/zcompdump-*"
+rm -f "$HOME/.cache/zsh/zcompdump-*"
 set +x
 echo
 echo "Done! Start a new shell session"

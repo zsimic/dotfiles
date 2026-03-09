@@ -11,10 +11,10 @@ HISTIGNORE="[ ]*:&:[bf]g:clear:exit"
 HISTCONTROL=ignoreboth
 HISTSIZE=1000
 HISTFILESIZE=$HISTSIZE
-HISTFILE="$XDG_STATE_HOME/history/bash.history"
+HISTFILE="$HOME/.local/state/history/bash.history"
 
 export INPUTRC=~/.inputrc
 
-[ -r "$XDG_CONFIG_HOME/shell-settings.sh" ] && . "$XDG_CONFIG_HOME/shell-settings.sh"
+[ -r "$HOME/.config/shell-settings.sh" ] && . "$HOME/.config/shell-settings.sh"
 type -p fzf >/dev/null && eval "$(fzf --bash)"
 type -p zoxide >/dev/null && eval "$(zoxide init --cmd cd bash)"

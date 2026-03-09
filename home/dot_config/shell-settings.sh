@@ -4,10 +4,10 @@
 [ -n "$MAILCHECK" ] && unset MAILCHECK
 [ -z "$TERMINFO_DIRS" ] && export TERMINFO_DIRS=/usr/share/terminfo
 
-export RIPGREP_CONFIG_PATH="$XDG_CONFIG_HOME/ripgrep/config"
-export PYTHON_HISTORY="$XDG_STATE_HOME/history/python.history"
+export RIPGREP_CONFIG_PATH="$HOME/.config/ripgrep/config"
+export PYTHON_HISTORY="$HOME/.local/state/history/python.history"
 
-alias cz="$XDG_DATA_HOME/chezmoi/cz.sh"
+alias cz="$HOME/.local/share/chezmoi/cz.sh"
 
 if command -v eza > /dev/null; then
     alias ls='eza -F --color-scale --time-style iso'
@@ -33,7 +33,7 @@ alias l='ls -lA'
 alias ..='cd ..'
 alias ...='cd ../..'
 alias grep='grep --color=auto'
-alias wget='wget --hsts-file="$XDG_DATA_HOME/wget-hsts"'
+alias wget='wget --hsts-file="$HOME/.local/share/wget-hsts"'
 
 edit() {
     local s="/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl"
