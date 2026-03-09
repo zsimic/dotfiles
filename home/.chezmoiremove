@@ -12,7 +12,3 @@
 /.config/lesskey
 /.config/ripgrep.conf
 /.local/share/chezmoi-local
-
-# Apple Terminal cruft
-/.bash_sessions
-/.zsh_sessions
