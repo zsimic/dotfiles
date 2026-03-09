@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # sourced by all shells that need PATH, keep compatible with bash and zsh
 
 # This repo has a fixed structure and would be irrelevant for any other XDG layout, we still define entries in standard way
@@ -8,7 +8,32 @@
 : "${XDG_STATE_HOME:=$HOME/.local/state}"
 
 cleanup_path() {  # Dedupe and cleanup entries from a PATH-like value that point to non-existing folders
-    echo -n "$1" | awk -vRS=: '(!a[$0]++){if(system("test -d \""$0"\"")==0){if(b++)printf(RS);printf($0)}}'
+    local input=$1
+    local output=
+    local seen=
+    local part
+
+    while [ -n "$input" ]; do
+        part=${input%%:*}
+        if [ "$input" = "$part" ]; then
+            input=
+        else
+            input=${input#*:}
+        fi
+
+        [ -z "$part" ] && continue
+        [ -d "$part" ] || continue
+
+        case ":$seen:" in
+            *":$part:"*) ;;
+            *)
+                seen="${seen:+$seen:}$part"
+                output="${output:+$output:}$part"
+                ;;
+        esac
+    done
+
+    printf '%s' "$output"
 }
 
 prepend_path() {
@@ -32,4 +57,4 @@ PATH=$(cleanup_path "$PATH")
 export PATH
 
 # Keep the bootstrap helper namespace clean
-unset -f prepend_path # cleanup_path
+unset -f prepend_path cleanup_path
