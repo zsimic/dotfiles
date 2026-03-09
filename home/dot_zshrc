@@ -40,11 +40,58 @@ zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
 fpath+=("$HOME/.local/share/zsh/site-functions")
 autoload -Uz compinit
 zcompdump_file="$HOME/.cache/zsh/zcompdump-$ZSH_VERSION"
-if [ -f "$zcompdump_file" ]; then
+zcompdump_lock_dir="$HOME/.cache/zsh/.zcompdump-$ZSH_VERSION.lock"
+{
+  zcompdump_lock_acquired=0
+  zcompdump_lock_timed_out=0
+  zcompdump_lock_deadline=$(( EPOCHSECONDS + 5 ))
+  while true; do
+    if mkdir "$zcompdump_lock_dir" 2>/dev/null; then
+      printf '%s\n' "$$" > "$zcompdump_lock_dir/pid"
+      zcompdump_lock_acquired=1
+      break
+    fi
+
+    if [[ -f "$zcompdump_lock_dir/pid" ]]; then
+      zcompdump_lock_pid="$(<"$zcompdump_lock_dir/pid")"
+      if [[ -n "$zcompdump_lock_pid" ]] && ! kill -0 "$zcompdump_lock_pid" 2>/dev/null; then
+        command rm -f "$zcompdump_lock_dir/pid" 2>/dev/null
+        command rmdir "$zcompdump_lock_dir" 2>/dev/null
+      fi
+    fi
+
+    if (( EPOCHSECONDS >= zcompdump_lock_deadline )); then
+      zcompdump_lock_timed_out=1
+      break
+    fi
+    sleep 0.1
+  done
+
+  if (( zcompdump_lock_acquired )); then
+    if [ -f "$zcompdump_file" ]; then
+      compinit -C -d "$zcompdump_file"
+    else
+      compinit -d "$zcompdump_file"
+    fi
+  elif (( zcompdump_lock_timed_out )) && [ -f "$zcompdump_file" ]; then
     compinit -C -d "$zcompdump_file"
-else
-    compinit -d "$zcompdump_file"
-fi
+  else
+    while (( EPOCHSECONDS < zcompdump_lock_deadline + 1 )) && ! [ -f "$zcompdump_file" ]; do
+      sleep 0.1
+    done
+
+    if [ -f "$zcompdump_file" ]; then
+      compinit -C -d "$zcompdump_file"
+    else
+      compinit -d "$zcompdump_file"
+    fi
+  fi
+} always {
+  if (( zcompdump_lock_acquired )); then
+    command rm -f "$zcompdump_lock_dir/pid" 2>/dev/null
+    command rmdir "$zcompdump_lock_dir" 2>/dev/null
+  fi
+}
 
 # Load plugins after compinit
 source "$HOME/.local/share/zsh/plugins/fzf-tab/fzf-tab.plugin.zsh"
