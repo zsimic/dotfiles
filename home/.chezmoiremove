@@ -8,14 +8,9 @@
 /.lesshst
 /.python_history
 /.tmux.conf
-/.vimrc
-/.wget-hsts
-/.zcompdump
 
 /.config/lesskey
 /.config/ripgrep.conf
-
-# Prev iterations
 /.local/share/chezmoi-local
 
 # Apple Terminal cruft
