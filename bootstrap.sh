@@ -1,11 +1,11 @@
-#!/bin/sh
+#!/bin/zsh
 
 # Bootstrap chezmoi
 # zsh -c "$(curl -fsSL https://raw.githubusercontent.com/zsimic/dotfiles/main/bootstrap.sh)"
 
-set -ex
-
-PATH="/opt/homebrew/bin:/home/linuxbrew/.linuxbrew/bin:$PATH"
+set -eufx
+typeset -U path
+path=(/opt/homebrew/bin /home/linuxbrew/.linuxbrew/bin $path)
 
 if ! command -v brew > /dev/null; then
     NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
