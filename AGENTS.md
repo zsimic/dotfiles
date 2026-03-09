@@ -26,7 +26,10 @@
 
 ## Shell Conventions
 - Use best-practice shell conventions
-- Do not use XDG env vars, we are just defining them for good measure, use `"$HOME/.config"` etc. instead
+- Do not use XDG env vars
+  - Use `"$HOME/.config"` instead of `$XDG_CONFIG_HOME` etc.
+  - We are just defining them for good measure for a handful of tools that operate better with them defined
+  - This repo's file layout under `home/` will not accommodate any XDG esoteric setup anyway
 - Keep shell scripts idempotent and safe to re-run.
 - The setup aims to be more and more best-practice (not quite there yet)
 

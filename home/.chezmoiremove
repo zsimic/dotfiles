@@ -1,4 +1,4 @@
-# Cleanup old locations, moved to XDG setup
+# Cleanup old locations, moved to XDG default setup
 /.agignore
 /.bash_history
 /.bash_profile

@@ -13,7 +13,7 @@ HISTSIZE=1000
 HISTFILESIZE=$HISTSIZE
 HISTFILE="$HOME/.local/state/history/bash.history"
 
-export INPUTRC=~/.inputrc
+export INPUTRC="$HOME/.inputrc"
 
 [ -r "$HOME/.config/shell-settings.sh" ] && . "$HOME/.config/shell-settings.sh"
 type -p fzf >/dev/null && eval "$(fzf --bash)"

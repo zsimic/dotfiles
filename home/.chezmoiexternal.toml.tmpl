@@ -1,6 +1,9 @@
-#[".local/bin/uv"]
-#    type = "archive-file"
-#    url = {{ gitHubLatestReleaseAssetURL "astral-sh/uv" "uv-x86_64-unknown-linux-gnu.tar.gz" | quote }}
-#    refreshPeriod = "72h"
-#    executable = true
-#    path = "uv-x86_64-unknown-linux-gnu/uv"
+[".local/share/zsh/plugins/fzf-tab"]
+    type = "git-repo"
+    url = "https://github.com/Aloxaf/fzf-tab.git"
+    refreshPeriod = "72h"
+
+[".local/share/zsh/plugins/zsh-autosuggestions"]
+    type = "git-repo"
+    url = "https://github.com/zsh-users/zsh-autosuggestions.git"
+    refreshPeriod = "72h"

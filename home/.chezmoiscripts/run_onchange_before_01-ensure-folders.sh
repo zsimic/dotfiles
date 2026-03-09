@@ -6,7 +6,8 @@ ensure_folders() {
     done
 }
 
-ensure_folders ~/.cache/zsh ~/.local/bin ~/.local/config ~/.local/share/zsh/site-functions ~/.local/state/history
+ensure_folders "$HOME/.local/bin" "$HOME/.local/config" "$HOME/.local/state/history"
+ensure_folders "$HOME/.cache/zsh" "$HOME/.local/share/zsh/site-functions"
 if [[ -n "$CODER" || -d /Users ]]; then
-    ensure_folders ~/dev ~/github ~/tmp
+    ensure_folders "$HOME/dev" "$HOME/github" "$HOME/tmp"
 fi

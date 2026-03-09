@@ -1,9 +1,5 @@
-# See `bat --list-themes`
-#--theme="DarkNeon"         # Not great for man pages, good otherwise
+# See `bat --list-themes`, "DarkNeon" is not great for man pages, good otherwise
 --theme="Monokai Extended"  # Not great for .md, good otherwise
-
-# Already configured in ~/.config/less/
-#--pager="less -SRFWJ -z-2 -#.5 --no-histdups --mouse --wheel-lines=3"
 
 # See `bat -L`
 --map-syntax ".*ignore*:Git Ignore"

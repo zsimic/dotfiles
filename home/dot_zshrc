@@ -45,10 +45,10 @@ else
 fi
 
 # Load plugins after compinit
-#source "$HOME/.local/share/zsh/plugins/fzf-tab/fzf-tab.plugin.zsh"
+source "$HOME/.local/share/zsh/plugins/fzf-tab/fzf-tab.plugin.zsh"
 #zstyle ':fzf-tab:complete:*:*' fzf-preview \
 #  'if [ -d $realpath ]; then eza --icons --color=always --tree --level=2 $realpath; else bat --color=always --style=numbers $realpath; fi'
-#source "$HOME/.local/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
+source "$HOME/.local/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
 
 zmodload zsh/terminfo 2>/dev/null  # Ensure $terminfo is available
 

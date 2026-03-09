@@ -7,14 +7,14 @@ set -e
 ACTION="$1"
 
 if [[ -z "$ACTION" ]]; then
-    PULL=1 ~/bin/check-repo-status ~/.local/share/chezmoi
+    PULL=1 "$HOME/bin/check-repo-status" "$HOME/.local/share/chezmoi"
     chezmoi status
 
 elif [[ "$ACTION" = "fetch" ]]; then
-    ~/bin/check-repo-status ~/.local/share/chezmoi
+    "$HOME/bin/check-repo-status" "$HOME/.local/share/chezmoi"
 
 elif [[ "$ACTION" = "pull" ]]; then
-    PULL=1 ~/bin/check-repo-status ~/.local/share/chezmoi
+    PULL=1 "$HOME/bin/check-repo-status" "$HOME/.local/share/chezmoi"
 
 else
     chezmoi "$@"
