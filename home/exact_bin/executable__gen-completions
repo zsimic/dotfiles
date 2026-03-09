@@ -1,7 +1,7 @@
 #!/bin/zsh -eu
 
 # Regenerate completion files, script intended to fail if a tool is not present
-# Remove too mention if/when uninstalled
+# Remove tool mentions if/when uninstalled
 
 COMP_DIR="$HOME/.local/share/zsh/site-functions"
 

@@ -37,7 +37,7 @@ if command -v brew > /dev/null; then
     export HOMEBREW_NO_ENV_HINTS=1
     brew update
 
-    if [[ -x "$HOMEBREW_PREFIX/bin/bat" ]]; then
+    if [[ -x "$(brew --prefix)/bin/bat" ]]; then
         # Cleanup what was moved to cargo installation
         brew uninstall bat dua-cli eza fd git-delta ripgrep tokei tre-command zoxide || true
         brew cleanup
