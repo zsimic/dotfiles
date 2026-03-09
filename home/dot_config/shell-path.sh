@@ -36,11 +36,13 @@ cleanup_path() {  # Dedupe and cleanup entries from a PATH-like value that point
     printf '%s' "$output"
 }
 
-prepend_path() {
-    [ -d "$1" ] && PATH="$1:$PATH"
-}
+append_path() { [ -d "$1" ] && PATH="$PATH:$1"; }
+prepend_path() { [ -d "$1" ] && PATH="$1:$PATH"; }
 
 PATH=$(cleanup_path "$PATH")
+
+append_path "$PATH:$HOME/Library/Application Support/JetBrains/Toolbox/scripts"
+
 if [ -z "$HOMEBREW_PREFIX" ]; then
     # Probe brew directly, as we have a chicken and egg conundrum (brew needed on PATH in order to call `brew shellenv`...)
     if [ -x /opt/homebrew/bin/brew ]; then
@@ -57,4 +59,4 @@ PATH=$(cleanup_path "$PATH")
 export PATH
 
 # Keep the bootstrap helper namespace clean
-unset -f prepend_path cleanup_path
+unset -f cleanup_path append_path prepend_path
