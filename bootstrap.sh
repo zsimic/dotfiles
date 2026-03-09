@@ -1,8 +1,9 @@
-#!/bin/zsh -euf
+#!/bin/zsh
 
 # Bootstrap chezmoi
 # zsh -c "$(curl -fsSL https://raw.githubusercontent.com/zsimic/dotfiles/main/bootstrap.sh)"
 
+set -eufx
 typeset -U path
 path=(/opt/homebrew/bin /home/linuxbrew/.linuxbrew/bin $path)
 

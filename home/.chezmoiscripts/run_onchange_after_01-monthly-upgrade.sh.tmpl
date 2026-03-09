@@ -3,6 +3,7 @@
 echo 'Monthly upgrade: {{ now | date "2006-01" }}'
 
 if [[ ! -x "$HOME/.cargo/bin/rustup" ]]; then
+    set -x
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --profile minimal
 fi
 

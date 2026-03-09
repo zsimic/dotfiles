@@ -1,4 +1,4 @@
-#!/bin/zsh -euf
+#!/bin/zsh -eufx
 
 [ -d /srv ] && exit 0
 
