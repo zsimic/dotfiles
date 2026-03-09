@@ -1,23 +1,23 @@
 #!/bin/zsh -eu
 
-# Regenerate completion files, script intended to fail if a tool is not present
-# Remove tool mentions if/when uninstalled
-
 COMP_DIR="$HOME/.local/share/zsh/site-functions"
 
-set -x
-curl -fsSL https://raw.githubusercontent.com/sharkdp/bat/master/assets/completions/bat.zsh -o "$COMP_DIR/_bat"
-curl -fsSL https://raw.githubusercontent.com/dandavison/delta/master/etc/completion/completion.zsh -o "$COMP_DIR/_delta"
+# Keep one completion command per configured tool so any interface break fails early.
+# Remove a line here when the tool is removed from this dotfiles set.
+# Keep instructions sorted by tool, ie: same order as in `home/.chezmoiscripts/run_onchange_after_01-monthly-upgrade.sh.tmpl`
+
+bat --completion zsh > "$COMP_DIR/_bat"
+curl -fsSL https://raw.githubusercontent.com/dandavison/delta/HEAD/etc/completion/completion.zsh -o "$COMP_DIR/_delta"
 dua completion zsh > "$COMP_DIR/_dua"
-curl -fsSL https://raw.githubusercontent.com/eza-community/eza/main/completions/zsh/_eza -o "$COMP_DIR/_eza"
+curl -fsSL https://raw.githubusercontent.com/eza-community/eza/HEAD/completions/zsh/_eza -o "$COMP_DIR/_eza"
 fd --gen-completions zsh > "$COMP_DIR/_fd"
-url -fsSL https://raw.githubusercontent.com/BurntSushi/ripgrep/master/complete/_rg -o "$COMP_DIR/_rg"
+rg --generate complete-zsh > "$COMP_DIR/_rg"
 rustup completions zsh > "$COMP_DIR/_rustup"
-curl -fsSL https://raw.githubusercontent.com/XAMPPRocky/tokei/master/completions/_tokei -o "$COMP_DIR/_tokei"
-tre --completion zsh > "$COMP_DIR/_tre"
+# tokei: upstream no longer ships a checked-in completion source, and no supported `tokei completion` command was found.
+# tre: no shell completion subcommand is exposed; keep only if this changes.
 uv generate-shell-completion zsh > "$COMP_DIR/_uv"
 
-rm -f "$HOME/.cache/zsh/zcompdump-*"
+rm -f "$HOME/.cache/zsh/zcompdump-"*
 set +x
 echo
 echo "Done! Start a new shell session"
