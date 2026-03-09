@@ -43,8 +43,9 @@ PATH=$(cleanup_path "$PATH")
 
 append_path "$HOME/Library/Application Support/JetBrains/Toolbox/scripts"
 
-# Probe brew directly, as we have a chicken and egg conundrum (brew needed on PATH in order to call `brew shellenv`...)
-if [ -z "$HOMEBREW_PREFIX" ]; then
+if ! command -v brew > /dev/null; then
+    # brew likes to put itself at front of PATH, we don't need that, call `brew shellenv` only once
+    # Probe brew directly, as we have a chicken and egg conundrum (brew needed on PATH in order to call `brew shellenv`...)
     for folder in /opt/homebrew /home/linuxbrew/.linuxbrew; do
         if [ -x "$folder/bin/brew" ]; then
             eval "$($folder/bin/brew shellenv)"
