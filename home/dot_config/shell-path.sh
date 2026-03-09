@@ -41,7 +41,7 @@ prepend_path() { [ -d "$1" ] && PATH="$1:$PATH"; }
 
 PATH=$(cleanup_path "$PATH")
 
-append_path "$PATH:$HOME/Library/Application Support/JetBrains/Toolbox/scripts"
+append_path "$HOME/Library/Application Support/JetBrains/Toolbox/scripts"
 
 if [ -z "$HOMEBREW_PREFIX" ]; then
     # Probe brew directly, as we have a chicken and egg conundrum (brew needed on PATH in order to call `brew shellenv`...)
