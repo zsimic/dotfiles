@@ -57,4 +57,6 @@ fi
 prepend_path "$HOME/.local/bin"
 prepend_path "$HOME/.cargo/bin"
 
-export PATH=$(cleanup_path "$PATH")
+# less setup done via env vars because older less versions don't respect XDG...
+export LESSHISTFILE="$XDG_STATE_HOME/lesshst"
+export LESS="-SFWJ --no-histdups --mouse --wheel-lines=3"
