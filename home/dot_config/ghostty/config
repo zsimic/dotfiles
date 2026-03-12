@@ -13,6 +13,15 @@ window-width = 220
 window-height = 72
 background-image = python-small.png
 
+background-image-opacity = 0.5
+background-image-position = top-right
+background-image-fit = none
+background-image-repeat = false
+
+custom-shader = shaders/hot-cursor.glsl
+cursor-style = block
+cursor-style-blink = true
+
 # tmux convenience settings
 scrollback-limit = 1
 scrollbar = never
@@ -52,10 +61,3 @@ cursor-color = #ffffff
 cursor-text = #000000
 selection-background = #a5c5ef
 selection-foreground = #000000
-background-image-opacity = 0.5
-background-image-position = top-right
-background-image-fit = none
-background-image-repeat = false
-custom-shader = shaders/hot-cursor.glsl
-cursor-style = block
-cursor-style-blink = true
