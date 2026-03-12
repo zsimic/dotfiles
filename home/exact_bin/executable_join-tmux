@@ -27,6 +27,7 @@ if ! $_TMUX_EXE has-session -t $SESSION_NAME 2> /dev/null; then
             sleep 0.0001
             $RUNNER $_TMUX_EXE new-window -c $ss
         done
+        (sleep 1 && $_TMUX_EXE kill-session -C -t $SESSION_NAME) &|
     fi
 fi
 $RUNNER exec $_TMUX_EXE attach-session -t $SESSION_NAME
