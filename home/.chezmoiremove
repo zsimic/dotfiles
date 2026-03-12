@@ -9,6 +9,7 @@
 /.python_history
 /.tmux.conf
 
+/.config/less
 /.config/lesskey
 /.config/ripgrep.conf
 /.local/share/chezmoi-local
