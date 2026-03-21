@@ -26,7 +26,7 @@ defaults write NSGlobalDomain AppleShowAllExtensions -bool true  # Show all file
 defaults write NSGlobalDomain KeyRepeat -int 2
 defaults write NSGlobalDomain InitialKeyRepeat -int 15
 
-# iterm
+# iterm2
 defaults write com.googlecode.iterm2 PromptOnQuit -bool false
 defaults write com.googlecode.iterm2 LoadPrefsFromCustomFolder -bool true
 defaults write com.googlecode.iterm2 PrefsCustomFolder "$CHEZMOI_WORKING_TREE/resources/darwin/iterm2/"
