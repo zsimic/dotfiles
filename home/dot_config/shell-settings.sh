@@ -36,10 +36,7 @@ alias grep='grep --color=auto'
 alias wget='wget --hsts-file="$HOME/.local/share/wget-hsts"'
 
 mptree() {
-    if (( $# == 0 )); then
-        pstree -g3 -p $$ | grep --color=auto -E "($$|$)"
-    fi
-    for name in "$@"; do
+    for name in "${@:-$$}"; do
         if [ "$name" -eq "$name" ]; then
             pstree -g3 -p "$name" | grep --color=auto -E "($name|$)"
             echo
