@@ -133,7 +133,6 @@ class TmuxRunner:
 
             yield line
 
-
     def run(self, *args, do_exec=False, dryrun=None, fatal=True):
         return run_command(self.tmux_path, *args, do_exec=do_exec, dryrun=dryrun, fatal=fatal)
 
@@ -145,8 +144,26 @@ def launch_ghostty(session_name):
     run_command("/usr/bin/open", "-na", "Ghostty", "--args", f"--class={session_name}", f"--config-file={cf}", do_exec=True)
 
 
+def find_iterm_profile(profile_name):
+    import plistlib
+
+    r = run_command("defaults", "read", "com.googlecode.iterm2", "PrefsCustomFolder", dryrun=False)
+    file_path = Path(r.stdout.strip()) / "com.googlecode.iterm2.plist"
+    abort_if(not file_path.exists(), f"No iterm file: {file_path}")
+    with open(file_path, "rb") as fp:
+        prefs = plistlib.load(fp)
+
+    profiles = prefs.get("Profiles", [])
+    for profile in profiles:
+        name = profile.get("Name")
+        if name == profile_name:
+            return profile
+
+
 def launch_iterm(session_name):
     abort_if(not Path("/Applications/iTerm.app").is_dir(), "ghostty is not installed")
+    has_profile = find_iterm_profile(session_name)
+    abort_if(not has_profile, f"No profile '{session_name}' in iterm2 plist")
     run_command("/usr/bin/open", "-a", "iTerm")
     run_command("/usr/bin/osascript", "-e", f'tell application "iTerm" to create window with profile "{session_name}"')
 
