@@ -130,6 +130,7 @@ class TmuxRunner:
 
 
 def launch_ghostty(session_name):
+    abort_if(not Path("/Applications/Ghostty.app").is_dir(), "ghostty is not installed")
     cmd = ["-na", "Ghostty", "--args", f"--class={session_name}"]
     cf = HOME / f".config/ghostty/{session_name}.conf"
     if cf.exists():
@@ -139,6 +140,7 @@ def launch_ghostty(session_name):
 
 
 def launch_iterm(session_name):
+    abort_if(not Path("/Applications/iTerm.app").is_dir(), "ghostty is not installed")
     run_command("/usr/bin/open", "-a", "iTerm")
     run_command("/usr/bin/osascript", "-e", f'tell application "iTerm" to create window with profile "{session_name}"')
 
