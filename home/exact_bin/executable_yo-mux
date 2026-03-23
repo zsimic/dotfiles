@@ -140,12 +140,9 @@ class TmuxRunner:
 
 def launch_ghostty(session_name):
     abort_if(not Path("/Applications/Ghostty.app").is_dir(), "ghostty is not installed")
-    cmd = ["-na", "Ghostty", "--args", f"--class={session_name}"]
     cf = HOME / f".config/ghostty/{session_name}.conf"
-    if cf.exists():
-        cmd.append(f"--config-file={cf}")
-
-    run_command("/usr/bin/open", *cmd, do_exec=True)
+    abort_if(not cf.exists(), f"No ghostty config: {cf}")
+    run_command("/usr/bin/open", "-na", "Ghostty", "--args", f"--class={session_name}", f"--config-file={cf}", do_exec=True)
 
 
 def launch_iterm(session_name):
@@ -172,25 +169,24 @@ def main(args=None):
     args = parser.parse_args(args=args)
 
     DRYRUN = args.dryrun
-    running_in_tmux = is_already_running_in_tmux()
     tmux = TmuxRunner(args.session_name)
     session_name = args.session_name
     term_emulator = args.term_emulator
     if not term_emulator and args.term_short:
         term_emulator = KNOWN_EMULATORS[args.term_short]
 
-    # Clear env vars to avoid polluting sessions (eg: clear ghostty env vars when starting iterm)
-    groomed_env = {"PATH": "/usr/bin:/bin:/sbin", "TERM": "xterm-256color"}
-    groomed_env.update({k: v for k, v in os.environ.items() if v and k in ("HOME", "LANG", "LOGNAME", "USER")})
-    os.environ.clear()
-    os.environ.update(groomed_env)
     if term_emulator:
+        # Clear env vars to avoid polluting sessions (eg: clear ghostty env vars when starting iterm)
+        groomed_env = {"PATH": "/usr/bin:/bin:/sbin", "TERM": "xterm-256color"}
+        groomed_env.update({k: v for k, v in os.environ.items() if v and k in ("HOME", "LANG", "LOGNAME", "USER")})
+        os.environ.clear()
+        os.environ.update(groomed_env)
         if term_emulator == K_GHOSTTY:
             return launch_ghostty(session_name)
 
         return launch_iterm(session_name)
 
-    abort_if(running_in_tmux, "Already in tmux")
+    abort_if(is_already_running_in_tmux(), "Already in tmux")
     tmux.join_or_attach()
 
 
