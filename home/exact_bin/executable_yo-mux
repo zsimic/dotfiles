@@ -17,6 +17,7 @@ HOME = Path(os.path.expanduser("~"))
 K_GHOSTTY = "ghostty"
 K_ITERM = "iterm"
 KNOWN_EMULATORS = {"g": K_GHOSTTY, "i": K_ITERM}
+ITERM_PROFILE_KEYS = ("New Bookmarks", "Profiles", "Bookmarks")
 
 
 def abort_if(condition, msg: str):
@@ -150,18 +151,28 @@ def find_iterm_profile(profile_name):
     r = run_command("defaults", "read", "com.googlecode.iterm2", "PrefsCustomFolder", dryrun=False)
     file_path = Path(r.stdout.strip()) / "com.googlecode.iterm2.plist"
     abort_if(not file_path.exists(), f"No iterm file: {file_path}")
-    with open(file_path, "rb") as fp:
+    with file_path.open("rb") as fp:
         prefs = plistlib.load(fp)
 
-    profiles = prefs.get("Profiles", [])
-    for profile in profiles:
-        name = profile.get("Name")
-        if name == profile_name:
-            return profile
+    return find_iterm_profile_in_prefs(prefs, profile_name)
+
+
+def find_iterm_profile_in_prefs(prefs, profile_name):
+    for key in ITERM_PROFILE_KEYS:
+        profiles = prefs.get(key, [])
+        if not isinstance(profiles, list):
+            continue
+
+        for profile in profiles:
+            if not isinstance(profile, dict):
+                continue
+
+            if profile.get("Name") == profile_name:
+                return profile
 
 
 def launch_iterm(session_name):
-    abort_if(not Path("/Applications/iTerm.app").is_dir(), "ghostty is not installed")
+    abort_if(not Path("/Applications/iTerm.app").is_dir(), "iTerm is not installed")
     has_profile = find_iterm_profile(session_name)
     abort_if(not has_profile, f"No profile '{session_name}' in iterm2 plist")
     run_command("/usr/bin/open", "-a", "iTerm")
