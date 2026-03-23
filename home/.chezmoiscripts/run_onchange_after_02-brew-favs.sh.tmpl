@@ -1,4 +1,4 @@
-#!/bin/zsh -eufx
+#!/bin/zsh -euf
 
 {{ $casks := list -}}
 {{ $brews := list
@@ -13,7 +13,7 @@
 {{- if eq .chezmoi.os "darwin" }}
     {{- $brews = append $brews "wget" -}}
     {{- $casks = append $casks "font-symbols-only-nerd-font" -}}
-    {{- /* $casks = append $casks "ghostty" */ -}}
+    {{- $casks = append $casks "ghostty" -}}
     {{- $casks = append $casks "iterm2" -}}
 {{ end -}}
 
