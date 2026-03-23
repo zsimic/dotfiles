@@ -59,6 +59,15 @@ def run_command(exe: str, *args: str, do_exec=False, dryrun=None, fatal=True):
     return result
 
 
+def is_already_running_in_tmux():
+    if os.environ.get("TMUX"):
+        return True
+
+    if os.environ.get("SSH_TTY"):
+        current_term = os.environ.get("TERM")
+        return current_term and "tmux" in current_term
+
+
 def detected_term_emulator():
     if "GHOSTTY_BIN_DIR" in os.environ or "PYCHARM_HOSTED" in os.environ:
         return K_GHOSTTY
@@ -163,6 +172,7 @@ def main(args=None):
     args = parser.parse_args(args=args)
 
     DRYRUN = args.dryrun
+    running_in_tmux = is_already_running_in_tmux()
     tmux = TmuxRunner(args.session_name)
     session_name = args.session_name
     term_emulator = args.term_emulator
@@ -180,6 +190,7 @@ def main(args=None):
 
         return launch_iterm(session_name)
 
+    abort_if(running_in_tmux, "Already in tmux")
     tmux.join_or_attach()
 
 
