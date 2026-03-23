@@ -37,11 +37,16 @@ alias wget='wget --hsts-file="$HOME/.local/share/wget-hsts"'
 
 mptree() {
     for name in "$@"; do
-        echo "⋯⋯ $name ⋯⋯" | grep --color=auto "⋯"
-        for pid in $(pgrep -i $name); do
-            pstree -g3 -p "$pid" | grep --color=auto -E "($pid|$name|$)"
+        if [ "$name" -eq "$name" ]; then
+            pstree -g3 -p "$name" | grep --color=auto -E "($name|$)"
             echo
-        done
+        else
+            echo "⋯⋯ $name ⋯⋯" | grep --color=auto "⋯"
+            for pid in $(pgrep -i $name); do
+                pstree -g3 -p "$pid" | grep --color=auto -E "($pid|$name|$)"
+                echo
+            done
+        fi
     done
 }
 
