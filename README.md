@@ -27,7 +27,7 @@ Not automated:
 # Terminals
 
 - [ghostty](https://ghostty.org/) _(zig)_ - My current daily-driver terminal emulator
-- [iterm2](https://iterm2.com/) _(Objective C)_  - Previous classic
+- [iTerm2](https://iterm2.com/) _(Objective-C)_  - Previous classic
 
 
 # Ghostty
@@ -40,7 +40,7 @@ Not automated:
 # Seldom used
 
 - https://github.com/sharkdp/hyperfine _(rust)_ - Command-line benchmarking tool
-- https://dev.yorhel.nl/ncdu _(C)_ - NCurses Disk Usage
+- https://dev.yorhel.nl/ncdu _(C)_ - Ncurses Disk Usage
 - https://github.com/bensadeh/tailspin _(rust)_ - Log file highlighter
 - https://github.com/imsnif/bandwhich _(rust)_ - Terminal bandwidth utilization tool
 

@@ -1,6 +1,6 @@
 # See https://ghostty.org/docs/config
 
-initial-command = ~/bin/join-tmux main
+initial-command = ~/bin/yo-mux main
 
 title = main
 macos-icon = official

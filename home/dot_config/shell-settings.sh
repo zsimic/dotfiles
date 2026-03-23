@@ -35,6 +35,16 @@ alias ...='cd ../..'
 alias grep='grep --color=auto'
 alias wget='wget --hsts-file="$HOME/.local/share/wget-hsts"'
 
+mptree() {
+    for name in "$@"; do
+        echo "⋯⋯ $name ⋯⋯" | grep --color=auto "⋯"
+        for pid in $(pgrep -i $name); do
+            pstree -g3 -p "$pid" | grep --color=auto -E "($pid|$name|$)"
+            echo
+        done
+    done
+}
+
 edit() {
     local s="/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl"
     [ -x "$s" ] && { "$s" "$@" ; return $?; }

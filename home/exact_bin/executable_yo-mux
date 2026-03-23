@@ -1,0 +1,175 @@
+#!/usr/bin/env python3
+
+"""
+Create or attach a tmux session
+"""
+
+import argparse
+import os
+import shutil
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+DRYRUN = False
+HOME = Path(os.path.expanduser("~"))
+K_GHOSTTY = "ghostty"
+K_ITERM = "iterm"
+KNOWN_EMULATORS = {"g": K_GHOSTTY, "i": K_ITERM}
+
+
+def abort_if(condition, msg: str):
+    if condition:
+        sys.exit(msg)
+
+
+def which(command):
+    exe = shutil.which(command)
+    if not exe:
+        for folder in ("/opt/homebrew/bin", "/home/linuxbrew/.linuxbrew/bin"):
+            full_path = os.path.join(folder, command)
+            if os.path.exists(full_path):
+                exe = full_path
+                break
+
+    return exe
+
+
+def run_command(exe: str, *args: str, do_exec=False, dryrun=None, fatal=True):
+    abort_if(not exe, f"'{exe}' does not exist")
+    if dryrun is None:
+        dryrun = DRYRUN
+
+    command = os.path.basename(exe)
+    description = "%s %s" % (command, " ".join(str(x) for x in args))
+    if do_exec:
+        description = f"exec {description}"
+
+    if dryrun:
+        print(f"Would run: {description}")
+        return None if do_exec else subprocess.CompletedProcess(args=args, returncode=0, stdout="", stderr="")
+
+    full_args = [exe, *args]
+    if do_exec:
+        os.execv(exe, [exe, *args])  # noqa: S606
+
+    result = subprocess.run(full_args, capture_output=True, text=True)  # noqa: S603
+    abort_if(fatal and result.returncode, f"'{description}' failed with exit code {result.returncode}:\n{result.stderr}")
+    return result
+
+
+def detected_term_emulator():
+    if "GHOSTTY_BIN_DIR" in os.environ or "PYCHARM_HOSTED" in os.environ:
+        return K_GHOSTTY
+
+    if "ITERM_PROFILE" in os.environ:
+        return K_ITERM
+
+
+class TmuxRunner:
+    def __init__(self, session_name):
+        self.given_session_name = session_name
+        self.session_name = session_name
+        self.detected_term_emulator = detected_term_emulator()
+        if self.detected_term_emulator:
+            self.session_name += f"-{self.detected_term_emulator}"
+
+        self.tmux_path = which("tmux")
+        abort_if(not self.tmux_path, "tmux is not installed")
+
+    def __repr__(self):
+        return self.session_name
+
+    def join_or_attach(self):
+        r = self.run("has-session", "-t", self.session_name, dryrun=False, fatal=False)
+        if r.returncode:
+            self.setup_session()
+
+        self.run("attach-session", "-t", self.session_name, do_exec=True)
+
+    def setup_session(self):
+        self.run("new-session", "-d", "-s", self.session_name, "-c", HOME)
+        cfg = Path(f"{HOME}/.local/tmux.{self.given_session_name}.cfg")
+        if cfg.exists():
+            for line in cfg.read_text().splitlines():
+                time.sleep(0.01)
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+
+                if line.startswith("~"):
+                    line = os.path.expanduser(line)
+
+                elif not line.startswith("/"):
+                    line = str(HOME / line)
+
+                self.run("new-window", "-t", self.session_name, "-c", line)
+
+            if not DRYRUN:
+                subprocess.Popen(  # noqa: S602
+                    f"sleep 1 && {self.tmux_path} kill-session -C -t {self.session_name}",
+                    shell=True,
+                    start_new_session=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+
+    def run(self, *args, do_exec=False, dryrun=None, fatal=True):
+        return run_command(self.tmux_path, *args, do_exec=do_exec, dryrun=dryrun, fatal=fatal)
+
+
+def launch_ghostty(session_name):
+    cmd = ["-na", "Ghostty", "--args", f"--class={session_name}"]
+    cf = HOME / f".config/ghostty/{session_name}.conf"
+    if cf.exists():
+        cmd.append(f"--config-file={cf}")
+
+    run_command("/usr/bin/open", *cmd, do_exec=True)
+
+
+def launch_iterm(session_name):
+    run_command("/usr/bin/open", "-a", "iTerm")
+    run_command("/usr/bin/osascript", "-e", f'tell application "iTerm" to create window with profile "{session_name}"')
+
+
+def main(args=None):
+    """
+    Start or join a tmux session
+    Examples:
+        yo-mux main
+        yo-mux g main
+        yo-mux -t ghostty main
+    """
+    global DRYRUN
+
+    parser = argparse.ArgumentParser(description=main.__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--dryrun", "-n", action="store_true", help="Perform a dryrun")
+    parser.add_argument("--term-emulator", "-t", choices=KNOWN_EMULATORS.values(), help="Terminal emulator to use")
+    parser.add_argument("term_short", nargs="?", choices=KNOWN_EMULATORS.keys(), help="Terminal emulator to use")
+    parser.add_argument("session_name", help="tmux session name")
+    args = parser.parse_args(args=args)
+
+    DRYRUN = args.dryrun
+    tmux = TmuxRunner(args.session_name)
+    session_name = args.session_name
+    term_emulator = args.term_emulator
+    if not term_emulator and args.term_short:
+        term_emulator = KNOWN_EMULATORS[args.term_short]
+
+    # Clear env vars to avoid polluting sessions (eg: clear ghostty env vars when starting iterm)
+    groomed_env = {"PATH": "/usr/bin:/bin:/sbin", "TERM": "xterm-256color"}
+    groomed_env.update({k: v for k, v in os.environ.items() if v and k in ("HOME", "LANG", "LOGNAME", "USER")})
+    os.environ.clear()
+    os.environ.update(groomed_env)
+    if term_emulator:
+        if term_emulator == K_GHOSTTY:
+            return launch_ghostty(session_name)
+
+        return launch_iterm(session_name)
+
+    tmux.join_or_attach()
+
+
+if __name__ == "__main__":  # pragma: no cover
+    sys.exit(main())
