@@ -22,7 +22,12 @@ ITERM_PROFILE_KEYS = ("New Bookmarks", "Profiles", "Bookmarks")
 
 def abort_if(condition, msg: str):
     if condition:
-        sys.exit(msg)
+        print(f"Aborting: {msg}")
+        if os.environ.get("SSH_TTY"):
+            # Avoid exiting too early when new ghostty -> ssh session created
+            input("Press ENTER to continue...")
+
+        sys.exit(1)
 
 
 def which(command):
