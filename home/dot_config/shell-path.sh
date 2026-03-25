@@ -60,7 +60,7 @@ if [ -z "$SDKMAN_DIR" ] && [ -d "$HOME/.sdkman/bin" ]; then
     _log_debug PATH post sdkman: $PATH
 fi
 
-if [ -z "$HOMEBREW_REPOSITORY" ] && ! command -v brew > /dev/null; then
+if ! command -v brew > /dev/null; then
     # brew likes to put itself at front of PATH, we don't need that, call `brew shellenv` only once
     # Probe brew directly, as we have a chicken and egg conundrum (brew needed on PATH in order to call `brew shellenv`...)
     for folder in /opt/homebrew /home/linuxbrew/.linuxbrew; do
