@@ -39,8 +39,7 @@ cleanup_path() {  # Dedupe and cleanup entries from a PATH-like value that point
 append_path() { [ -d "$1" ] && PATH="$PATH:$1"; }
 prepend_path() { [ -d "$1" ] && PATH="$1:$PATH"; }
 
-PATH=$(cleanup_path "$PATH")
-
+append_path "/usr/local/bin"
 append_path "$HOME/Library/Application Support/JetBrains/Toolbox/scripts"
 
 if ! command -v brew > /dev/null; then
@@ -56,6 +55,8 @@ fi
 
 prepend_path "$HOME/.local/bin"
 prepend_path "$HOME/.cargo/bin"
+
+PATH=$(cleanup_path "$PATH")
 
 # less setup done via env vars because older less versions don't respect XDG...
 export LESSHISTFILE="$XDG_STATE_HOME/lesshst"
