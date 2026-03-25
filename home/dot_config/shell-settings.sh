@@ -64,11 +64,6 @@ zz() {  # Toggle python venv
 
 [ -r "$HOME/.local/aliases" ] && . "$HOME/.local/aliases"
 
-if [ -d "$HOME/.sdkman/bin" ]; then
-    export SDKMAN_DIR="$HOME/.sdkman"
-    . "$SDKMAN_DIR/bin/sdkman-init.sh"
-fi
-
 # Minimalistic shell prompt
 __ps1s="$HOME/bin/shrinky.py"
 __l_ps1h=""

@@ -20,14 +20,51 @@ KNOWN_EMULATORS = {"g": K_GHOSTTY, "i": K_ITERM}
 ITERM_PROFILE_KEYS = ("New Bookmarks", "Profiles", "Bookmarks")
 
 
-def abort_if(condition, msg: str):
-    if condition:
-        print(f"Aborting: {msg}")
+class Logger:
+    log_location = "~/.cache/yo-mux.log"
+    logger = None
+
+    @classmethod
+    def enable_logging(cls):
+        import logging
+
+        logging.basicConfig(
+            filename=os.path.expanduser(cls.log_location),
+            datefmt="%m-%d %H:%M:%S",
+            format="%(asctime)s [%(process)s] %(levelname)s %(message)s",
+        )
+        cls.logger = logging.getLogger(__name__)
+        logging.root.setLevel(logging.DEBUG)
+        cls.logger.setLevel(logging.DEBUG)
+
+    @classmethod
+    def debug(cls, message):
+        if cls.logger:
+            cls.logger.debug(message)
+
+    @classmethod
+    def fail(cls, msg, exit_code=1, exc_info=None):
+        print(msg, file=sys.stderr)
+        if cls.logger:
+            cls.logger.error(msg, exc_info=exc_info)
+
         if os.environ.get("SSH_TTY"):
             # Avoid exiting too early when new ghostty -> ssh session created
             input("Press ENTER to continue...")
 
-        sys.exit(1)
+        sys.exit(exit_code)
+
+    @classmethod
+    def abort_if(cls, condition, msg: str, dryrun=None):
+        if condition:
+            if dryrun is None:
+                dryrun = DRYRUN
+
+            if dryrun:
+                print(f"Would abort: {msg}")
+                return
+
+            cls.fail(msg)
 
 
 def which(command):
@@ -43,7 +80,7 @@ def which(command):
 
 
 def run_command(exe: str, *args: str, do_exec=False, dryrun=None, fatal=True):
-    abort_if(not exe, f"'{exe}' does not exist")
+    Logger.abort_if(not exe, f"'{exe}' does not exist")
     if dryrun is None:
         dryrun = DRYRUN
 
@@ -53,24 +90,29 @@ def run_command(exe: str, *args: str, do_exec=False, dryrun=None, fatal=True):
         description = f"exec {description}"
 
     if dryrun:
-        print(f"Would run: {description}")
+        verb = "exec" if do_exec else "run"
+        print(f"Would {verb}: {description}")
         return None if do_exec else subprocess.CompletedProcess(args=args, returncode=0, stdout="", stderr="")
 
     full_args = [exe, *args]
     if do_exec:
+        Logger.debug(f"Exec: {description}")
         os.execv(exe, [exe, *args])  # noqa: S606
 
+    Logger.debug(f"Running: {description}")
     result = subprocess.run(full_args, capture_output=True, text=True)  # noqa: S603
-    abort_if(fatal and result.returncode, f"'{description}' failed with exit code {result.returncode}:\n{result.stderr}")
+    Logger.abort_if(fatal and result.returncode, f"'{description}' failed with exit code {result.returncode}:\n{result.stderr}")
     return result
 
 
 def is_already_running_in_tmux():
     if os.environ.get("TMUX"):
+        Logger.debug("TMUX env var is set")
         return True
 
     if os.environ.get("SSH_TTY"):
         current_term = os.environ.get("TERM")
+        Logger.debug(f"TERM: {current_term}")
         return current_term and "tmux" in current_term
 
 
@@ -87,11 +129,12 @@ class TmuxRunner:
         self.given_session_name = session_name
         self.session_name = session_name
         self.detected_term_emulator = detected_term_emulator()
+        Logger.debug(f"Detected term: {self.detected_term_emulator}")
         if self.detected_term_emulator:
             self.session_name += f"-{self.detected_term_emulator}"
 
         self.tmux_path = which("tmux")
-        abort_if(not self.tmux_path, "tmux is not installed")
+        Logger.abort_if(not self.tmux_path, "tmux is not installed")
 
     def __repr__(self):
         return self.session_name
@@ -104,7 +147,10 @@ class TmuxRunner:
         self.run("attach-session", "-t", self.session_name, do_exec=True)
 
     def setup_session(self):
+        Logger.debug(f"Setting up tmux session: {self.session_name}")
         self.run("new-session", "-d", "-s", self.session_name, "-c", HOME)
+        folders = list(self.session_folders())
+        Logger.debug(f"{len(folders)} session folders are configured")
         for folder in self.session_folders():
             time.sleep(0.01)
             self.run("new-window", "-t", self.session_name, "-c", folder)
@@ -144,9 +190,9 @@ class TmuxRunner:
 
 
 def launch_ghostty(session_name):
-    abort_if(not Path("/Applications/Ghostty.app").is_dir(), "ghostty is not installed")
+    Logger.abort_if(not Path("/Applications/Ghostty.app").is_dir(), "ghostty is not installed")
     cf = HOME / f".config/ghostty/{session_name}.conf"
-    abort_if(not cf.exists(), f"No ghostty config: {cf}")
+    Logger.abort_if(not cf.exists(), f"No ghostty config: {cf}")
     run_command("/usr/bin/open", "-na", "Ghostty", "--args", f"--class={session_name}", f"--config-file={cf}", do_exec=True)
 
 
@@ -155,7 +201,7 @@ def find_iterm_profile(profile_name):
 
     r = run_command("defaults", "read", "com.googlecode.iterm2", "PrefsCustomFolder", dryrun=False)
     file_path = Path(r.stdout.strip()) / "com.googlecode.iterm2.plist"
-    abort_if(not file_path.exists(), f"No iterm file: {file_path}")
+    Logger.abort_if(not file_path.exists(), f"No iterm file: {file_path}")
     with file_path.open("rb") as fp:
         prefs = plistlib.load(fp)
 
@@ -177,9 +223,9 @@ def find_iterm_profile_in_prefs(prefs, profile_name):
 
 
 def launch_iterm(session_name):
-    abort_if(not Path("/Applications/iTerm.app").is_dir(), "iTerm is not installed")
+    Logger.abort_if(not Path("/Applications/iTerm.app").is_dir(), "iTerm is not installed")
     has_profile = find_iterm_profile(session_name)
-    abort_if(not has_profile, f"No profile '{session_name}' in iterm2 plist")
+    Logger.abort_if(not has_profile, f"No profile '{session_name}' in iterm2 plist")
     run_command("/usr/bin/open", "-a", "iTerm")
     run_command("/usr/bin/osascript", "-e", f'tell application "iTerm" to create window with profile "{session_name}"')
 
@@ -195,6 +241,7 @@ def main(args=None):
     global DRYRUN
 
     parser = argparse.ArgumentParser(description=main.__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--debug", "-v", action="store_true", help="Log debug info")
     parser.add_argument("--dryrun", "-n", action="store_true", help="Perform a dryrun")
     parser.add_argument("--term-emulator", "-t", choices=KNOWN_EMULATORS.values(), help="Terminal emulator to use")
     parser.add_argument("term_short", nargs="?", choices=KNOWN_EMULATORS.keys(), help="Terminal emulator to use")
@@ -202,6 +249,10 @@ def main(args=None):
     args = parser.parse_args(args=args)
 
     DRYRUN = args.dryrun
+    if args.debug or args.session_name == "scratch":
+        Logger.enable_logging()
+
+    Logger.debug(f"-- {args}")
     tmux = TmuxRunner(args.session_name)
     session_name = args.session_name
     term_emulator = args.term_emulator
@@ -210,6 +261,7 @@ def main(args=None):
 
     if term_emulator:
         # Clear env vars to avoid polluting sessions (eg: clear ghostty env vars when starting iterm)
+        Logger.debug("Resetting env vars")
         groomed_env = {"PATH": "/usr/bin:/bin:/sbin", "TERM": "xterm-256color"}
         groomed_env.update({k: v for k, v in os.environ.items() if v and k in ("HOME", "LANG", "LOGNAME", "USER")})
         os.environ.clear()
@@ -219,7 +271,7 @@ def main(args=None):
 
         return launch_iterm(session_name)
 
-    abort_if(is_already_running_in_tmux(), "Already in tmux")
+    Logger.abort_if(is_already_running_in_tmux(), "Already in tmux")
     tmux.join_or_attach()
 
 

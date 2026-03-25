@@ -7,6 +7,18 @@
 : "${XDG_DATA_HOME:=$HOME/.local/share}"
 : "${XDG_STATE_HOME:=$HOME/.local/state}"
 
+_log_debug() {
+    if [[ -n "$_SHELL_PATH_LOG" ]]; then
+        if [ -z "$_logging_started" ]; then
+            _logging_started=yes
+            echo "" >> $_SHELL_PATH_LOG
+            echo "-- $(date) pid: $$ PATH: $PATH --" >> $_SHELL_PATH_LOG
+            /opt/homebrew/bin/pstree -p $$  >> $_SHELL_PATH_LOG
+        fi
+        echo "$@" >> $_SHELL_PATH_LOG
+    fi
+}
+
 cleanup_path() {  # Dedupe and cleanup entries from a PATH-like value that point to non-existing folders
     local input=$1
     local output=
@@ -42,7 +54,13 @@ prepend_path() { [ -d "$1" ] && PATH="$1:$PATH"; }
 append_path "/usr/local/bin"
 append_path "$HOME/Library/Application Support/JetBrains/Toolbox/scripts"
 
-if ! command -v brew > /dev/null; then
+if [ -z "$SDKMAN_DIR" ] && [ -d "$HOME/.sdkman/bin" ]; then
+    export SDKMAN_DIR="$HOME/.sdkman"
+    . "$SDKMAN_DIR/bin/sdkman-init.sh"
+    _log_debug PATH post sdkman: $PATH
+fi
+
+if [ -z "$HOMEBREW_REPOSITORY" ] && ! command -v brew > /dev/null; then
     # brew likes to put itself at front of PATH, we don't need that, call `brew shellenv` only once
     # Probe brew directly, as we have a chicken and egg conundrum (brew needed on PATH in order to call `brew shellenv`...)
     for folder in /opt/homebrew /home/linuxbrew/.linuxbrew; do
@@ -51,6 +69,7 @@ if ! command -v brew > /dev/null; then
             break
         fi
     done
+    _log_debug PATH post brew: $PATH
 fi
 
 prepend_path "$HOME/.local/bin"
