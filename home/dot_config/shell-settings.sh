@@ -62,7 +62,7 @@ zz() {  # Toggle python venv
     . .venv/bin/activate
 }
 
-[ -r "$HOME/.local/aliases" ] && . "$HOME/.local/aliases"
+[ -r "$HOME/.local/aliases.sh" ] && . "$HOME/.local/aliases.sh"
 
 # Minimalistic shell prompt
 __ps1s="$HOME/bin/shrinky.py"
