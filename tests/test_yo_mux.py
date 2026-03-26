@@ -4,7 +4,7 @@ from importlib.machinery import SourceFileLoader
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-YO_MUX_PATH = PROJECT_ROOT / "home/exact_bin/executable_yo-mux"
+YO_MUX_PATH = PROJECT_ROOT / "home/bin/executable_yo-mux"
 loader = SourceFileLoader("executable_yo_mux", str(YO_MUX_PATH))
 spec = importlib.util.spec_from_loader(loader.name, loader)
 yo_mux = importlib.util.module_from_spec(spec)
