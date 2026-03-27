@@ -869,7 +869,7 @@
 			<key>Idle Code</key>
 			<integer>0</integer>
 			<key>Initial Text</key>
-			<string>~/bin/yo-mux main</string>
+			<string>~/bin/gremlins/join-tmux main</string>
 			<key>Initial Use Transparency</key>
 			<false/>
 			<key>Jobs to Ignore</key>
@@ -2025,7 +2025,7 @@
 			<key>Columns</key>
 			<integer>160</integer>
 			<key>Command</key>
-			<string>~/bin/yo-mux demo</string>
+			<string>~/bin/gremlins/join-tmux demo</string>
 			<key>Cursor Color</key>
 			<dict>
 				<key>Blue Component</key>

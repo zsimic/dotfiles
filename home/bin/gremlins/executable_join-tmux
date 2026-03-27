@@ -5,6 +5,7 @@ Create or attach a tmux session
 """
 
 import argparse
+import logging
 import os
 import shutil
 import subprocess
@@ -14,25 +15,21 @@ from pathlib import Path
 
 DRYRUN = False
 HOME = Path(os.path.expanduser("~"))
-K_GHOSTTY = "ghostty"
-K_ITERM = "iterm"
-KNOWN_EMULATORS = {"g": K_GHOSTTY, "i": K_ITERM}
-ITERM_PROFILE_KEYS = ("New Bookmarks", "Profiles", "Bookmarks")
 
 
 class Logger:
-    log_location = "~/.cache/yo-mux.log"
     logger = None
 
     @classmethod
-    def enable_logging(cls):
-        import logging
+    def enable_logging(cls, log_location):
+        kwargs = {}
+        if log_location:
+            kwargs["filename"] = Path(log_location).resolve()
 
-        logging.basicConfig(
-            filename=os.path.expanduser(cls.log_location),
-            datefmt="%m-%d %H:%M:%S",
-            format="%(asctime)s [%(process)s] %(levelname)s %(message)s",
-        )
+        else:
+            kwargs["stream"] = sys.stderr
+
+        logging.basicConfig(datefmt="%m-%d %H:%M:%S", format="%(asctime)s %(message)s", **kwargs)
         cls.logger = logging.getLogger(__name__)
         logging.root.setLevel(logging.DEBUG)
         cls.logger.setLevel(logging.DEBUG)
@@ -43,12 +40,12 @@ class Logger:
             cls.logger.debug(message)
 
     @classmethod
-    def fail(cls, msg, exit_code=1, exc_info=None):
+    def fail(cls, msg, exit_code=1):
         print(msg, file=sys.stderr)
         if cls.logger:
-            cls.logger.error(msg, exc_info=exc_info)
+            cls.logger.error(msg)
 
-        if os.environ.get("SSH_TTY"):
+        if os.environ.get("SSH_TTY") and sys.stdout.isatty():  # pragma: no cover
             # Avoid exiting too early when new ghostty -> ssh session created
             input("Press ENTER to continue...")
 
@@ -95,7 +92,7 @@ def run_command(exe: str, *args: str, do_exec=False, dryrun=None, fatal=True):
         return None if do_exec else subprocess.CompletedProcess(args=args, returncode=0, stdout="", stderr="")
 
     full_args = [exe, *args]
-    if do_exec:
+    if do_exec:  # pragma: no cover
         Logger.debug(f"Exec: {description}")
         os.execv(exe, [exe, *args])  # noqa: S606
 
@@ -117,11 +114,11 @@ def is_already_running_in_tmux():
 
 
 def detected_term_emulator():
-    if "GHOSTTY_BIN_DIR" in os.environ or "PYCHARM_HOSTED" in os.environ:
-        return K_GHOSTTY
+    if "GHOSTTY_BIN_DIR" in os.environ:
+        return "ghostty"
 
     if "ITERM_PROFILE" in os.environ:
-        return K_ITERM
+        return "iterm"
 
 
 class TmuxRunner:
@@ -134,10 +131,6 @@ class TmuxRunner:
             self.session_name += f"-{self.detected_term_emulator}"
 
         self.tmux_path = which("tmux")
-        Logger.abort_if(not self.tmux_path, "tmux is not installed")
-
-    def __repr__(self):
-        return self.session_name
 
     def join_or_attach(self):
         r = self.run("has-session", "-t", self.session_name, dryrun=False, fatal=False)
@@ -155,7 +148,7 @@ class TmuxRunner:
             time.sleep(0.01)
             self.run("new-window", "-t", self.session_name, "-c", folder)
 
-        if not DRYRUN:
+        if not DRYRUN:  # pragma: no cover
             subprocess.Popen(  # noqa: S602
                 f"sleep 1 && {self.tmux_path} kill-session -C -t {self.session_name}",
                 shell=True,
@@ -166,114 +159,48 @@ class TmuxRunner:
 
     def session_folders(self):
         text = "~/dev\n~/github\n~/tmp"
+        cfg_folder = Path(os.getenv("TMUX_CONFIG", str(HOME / ".local"))).resolve()
         for basename in (self.session_name, self.given_session_name):
-            cfg = Path(f"{HOME}/.local/tmux.{basename}.cfg")
+            cfg = cfg_folder / f"tmux.{basename}.cfg"
             if cfg.exists():
                 text = cfg.read_text().strip()
                 break
 
         for line in text.splitlines():
             line = line.strip()
-            if not line or line.startswith("#"):
-                continue
+            if line and not line.startswith("#"):
+                if line.startswith("~"):
+                    line = os.path.expanduser(line)
 
-            if line.startswith("~"):
-                line = os.path.expanduser(line)
+                elif not line.startswith("/"):
+                    line = str(HOME / line)
 
-            elif not line.startswith("/"):
-                line = str(HOME / line)
-
-            yield line
+                yield line
 
     def run(self, *args, do_exec=False, dryrun=None, fatal=True):
         return run_command(self.tmux_path, *args, do_exec=do_exec, dryrun=dryrun, fatal=fatal)
 
 
-def launch_ghostty(session_name):
-    Logger.abort_if(not Path("/Applications/Ghostty.app").is_dir(), "ghostty is not installed")
-    cf = HOME / f".config/ghostty/{session_name}.conf"
-    Logger.abort_if(not cf.exists(), f"No ghostty config: {cf}")
-    run_command("/usr/bin/open", "-na", "Ghostty", "--args", f"--class={session_name}", f"--config-file={cf}", do_exec=True)
-
-
-def find_iterm_profile(profile_name):
-    import plistlib
-
-    r = run_command("defaults", "read", "com.googlecode.iterm2", "PrefsCustomFolder", dryrun=False)
-    file_path = Path(r.stdout.strip()) / "com.googlecode.iterm2.plist"
-    Logger.abort_if(not file_path.exists(), f"No iterm file: {file_path}")
-    with file_path.open("rb") as fp:
-        prefs = plistlib.load(fp)
-
-    return find_iterm_profile_in_prefs(prefs, profile_name)
-
-
-def find_iterm_profile_in_prefs(prefs, profile_name):
-    for key in ITERM_PROFILE_KEYS:
-        profiles = prefs.get(key, [])
-        if not isinstance(profiles, list):
-            continue
-
-        for profile in profiles:
-            if not isinstance(profile, dict):
-                continue
-
-            if profile.get("Name") == profile_name:
-                return profile
-
-
-def launch_iterm(session_name):
-    Logger.abort_if(not Path("/Applications/iTerm.app").is_dir(), "iTerm is not installed")
-    has_profile = find_iterm_profile(session_name)
-    Logger.abort_if(not has_profile, f"No profile '{session_name}' in iterm2 plist")
-    run_command("/usr/bin/open", "-a", "iTerm")
-    run_command("/usr/bin/osascript", "-e", f'tell application "iTerm" to create window with profile "{session_name}"')
-
-
 def main(args=None):
-    """
-    Start or join a tmux session
-    Examples:
-        yo-mux main
-        yo-mux g main
-        yo-mux -t ghostty main
-    """
     global DRYRUN
 
-    parser = argparse.ArgumentParser(description=main.__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--debug", "-v", action="store_true", help="Log debug info")
     parser.add_argument("--dryrun", "-n", action="store_true", help="Perform a dryrun")
-    parser.add_argument("--term-emulator", "-t", choices=KNOWN_EMULATORS.values(), help="Terminal emulator to use")
-    parser.add_argument("term_short", nargs="?", choices=KNOWN_EMULATORS.keys(), help="Terminal emulator to use")
+    parser.add_argument("--log", help="Log to specified file")
     parser.add_argument("session_name", help="tmux session name")
     args = parser.parse_args(args=args)
 
     DRYRUN = args.dryrun
-    if args.debug or args.session_name == "scratch":
-        Logger.enable_logging()
+    if args.debug or args.log:
+        Logger.enable_logging(args.log)
 
     Logger.debug(f"-- {args}")
     tmux = TmuxRunner(args.session_name)
-    session_name = args.session_name
-    term_emulator = args.term_emulator
-    if not term_emulator and args.term_short:
-        term_emulator = KNOWN_EMULATORS[args.term_short]
-
-    if term_emulator:
-        # Clear env vars to avoid polluting sessions (eg: clear ghostty env vars when starting iterm)
-        Logger.debug("Resetting env vars")
-        groomed_env = {"PATH": "/usr/bin:/bin:/sbin", "TERM": "xterm-256color"}
-        groomed_env.update({k: v for k, v in os.environ.items() if v and k in ("HOME", "LANG", "LOGNAME", "USER")})
-        os.environ.clear()
-        os.environ.update(groomed_env)
-        if term_emulator == K_GHOSTTY:
-            return launch_ghostty(session_name)
-
-        return launch_iterm(session_name)
-
+    Logger.abort_if(not tmux.tmux_path, "tmux is not installed")
     Logger.abort_if(is_already_running_in_tmux(), "Already in tmux")
     tmux.join_or_attach()
 
 
-if __name__ == "__main__":  # pragma: no cover
+if __name__ == "__main__":
     sys.exit(main())

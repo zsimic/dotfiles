@@ -125,8 +125,7 @@ def main(args=None):
         uv-metadata git+https://github.com/zsimic/uv-metadata@main
     """
     parser = argparse.ArgumentParser(description=main.__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    syspy = f"{sys.version_info[0]}.{sys.version_info[1]}"
-    parser.add_argument("-p", "--python", default=syspy, help="Python interpreter to use (default: %(default)s)")
+    parser.add_argument("-p", "--python", default="3.14", help="Python interpreter to use (default: %(default)s)")
     parser.add_argument("-k", "--key", help="Show only this key from the metadata")
     parser.add_argument("package", default=".", nargs="?", help="Show metadata for specified package")
     args = parser.parse_args(args=args)
@@ -148,5 +147,5 @@ def main(args=None):
     print(text)
 
 
-if __name__ == "__main__":  # pragma: no cover
+if __name__ == "__main__":
     sys.exit(main())

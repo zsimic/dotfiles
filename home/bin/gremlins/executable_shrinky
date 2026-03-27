@@ -4,21 +4,22 @@ Standalone script used to render PS1 parts and shortened folder names for tmux w
 Must work fast, with system python, std libs only
 """
 
+import contextlib
 import os
 import sys
 from pathlib import Path
 
 
 class Logger:
-    log_location = "~/.cache/shrinky.log"
     logger = None
 
     @classmethod
     def enable_logging(cls):
         import logging
 
+        log_location = os.getenv("LOG_FILE", "~/.cache/shrinky.log")
         logging.basicConfig(
-            filename=os.path.expanduser(cls.log_location),
+            filename=os.path.expanduser(log_location),
             datefmt="%m-%d %H:%M:%S",
             format="%(asctime)s [%(process)s] %(levelname)s %(message)s",
         )
@@ -45,27 +46,20 @@ def run_program(*args: str):
 
     Logger.debug("Running: %s", args)
     output = None
-    try:
+    with contextlib.suppress(Exception):
         p = subprocess.run(args, capture_output=True, shell=False, text=True)  # noqa: S603
         output = p.stdout and p.stdout.strip()
         Logger.debug("  stdout: %s", output)
 
-    except Exception:
-        return None
-
-    else:
-        return output
+    return output
 
 
-def get_path(path):
-    if isinstance(path, Path):
-        return path
+def get_path(path: str):
+    if path:
+        if path.startswith('"') and path.endswith('"'):
+            path = path.strip('"')
 
-    if path and path.startswith('"') and path.endswith('"'):
-        path = path.strip('"')
-
-    if path == "~":
-        return Path(os.path.expanduser("~"))
+        path = os.path.expanduser(path)
 
     return Path(path or os.getcwd())
 
@@ -111,7 +105,7 @@ def scm_root(folder: Path):
 
 def capped_text(text: str, max_size: int):
     if max_size and text and len(text) > max_size:
-        text = "𓈓%s" % text[-max_size:]
+        text = f"𓈓{text[-max_size:]}"
 
     return text
 
@@ -122,9 +116,6 @@ class ColorBit:
         self.open_marker = open_marker
         self.close_marker = close_marker
         self.wrapper_fmt = wrapper_fmt
-
-    def __repr__(self):
-        return self.__call__(self.name)
 
     def wrapped(self, marker):
         if self.wrapper_fmt:
@@ -188,10 +179,7 @@ class ColorSet:
         if not color_set_name or color_set_name == "plain":
             return cls("plain", {k: ColorBit(k, "", "") for k in cls.available})
 
-        Logger.fail("No color set for '%s'" % color_set_name)
-
-    def __repr__(self):
-        return self.name
+        Logger.fail(f"No color set for '{color_set_name}'")
 
 
 def shortened_path(prefix, parts, max_parts=6):
@@ -238,7 +226,6 @@ class PathCleaner(CommandRenderer):
 
 
 class Ps1Renderer(CommandRenderer):
-    dockerenv = "/.dockerenv"
     example = "ps1 -czsh -p.. -ozsimic,zoran -ufoo"
     flags = {"c": "color", "o": "owner", "p": "pwd", "u": "user", "v": "venv", "x": "exit_code"}
 
@@ -263,7 +250,7 @@ class Ps1Renderer(CommandRenderer):
         elif os.environ.get("SSH_TTY"):
             yield colors.cyan(" ")  # 📡   󰑔  󰢹
 
-        elif os.path.exists(self.dockerenv):
+        elif os.environ.get("container"):
             yield "🐳 "
 
         if self.venv:
@@ -288,12 +275,12 @@ class Ps1Renderer(CommandRenderer):
 
             venv_name = capped_text(venv_name, 24)
             py_version = capped_text(py_version, 5)
-            yield "(%s %s) " % (colors.cyan(venv_name), colors.blue(py_version))
+            yield f"({colors.cyan(venv_name)} {colors.blue(py_version)}) "
 
         if self.owner and self.user != "root":
             owners = self.owner.split(",")
             if self.user not in owners:
-                yield "%s@" % colors.blue(self.user)
+                yield f"{colors.blue(self.user)}@"
 
         if self.pwd:
             folder = get_path(self.pwd)
@@ -308,7 +295,7 @@ class Ps1Renderer(CommandRenderer):
         if self.exit_code:
             color = colors.green if self.exit_code == "0" else colors.red
             char = color("#" if self.user == "root" else "$")
-            yield "%s " % char
+            yield f"{char} "
 
 
 class TmuxBranchSpec:
@@ -344,13 +331,14 @@ def rendered_uptime(stdout):
     stdout = stdout[i + 2 :].strip()
     up = list(uptime_bits(stdout))
     up = " ".join(up[:2])
-    return "%s🔌" % tmux_colored(up or "-uptime?-", "default,dim", 10)  # 🕤⏳🪫🔋🔌
+    up = tmux_colored(up or "-uptime?-", "default,dim", 10)
+    return f"{up}🔌"  # 🕤⏳🪫🔋🔌
 
 
 def tmux_colored(text, fg: str, max_size: int):
     text = capped_text(text, max_size)
     if fg:
-        text = "#[fg=%s]%s#[default]" % (fg, text)
+        text = f"#[fg={fg}]{text}#[default]"
 
     return text
 
@@ -364,13 +352,13 @@ def uptime_bits(text):
 
             if ":" in bit:
                 h, _, m = bit.partition(":")
-                yield "%sh" % int(h)
-                yield "%sm" % int(m)
+                yield f"{int(h)}h"
+                yield f"{int(m)}m"
                 continue
 
             n, _, unit = bit.partition(" ")
             if n and unit:
-                yield "%s%s" % (int(n), unit[0])
+                yield f"{int(n)}{unit[0]}"
 
 
 class TmuxRenderer(CommandRenderer):
@@ -386,14 +374,14 @@ class TmuxRenderer(CommandRenderer):
 
         specs = TmuxBranchSpecs(self.branch_spec)
         spec = specs.get_spec(branch_name)
-        return spec and "%s%s" % (tmux_colored(branch_name, spec.color, 24), spec.icon)
+        return spec and f"{tmux_colored(branch_name, spec.color, 24)}{spec.icon}"
 
     def cmd_tmux_status(self):
         """
         Status for tmux status-right part
 
         Example:
-          set -g status-right '#(/usr/bin/python3 shrinky.py tmux_status -p"#{pane_current_path}")'
+          set -g status-right '#(/usr/bin/python3 shrinky tmux_status -p"#{pane_current_path}")'
         """
         folder = get_path(self.path)
         if folder:
@@ -408,7 +396,7 @@ class TmuxRenderer(CommandRenderer):
         Short name to show for a given tmux window
 
         Example:
-          setw -g automatic-rename-format '#(/usr/bin/python3 shrinky.py tmux_short -b📌yellow+✨blue,master,main -p"#{pane_current_path}")'
+          setw -g automatic-rename-format '#(/usr/bin/python3 shrinky tmux_short -b📌yellow+✨blue,master,main -p"#{pane_current_path}")'
         """
         folder = get_path(self.path)
         if folder == get_path("~"):
@@ -416,7 +404,7 @@ class TmuxRenderer(CommandRenderer):
             return
 
         root = scm_root(folder)
-        folder = folder.name if not root or folder == root else "%s/%s" % (root.name, folder.relative_to(root).name)
+        folder = folder.name if not root or folder == root else f"{root.name}/{folder.relative_to(root).name}"
         yield capped_text(folder, max_size=20)
 
 
@@ -430,7 +418,7 @@ class CommandDef:
         return self.name
 
     def get_func(self, instance=None):
-        func = getattr(instance or self.base_cls, "cmd_%s" % self.name)
+        func = getattr(instance or self.base_cls, f"cmd_{self.name}")
         return func
 
     def get_doc(self):
@@ -445,13 +433,13 @@ class CommandDef:
         instance = self.base_cls()
         for arg in args:
             if not arg or len(arg) <= 1 or not arg.startswith("-"):
-                Logger.fail("Unrecognized argument '%s'" % arg)
+                Logger.fail(f"Unrecognized argument '{arg}'")
 
             key = arg[1]
             value = arg[2:]
             flag = self.base_cls.flags.get(key)
             if not flag:
-                Logger.fail("Unknown flag '%s'" % key)
+                Logger.fail(f"Unknown flag '{key}'")
 
             setattr(instance, flag, value)
 
@@ -466,7 +454,7 @@ class CommandDef:
 
         doc = self.get_doc()
         doc = dedent(doc).strip()
-        print("%s\n" % doc, file=sys.stderr)
+        print(f"{doc}\n", file=sys.stderr)
         sys.exit(0)
 
 
@@ -484,7 +472,7 @@ class CommandParser:
     def get_command(self, name, fatal=True):
         cmd = self.available_commands.get(name)
         if cmd is None and fatal:
-            Logger.fail("Unknown command '%s'" % name)
+            Logger.fail(f"Unknown command '{name}'")
 
         return cmd
 
@@ -496,7 +484,8 @@ class CommandParser:
         print(__doc__, file=sys.stderr)
         print("\nCommands:", file=sys.stderr)
         for name, cmd in sorted(self.available_commands.items()):
-            print("  %s%s" % (ColorSet.ttyc().bold("%-18s" % name), cmd.summary()), file=sys.stderr)
+            bold_name = ColorSet.ttyc().bold(f"{name:<18}")
+            print(f"  {bold_name}{cmd.summary()}", file=sys.stderr)
 
         if exit_code is not None:
             sys.exit(exit_code)
@@ -522,8 +511,8 @@ class CommandParser:
         try:
             cmd.run_with_args(args)
 
-        except Exception as e:
-            Logger.fail("'%s()' crashed: %s" % (cmd.name, e), exc_info=e)
+        except Exception as e:  # pragma: no cover
+            Logger.fail(f"'{cmd.name}()' crashed: {e}", exc_info=e)
 
 
 def main(args=None):
@@ -534,5 +523,5 @@ def main(args=None):
     parser.run_args(args or sys.argv[1:])
 
 
-if __name__ == "__main__":  # pragma: no cover
+if __name__ == "__main__":
     main()

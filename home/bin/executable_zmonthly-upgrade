@@ -1,0 +1,47 @@
+#!/bin/zsh -eu
+
+regenerate_completions() {
+    local comp_dir="$HOME/.local/share/zsh/site-functions"
+
+    # Keep one completion command per configured tool so any interface break fails early.
+    # Remove a line here when the tool is removed from this dotfiles set.
+    # Keep instructions alphabetically sorted by tool
+
+    set -x
+    bat --completion zsh > "$comp_dir/_bat"
+    curl -fsSL https://raw.githubusercontent.com/dandavison/delta/HEAD/etc/completion/completion.zsh -o "$comp_dir/_delta"
+    # dua completion zsh > "$comp_dir/_dua"
+    curl -fsSL https://raw.githubusercontent.com/eza-community/eza/HEAD/completions/zsh/_eza -o "$comp_dir/_eza"
+    fd --gen-completions zsh > "$comp_dir/_fd"
+    rg --generate complete-zsh > "$comp_dir/_rg"
+    rustup completions zsh > "$comp_dir/_rustup"
+    # tokei: upstream no longer ships a checked-in completion source, and no supported `tokei completion` command was found.
+    # tre: no shell completion subcommand is exposed; keep only if this changes.
+    uv generate-shell-completion zsh > "$comp_dir/_uv"
+    set +x
+
+    # Regenerate zcompdump
+    rm -f "$HOME/.cache/zsh/zcompdump-"*
+    zsh -ilc 'echo zcompdump regenerated'
+}
+
+rustup self update
+rustup update
+cargo install-update -a
+
+if command -v brew > /dev/null; then
+    # Avoid running brew update on the very first run (where brew may not yet have been picked up in PATH)
+    export HOMEBREW_NO_ENV_HINTS=1
+    brew update
+
+    if [[ -x "$(brew --prefix)/bin/bat" ]]; then
+        # Cleanup what was moved to cargo installation
+        brew uninstall bat dua-cli eza fd git-delta ripgrep tokei tre-command zoxide || true
+        brew cleanup
+    fi
+
+    brew upgrade --quiet
+    brew cleanup --prune=all
+fi
+
+regenerate_completions

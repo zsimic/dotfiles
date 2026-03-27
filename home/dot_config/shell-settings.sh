@@ -1,8 +1,8 @@
-#!/usr/bin/env bash
 # source by interactive shells (keep compatible with bash and zsh)
 
-[ -n "$MAILCHECK" ] && unset MAILCHECK
-[ -z "$TERMINFO_DIRS" ] && export TERMINFO_DIRS=/usr/share/terminfo
+unset MAILCHECK
+: "${TERMINFO_DIRS:=/usr/share/terminfo}"
+export TERMINFO_DIRS
 
 export RIPGREP_CONFIG_PATH="$HOME/.config/ripgrep/config"
 export PYTHON_HISTORY="$HOME/.local/state/history/python.history"
@@ -37,7 +37,7 @@ alias wget='wget --hsts-file="$HOME/.local/share/wget-hsts"'
 
 mptree() {
     for name in "${@:-$$}"; do
-        if [ "$name" -eq "$name" ]; then
+        if [[ "$name" =~ ^[0-9]+$ ]]; then
             pstree -g3 -p "$name" | grep --color=auto -E "($name|$)"
             echo
         else
@@ -65,25 +65,37 @@ zz() {  # Toggle python venv
 [ -r "$HOME/.local/aliases.sh" ] && . "$HOME/.local/aliases.sh"
 
 # Minimalistic shell prompt
-__ps1s="$HOME/bin/shrinky.py"
+__ps1s="$HOME/bin/gremlins/shrinky"
 __l_ps1h=""
+__l_ps1h=""
+__l_pwd=""
 _update_custom_prompt() {
-    local ps1h=( -c$__shell -ozsimic,zoran -p"$PWD" -u$USER -v"$VIRTUAL_ENV" -x$? )
-    [[ "${ps1h[@]}" == "$__l_ps1h" ]] && return;
-    local v=$(/usr/bin/python3 $__ps1s ps1 "${ps1h[@]}")
+    local ps1h=( -c$__shell -ozsimic,zoran -p"$PWD" -u$USER -v"${VIRTUAL_ENV:-}" -x$? )
+    [[ "${ps1h[*]}" == "$__l_ps1h" ]] && return;
+    local v=$(/usr/bin/python3 "$__ps1s" ps1 "${ps1h[@]}")
     [ -z "$v" ] && return;
-    PS1=$v
-    __l_ps1h="${ps1h[@]}"
-    if [[ -n "$TMUX_PANE" && "$__l_pwd" != "$PWD" ]]; then  # Change tmux window name
-        __l_pwd=$PWD
-        printf '\033k%s\033\\' $(/usr/bin/python3 $__ps1s tmux_short -p"$PWD")
+    PS1="$v"
+    __l_ps1h="${ps1h[*]}"
+    if [[ -n "${TMUX_PANE:-}" && "$__l_pwd" != "$PWD" ]]; then  # Change tmux window name
+        __l_pwd="$PWD"
+        printf '\033k%s\033\\' "$(/usr/bin/python3 "$__ps1s" tmux_short -p"$PWD")"
     fi
 }
 
 if [ -r "$__ps1s" ]; then
-    if [ -n "$ZSH_VERSION" ]; then
-        __shell="zsh"; precmd() { _update_custom_prompt; }
-    elif [ -n "$BASH_VERSION" ]; then
-        __shell="bash"; PROMPT_COMMAND="_update_custom_prompt"
+    if [ -n "${ZSH_VERSION:-}" ]; then
+        __shell="zsh"
+        autoload -Uz add-zsh-hook
+        add-zsh-hook precmd _update_custom_prompt
+    elif [ -n "${BASH_VERSION:-}" ]; then
+        __shell="bash"
+        if [[ "$PROMPT_COMMAND" != *"_update_custom_prompt"* ]]; then
+            if [[ $((BASH_VERSINFO[0] * 10 + BASH_VERSINFO[1])) -ge 51 ]]; then
+                # bash 5.1+ uses arrays
+                PROMPT_COMMAND+=(_update_custom_prompt)
+            else
+                PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND;}_update_custom_prompt"
+            fi
+        fi
     fi
 fi

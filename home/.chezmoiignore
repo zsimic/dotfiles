@@ -3,6 +3,7 @@
 .chezmoiscripts/darwin/**
 .config/ghostty
 .config/kitty
+bin/zterm
 Library
 {{- end }}
 {{- if ne .chezmoi.username "zoran" }}

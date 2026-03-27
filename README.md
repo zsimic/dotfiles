@@ -2,6 +2,7 @@
 
 My dotfiles, managed with [chezmoi](https://github.com/twpayne/chezmoi).
 
+
 # CLIs
 
 - [bat](https://github.com/sharkdp/bat) _(rust)_ - A `cat(1)` clone with wings
@@ -23,6 +24,7 @@ Not automated:
 
 - [grpcurl](https://github.com/fullstorydev/grpcurl) _(go)_ - Like cURL, but for gRPC
 - [htop](https://htop.dev/) _(C)_ - Interactive process viewer
+
 
 # Terminals
 

@@ -1,0 +1,150 @@
+#!/usr/bin/env python3
+
+"""
+Open a new ghostty or iterm window
+"""
+
+import argparse
+import logging
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+DRYRUN = False
+HOME = Path(os.path.expanduser("~"))
+K_GHOSTTY = "ghostty"
+K_ITERM = "iterm"
+KNOWN_EMULATORS = {"g": K_GHOSTTY, "i": K_ITERM}
+ITERM_PROFILE_KEYS = ("New Bookmarks", "Profiles", "Bookmarks")
+
+
+class Logger:
+    logger = None
+
+    @classmethod
+    def enable_logging(cls):
+        logging.basicConfig(datefmt="%m-%d %H:%M:%S", format="%(asctime)s %(message)s", stream=sys.stderr, level=logging.DEBUG)
+        cls.logger = logging.getLogger(__name__)
+        logging.root.setLevel(logging.DEBUG)
+        cls.logger.setLevel(logging.DEBUG)
+
+    @classmethod
+    def debug(cls, message):
+        if cls.logger:
+            cls.logger.debug(message)
+
+    @classmethod
+    def fail(cls, msg, exit_code=1):
+        print(msg, file=sys.stderr)
+        if cls.logger:
+            cls.logger.error(msg)
+
+        sys.exit(exit_code)
+
+    @classmethod
+    def abort_if(cls, condition, msg: str):
+        if condition:
+            cls.fail(msg)
+
+
+def run_command(exe: str, *args: str, capture_output=True, do_exec=False, dryrun=None, env=None, fatal=True):
+    Logger.abort_if(not exe, f"'{exe}' does not exist")
+    if dryrun is None:
+        dryrun = DRYRUN
+
+    command = os.path.basename(exe)
+    description = "%s %s" % (command, " ".join(str(x) for x in args))
+    if do_exec:
+        description = f"exec {description}"
+
+    if dryrun:
+        verb = "exec" if do_exec else "run"
+        print(f"Would {verb}: {description}")
+        return None if do_exec else subprocess.CompletedProcess(args=args, returncode=0, stdout="", stderr="")
+
+    full_args = [exe, *args]
+    if do_exec:  # pragma: no cover
+        Logger.debug(f"Exec: {description}")
+        os.execve(exe, [exe, *args], env or dict(os.environ))  # noqa: S606
+
+    Logger.debug(f"Running: {description}")
+    result = subprocess.run(full_args, capture_output=capture_output, text=True, env=env)  # noqa: S603
+    Logger.abort_if(fatal and result.returncode, f"'{description}' failed with exit code {result.returncode}:\n{result.stderr}")
+    return result
+
+
+def launch_ghostty(session_name, env=None):
+    Logger.abort_if(not Path("/Applications/Ghostty.app").is_dir(), "ghostty is not installed")
+    cf = HOME / f".config/ghostty/{session_name}.conf"
+    Logger.abort_if(session_name != "test" and not cf.exists(), f"No ghostty config: {cf}")
+    run_command("/usr/bin/open", "-na", "Ghostty", "--args", f"--class={session_name}", f"--config-file={cf}", do_exec=True, env=env)
+
+
+def find_iterm_profile(profile_name):
+    import plistlib
+
+    r = run_command("defaults", "read", "com.googlecode.iterm2", "PrefsCustomFolder", dryrun=False)
+    file_path = Path(r.stdout.strip()) / "com.googlecode.iterm2.plist"
+    Logger.abort_if(not file_path.exists(), f"No iterm file: {file_path}")
+    with file_path.open("rb") as fp:
+        prefs = plistlib.load(fp)
+
+    return find_iterm_profile_in_prefs(prefs, profile_name)
+
+
+def find_iterm_profile_in_prefs(prefs, profile_name):
+    for key in ITERM_PROFILE_KEYS:
+        profiles = prefs.get(key)
+        if not isinstance(profiles, list):
+            continue
+
+        for profile in profiles:
+            if isinstance(profile, dict) and profile.get("Name") == profile_name:
+                return profile
+
+
+def launch_iterm(session_name, env=None):
+    Logger.abort_if(not Path("/Applications/iTerm.app").is_dir(), "iTerm is not installed")
+    has_profile = find_iterm_profile(session_name)
+    Logger.abort_if(not has_profile, f"No profile '{session_name}' in iterm2 plist")
+    run_command("/usr/bin/open", "-a", "iTerm", env=env)
+    run_command("/usr/bin/osascript", "-e", f'tell application "iTerm" to create window with profile "{session_name}"', env=env)
+
+
+def main():
+    global DRYRUN
+
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--debug", "-v", action="store_true", help="Log debug info")
+    parser.add_argument("--dryrun", "-n", action="store_true", help="Perform a dryrun")
+    parser.add_argument("term_short", nargs="?", choices=KNOWN_EMULATORS.keys(), help="Terminal emulator to use")
+    parser.add_argument("session_name", help="tmux session name")
+    args = parser.parse_args()
+
+    DRYRUN = args.dryrun
+    if args.debug:
+        Logger.enable_logging()
+
+    Logger.debug(f"-- {args}")
+    # Clear env vars to avoid polluting sessions (eg: clear ghostty env vars when starting iterm)
+    Logger.debug("Resetting env vars")
+    groomed_env = {"PATH": "/usr/bin:/bin:/sbin", "TERM": "xterm-256color"}
+    groomed_env.update({k: v for k, v in os.environ.items() if v and k in ("HOME", "LANG", "LOGNAME", "PWD", "USER")})
+    os.environ.clear()
+    os.environ.update(groomed_env)
+    session_name = args.session_name
+    if session_name in ("exec-env", "show-env"):
+        run_command("/usr/bin/env", capture_output=False, env=groomed_env, do_exec=session_name == "exec-env")
+        return
+
+    term_emulator = KNOWN_EMULATORS.get(args.term_short) or K_GHOSTTY
+    if term_emulator == K_ITERM:
+        launch_iterm(session_name, env=groomed_env)
+        return
+
+    launch_ghostty(session_name, env=groomed_env)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

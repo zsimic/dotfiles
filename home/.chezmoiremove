@@ -13,3 +13,10 @@
 /.config/lesskey
 /.config/ripgrep.conf
 /.local/share/chezmoi-local
+
+# Old bin
+/bin/_gen-completions
+/bin/check-repo-status
+/bin/injectrc.py
+/bin/shrinky.py
+/bin/yo-mux

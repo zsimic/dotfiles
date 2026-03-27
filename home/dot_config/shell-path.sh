@@ -1,23 +1,9 @@
-#!/bin/bash
 # sourced by all shells that need PATH, keep compatible with bash and zsh
-
 # This repo has a fixed structure and would be irrelevant for any other XDG layout, we still define entries in standard way
 : "${XDG_CACHE_HOME:=$HOME/.cache}"
 : "${XDG_CONFIG_HOME:=$HOME/.config}"
 : "${XDG_DATA_HOME:=$HOME/.local/share}"
 : "${XDG_STATE_HOME:=$HOME/.local/state}"
-
-_log_debug() {
-    if [[ -n "$_SHELL_PATH_LOG" ]]; then
-        if [ -z "$_logging_started" ]; then
-            _logging_started=yes
-            echo "" >> $_SHELL_PATH_LOG
-            echo "-- $(date) pid: $$ PATH: $PATH --" >> $_SHELL_PATH_LOG
-            /opt/homebrew/bin/pstree -p $$  >> $_SHELL_PATH_LOG
-        fi
-        echo "$@" >> $_SHELL_PATH_LOG
-    fi
-}
 
 cleanup_path() {  # Dedupe and cleanup entries from a PATH-like value that point to non-existing folders
     local input=$1
@@ -54,10 +40,9 @@ prepend_path() { [ -d "$1" ] && PATH="$1:$PATH"; }
 append_path "/usr/local/bin"
 append_path "$HOME/Library/Application Support/JetBrains/Toolbox/scripts"
 
-if [ -z "$SDKMAN_DIR" ] && [ -d "$HOME/.sdkman/bin" ]; then
+if [ -z "${SDKMAN_DIR:-}" ] && [ -d "$HOME/.sdkman/bin" ]; then
     export SDKMAN_DIR="$HOME/.sdkman"
     . "$SDKMAN_DIR/bin/sdkman-init.sh"
-    _log_debug PATH post sdkman: $PATH
 fi
 
 if ! command -v brew > /dev/null; then
@@ -69,11 +54,11 @@ if ! command -v brew > /dev/null; then
             break
         fi
     done
-    _log_debug PATH post brew: $PATH
 fi
 
 prepend_path "$HOME/.local/bin"
 prepend_path "$HOME/.cargo/bin"
+prepend_path "$HOME/bin"
 
 # less setup done via env vars because older less versions don't respect XDG...
 export LESSHISTFILE="$XDG_STATE_HOME/lesshst"
