@@ -25,13 +25,13 @@ def test_help(cli):
     assert "Example:\n  set -g status-right" in cli.logged.stderr
 
 
-def test_invalid(cli):
+def test_invalid(cli, monkeypatch):
     cli.main = SHRINKY
     cli.run("")
     assert cli.failed
     assert "No command provided" in cli.logged.stderr
 
-    cli.run("-v", "foo")
+    cli.run("foo")
     assert cli.failed
     assert "Unknown command 'foo'" in cli.logged.stderr
     assert not cli.logged.stdout
@@ -52,9 +52,12 @@ def test_invalid(cli):
     assert cli.failed
     assert "No color set for 'foo'" in cli.logged.stderr
 
+    assert not os.path.exists("shrinky.log")
+    monkeypatch.setenv("SHRINKY_LOG", "shrinky.log")
     cli.run("ps1 -z5")
     assert cli.failed
     assert "Unknown flag 'z'" in cli.logged.stderr
+    assert os.path.exists("shrinky.log")
 
 
 def test_ps1(cli):
@@ -120,12 +123,12 @@ def test_ps1_deep(cli, monkeypatch):
 
 def test_tmux(cli, monkeypatch):
     cli.main = SHRINKY
-    monkeypatch.setenv("LOG_FILE", "test.log")
-    assert not os.path.exists("test.log")
-    cli.run("-v tmux_short -p%s" % os.environ.get("HOME"))
+    monkeypatch.setenv("SHRINKY_LOG", "shrinky.log")
+    assert not os.path.exists("shrinky.log")
+    cli.run("tmux_short -p%s" % os.environ.get("HOME"))
     assert cli.succeeded
     assert cli.logged.stdout.contents() == "~"
-    assert os.path.exists("test.log")
+    assert os.path.exists("shrinky.log")
 
     cli.run("tmux_short -p~/dev/foo/bar")
     assert cli.succeeded

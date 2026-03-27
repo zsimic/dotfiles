@@ -22,14 +22,14 @@ class Logger:
 
     @classmethod
     def enable_logging(cls, log_location):
-        kwargs = {}
+        kwargs = {"datefmt": "%m-%d %H:%M:%S", "format": "%(asctime)s %(message)s", "stream": sys.stderr}
         if log_location:
-            kwargs["filename"] = Path(log_location).resolve()
+            kwargs.pop("stream")
+            kwargs["datefmt"] = "%Y-%m-%d %H:%M:%S"
+            kwargs["format"] = "%(asctime)s [%(process)s] %(message)s"
+            kwargs["filename"] = Path(os.path.expanduser(log_location)).resolve()
 
-        else:
-            kwargs["stream"] = sys.stderr
-
-        logging.basicConfig(datefmt="%m-%d %H:%M:%S", format="%(asctime)s %(message)s", **kwargs)
+        logging.basicConfig(**kwargs)
         cls.logger = logging.getLogger(__name__)
         logging.root.setLevel(logging.DEBUG)
         cls.logger.setLevel(logging.DEBUG)
@@ -114,23 +114,22 @@ def is_already_running_in_tmux():
 
 
 def detected_term_emulator():
-    if "GHOSTTY_BIN_DIR" in os.environ:
+    if os.environ.get("GHOSTTY_BIN_DIR"):
         return "ghostty"
 
-    if "ITERM_PROFILE" in os.environ:
+    if os.environ.get("ITERM_PROFILE"):
         return "iterm"
 
 
 class TmuxRunner:
     def __init__(self, session_name):
+        self.tmux_path = which("tmux")
         self.given_session_name = session_name
         self.session_name = session_name
         self.detected_term_emulator = detected_term_emulator()
-        Logger.debug(f"Detected term: {self.detected_term_emulator}")
         if self.detected_term_emulator:
             self.session_name += f"-{self.detected_term_emulator}"
 
-        self.tmux_path = which("tmux")
 
     def join_or_attach(self):
         r = self.run("has-session", "-t", self.session_name, dryrun=False, fatal=False)
@@ -178,6 +177,7 @@ class TmuxRunner:
                 yield line
 
     def run(self, *args, do_exec=False, dryrun=None, fatal=True):
+        Logger.abort_if(not self.tmux_path, "tmux is not installed", dryrun=False)
         return run_command(self.tmux_path, *args, do_exec=do_exec, dryrun=dryrun, fatal=fatal)
 
 
@@ -187,17 +187,17 @@ def main(args=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--debug", "-v", action="store_true", help="Log debug info")
     parser.add_argument("--dryrun", "-n", action="store_true", help="Perform a dryrun")
-    parser.add_argument("--log", help="Log to specified file")
     parser.add_argument("session_name", help="tmux session name")
     args = parser.parse_args(args=args)
 
     DRYRUN = args.dryrun
-    if args.debug or args.log:
-        Logger.enable_logging(args.log)
+    log_location = os.getenv("JOIN_TMUX_LOG")
+    if args.debug or log_location:
+        Logger.enable_logging(log_location)
 
     Logger.debug(f"-- {args}")
     tmux = TmuxRunner(args.session_name)
-    Logger.abort_if(not tmux.tmux_path, "tmux is not installed")
+    Logger.debug(f"Session: {tmux.session_name}")
     Logger.abort_if(is_already_running_in_tmux(), "Already in tmux")
     tmux.join_or_attach()
 

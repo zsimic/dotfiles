@@ -14,10 +14,9 @@ class Logger:
     logger = None
 
     @classmethod
-    def enable_logging(cls):
+    def enable_logging(cls, log_location):
         import logging
 
-        log_location = os.getenv("LOG_FILE", "~/.cache/shrinky.log")
         logging.basicConfig(
             filename=os.path.expanduser(log_location),
             datefmt="%m-%d %H:%M:%S",
@@ -499,10 +498,9 @@ class CommandParser:
         if cmd == "--help":
             self.show_help()
 
-        if cmd in ("-v", "--debug"):
-            cmd = args[0]
-            args = args[1:]
-            Logger.enable_logging()
+        log_location = os.getenv("SHRINKY_LOG")
+        if log_location:
+            Logger.enable_logging(log_location)
 
         cmd = self.get_command(cmd)
         if "--help" in args:
