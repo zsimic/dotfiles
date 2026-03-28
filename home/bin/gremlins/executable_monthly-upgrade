@@ -27,7 +27,9 @@ regenerate_completions() {
 
 rustup self update
 rustup update
-cargo install-update -a
+#cargo install-update -a  # unfortunately compiles from source sometimes, overkill (prefer to skip if there's no binary yet)
+export BINSTALL_STRATEGIES=crate-meta-data
+cargo install --list | grep -E '^.+ v[0-9.]+:$' | cut -f1 -d' ' | xargs -I {} cargo binstall --no-confirm {}
 
 if command -v brew > /dev/null; then
     # Avoid running brew update on the very first run (where brew may not yet have been picked up in PATH)
