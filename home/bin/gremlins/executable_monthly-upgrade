@@ -31,7 +31,7 @@ rustup update
 export BINSTALL_STRATEGIES=crate-meta-data
 packages=($(cargo install --list | grep -E '^[a-z0-9_-]+ v[0-9.]+:$' | cut -f1 -d' '))
 for pkg in "${packages[@]}"; do
-    cargo binstall --no-confirm "$pkg" || print "⚠️ Skipped $pkg: No binary"
+    cargo binstall --no-confirm "$pkg" || print "⚠️ Skipped $pkg: no binary"
 done
 
 if command -v brew > /dev/null; then
