@@ -21,7 +21,7 @@ regenerate_completions() {
     set +x
 
     # Regenerate zcompdump
-    rm -f "$HOME/.cache/zsh/zcompdump-"*
+    rm -f "$HOME/.cache/zsh/zcompdump-"* || true
     zsh -ilc 'echo zcompdump regenerated'
 }
 
