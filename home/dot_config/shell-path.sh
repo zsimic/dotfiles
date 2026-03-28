@@ -4,6 +4,10 @@
 : "${XDG_CONFIG_HOME:=$HOME/.config}"
 : "${XDG_DATA_HOME:=$HOME/.local/share}"
 : "${XDG_STATE_HOME:=$HOME/.local/state}"
+export XDG_CACHE_HOME
+export XDG_CONFIG_HOME
+export XDG_DATA_HOME
+export XDG_STATE_HOME
 
 cleanup_path() {  # Dedupe and cleanup entries from a PATH-like value that point to non-existing folders
     local input=$1
@@ -45,25 +49,23 @@ if [ -z "${SDKMAN_DIR:-}" ] && [ -d "$HOME/.sdkman/bin" ]; then
     . "$SDKMAN_DIR/bin/sdkman-init.sh"
 fi
 
-if ! command -v brew > /dev/null; then
-    # brew likes to put itself at front of PATH, we don't need that, call `brew shellenv` only once
-    # Probe brew directly, as we have a chicken and egg conundrum (brew needed on PATH in order to call `brew shellenv`...)
-    for folder in /opt/homebrew /home/linuxbrew/.linuxbrew; do
-        if [ -x "$folder/bin/brew" ]; then
-            eval "$($folder/bin/brew shellenv)"
-            break
-        fi
-    done
-fi
+for brew_folder in /opt/homebrew /home/linuxbrew/.linuxbrew; do
+    if [[ -d "$brew_folder" ]]; then
+        prepend_path "$brew_folder/sbin"
+        prepend_path "$brew_folder/bin"
+    fi
+done
+unset brew_folder
 
 prepend_path "$HOME/.local/bin"
 prepend_path "$HOME/.cargo/bin"
 prepend_path "$HOME/bin"
 
 # less setup done via env vars because older less versions don't respect XDG...
-export LESSHISTFILE="$XDG_STATE_HOME/lesshst"
+export LESSHISTFILE="$HOME/.local/state/lesshst"
 export LESS="-SFWJ --no-histdups --mouse --wheel-lines=3"
 
+# Optional machine-specific additions
 [ -r "$HOME/.local/shell-path.sh" ] && . "$HOME/.local/shell-path.sh"
 
 PATH=$(cleanup_path "$PATH")

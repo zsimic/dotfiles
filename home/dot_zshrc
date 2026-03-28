@@ -30,7 +30,6 @@ zstyle ':completion:*:descriptions' format '[%d]'
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 zstyle ':completion:*' completer _complete
 
-# fzf-tab:
 zstyle ':completion:*' menu no  # Let fzf-tab handle completion list rendering
 zstyle ':fzf-tab:complete:*' switch-group '<' '>'  # Switch completion groups using `<` and `>`
 zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
@@ -38,6 +37,14 @@ zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
 [ -r "$HOME/.config/shell-settings.sh" ] && . "$HOME/.config/shell-settings.sh"
 
 fpath+=("$HOME/.local/share/zsh/site-functions")
+for brew_folder in /opt/homebrew /home/linuxbrew/.linuxbrew; do
+    if [ -d "$brew_folder" ]; then
+        [ -d $brew_folder/share/zsh/site-functions ] && fpath+=($brew_folder/share/zsh/site-functions)
+        [ -z "${INFOPATH:-}" ] && export INFOPATH="$brew_folder/share/info";
+    fi
+done
+unset brew_folder
+
 autoload -Uz compinit
 zcompdump_file="$HOME/.cache/zsh/zcompdump-$ZSH_VERSION"
 if [ -f "$zcompdump_file" ]; then

@@ -3,8 +3,9 @@ import os
 ZTERM = "home/bin/executable_zterm"
 
 
-def test_iterm(cli):
+def test_iterm(cli, monkeypatch):
     cli.main = ZTERM
+    monkeypatch.setenv("JOIN_TMUX_LOG", "test.log")
     cli.run("-v", "i", "foo")
     assert cli.failed
     assert "No profile 'foo' in iterm2 plist" in cli.logged.stderr
@@ -19,7 +20,8 @@ def test_iterm(cli):
     assert 'create window with profile "asciinema"' in cli.logged.stdout
 
     assert "PYTEST_CURRENT_TEST" in os.environ
-    cli.run("show-env")
+    cli.run("-v", "show-env")
     assert cli.succeeded
-    assert "LOGNAME:" not in cli.logged.stdout
+    assert "JOIN_TMUX_LOG=test.log" in cli.logged.stdout
+    assert "PATH=" in cli.logged.stdout
     assert "PYTEST_CURRENT_TEST" not in cli.logged.stdout

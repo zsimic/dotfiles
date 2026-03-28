@@ -19,6 +19,10 @@ KNOWN_EMULATORS = {"g": K_GHOSTTY, "i": K_ITERM}
 ITERM_PROFILE_KEYS = ("New Bookmarks", "Profiles", "Bookmarks")
 
 
+def short(text: str):
+    return text.replace(str(HOME), "~")
+
+
 class Logger:
     logger = None
 
@@ -30,12 +34,13 @@ class Logger:
         cls.logger.setLevel(logging.DEBUG)
 
     @classmethod
-    def debug(cls, message):
+    def debug(cls, message: str):
         if cls.logger:
-            cls.logger.debug(message)
+            cls.logger.debug(short(message))
 
     @classmethod
     def fail(cls, msg, exit_code=1):
+        msg = short(msg)
         print(msg, file=sys.stderr)
         if cls.logger:
             cls.logger.error(msg)
@@ -48,29 +53,28 @@ class Logger:
             cls.fail(msg)
 
 
-def run_command(exe: str, *args: str, capture_output=True, do_exec=False, dryrun=None, env=None, fatal=True):
-    Logger.abort_if(not exe, f"'{exe}' does not exist")
+def run_command(exe: str, *args: str, capture_output=True, do_exec=False, dryrun=None, env=None):
     if dryrun is None:
         dryrun = DRYRUN
 
     command = os.path.basename(exe)
-    description = "%s %s" % (command, " ".join(str(x) for x in args))
+    description = " ".join(str(x) for x in args)
+    description = short(f"{command} {description}")
     if do_exec:
         description = f"exec {description}"
 
+    verb = "exec" if do_exec else "run"
     if dryrun:
-        verb = "exec" if do_exec else "run"
         print(f"Would {verb}: {description}")
         return None if do_exec else subprocess.CompletedProcess(args=args, returncode=0, stdout="", stderr="")
 
+    Logger.debug(f"{verb.capitalize()}: {description}")
     full_args = [exe, *args]
     if do_exec:  # pragma: no cover
-        Logger.debug(f"Exec: {description}")
-        os.execve(exe, [exe, *args], env or dict(os.environ))  # noqa: S606
+        os.execve(exe, full_args, env or dict(os.environ))  # noqa: S606
 
-    Logger.debug(f"Running: {description}")
     result = subprocess.run(full_args, capture_output=capture_output, text=True, env=env)  # noqa: S603
-    Logger.abort_if(fatal and result.returncode, f"'{description}' failed with exit code {result.returncode}:\n{result.stderr}")
+    Logger.abort_if(result.returncode, f"'{description}' failed with exit code {result.returncode}:\n{result.stderr}")
     return result
 
 
@@ -130,13 +134,19 @@ def main():
     # Clear env vars to avoid polluting sessions (eg: clear ghostty env vars when starting iterm)
     Logger.debug("Resetting env vars")
     groomed_env = {"PATH": "/usr/bin:/bin:/sbin", "TERM": "xterm-256color"}
-    groomed_env.update({k: v for k, v in os.environ.items() if v and k in ("HOME", "LANG", "LOGNAME", "PWD", "USER")})
+    groomed_env.update({k: v for k, v in os.environ.items() if v and k in ("HOME", "JOIN_TMUX_LOG", "LANG", "LOGNAME", "PWD", "USER")})
+    if args.debug:
+        groomed_env.setdefault("JOIN_TMUX_LOG", str(HOME / ".cache/join-tmux.log"))
+
     os.environ.clear()
     os.environ.update(groomed_env)
     session_name = args.session_name
     if session_name in ("exec-env", "show-env"):
         run_command("/usr/bin/env", capture_output=False, env=groomed_env, do_exec=session_name == "exec-env")
         return
+
+    if os.getenv("JOIN_TMUX_LOG"):
+        Logger.debug(f"JOIN_TMUX_LOG: {os.getenv('JOIN_TMUX_LOG')}")
 
     term_emulator = KNOWN_EMULATORS.get(args.term_short) or K_GHOSTTY
     if term_emulator == K_ITERM:

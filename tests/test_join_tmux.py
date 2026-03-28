@@ -32,10 +32,13 @@ def test_tmux(cli, monkeypatch):
     monkeypatch.delenv("TMUX", raising=False)
     monkeypatch.delenv("GHOSTTY_BIN_DIR", raising=False)
     monkeypatch.setenv("ITERM_PROFILE", "foo")
+    monkeypatch.setenv("JOIN_TMUX_LOG", "test.log")
+    assert not os.path.exists("test.log")
     cli.run("-nv", "test")
     assert cli.succeeded
     assert "Would run: tmux new-session -d -s test-iterm" in cli.logged.stdout
     assert "Would exec: exec tmux attach-session -t test-iterm" in cli.logged.stdout
+    assert not os.path.exists("test.log")  # Not effectively logged to file in dryrun mode
 
     monkeypatch.setenv("GHOSTTY_BIN_DIR", "some-path")
     monkeypatch.setenv("TMUX", "some-socket")
@@ -49,7 +52,6 @@ def test_tmux(cli, monkeypatch):
 
     monkeypatch.setenv("SSH_TTY", "some-socket")
     monkeypatch.setenv("TERM", "tmux-256color")
-    monkeypatch.setenv("JOIN_TMUX_LOG", "test.log")
     monkeypatch.delenv("TMUX", raising=False)
     assert not os.path.exists("test.log")
     cli.run("-v", "test")
