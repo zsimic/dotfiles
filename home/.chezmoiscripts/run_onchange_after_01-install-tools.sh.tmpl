@@ -13,7 +13,6 @@ if [[ ! -x "$HOME/.cargo/bin/cargo-binstall" ]]; then
     curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
 fi
 
-export BINSTALL_STRATEGIES=crate-meta-data
 cargo_install() {
     local pkg_name="$1"
     if ! cargo install --list | grep -Eq "^$pkg_name v"; then
@@ -23,6 +22,8 @@ cargo_install() {
 
 # Rust tools
 cargo_install cargo-update
+
+export BINSTALL_STRATEGIES=crate-meta-data
 cargo_install bat
 cargo_install dua-cli
 cargo_install eza
