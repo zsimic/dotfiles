@@ -2,7 +2,9 @@
 # sourced once by login shells (sh, bash, ksh interactive and non-interactive)
 
 if [ -z "$BASH_VERSION" ]; then
-    [ -r "$HOME/.config/shell-path.sh" ] && . "$HOME/.config/shell-path.sh"
+    if [ -r "$HOME/.config/shell-path.sh" ]; then
+        . "$HOME/.config/shell-path.sh"
+    fi
 elif [ -r "$HOME/.bashrc" ]; then
     . "$HOME/.bashrc"
 fi

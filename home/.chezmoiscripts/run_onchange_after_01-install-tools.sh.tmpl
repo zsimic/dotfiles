@@ -1,39 +1,7 @@
 #!/bin/zsh -euf
 
-# Install cargo for rust based tools
-if [[ ! -x "$HOME/.cargo/bin/rustup" ]]; then
-    echo Installing rustup
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --profile minimal
-fi
-if ! command -v cargo > /dev/null && [[ -f "$HOME/.cargo/env" ]]; then
-    source "$HOME/.cargo/env"  # Ensure cargo is in the PATH for the rest of this script
-fi
-if [[ ! -x "$HOME/.cargo/bin/cargo-binstall" ]]; then
-    echo Installing cargo-binstall
-    curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
-fi
-
-cargo_install() {
-    local pkg_name="$1"
-    if ! cargo install --list | grep -Eq "^$pkg_name v"; then
-        cargo binstall -y $pkg_name || print "⚠️ Skipped $pkg: no binary"
-    fi
-}
-
 # Rust tools
-cargo_install cargo-update
-
-export BINSTALL_STRATEGIES=crate-meta-data
-cargo_install bat
-cargo_install dua-cli
-cargo_install eza
-cargo_install fd-find
-cargo_install git-delta
-cargo_install ripgrep
-cargo_install tokei
-cargo_install tre-command
-cargo_install zoxide
-[[ "$USER" == "zoran" ]] && cargo_install uv
+"$HOME/bin/gremlins/manage-rust-tools" bootstrap
 
 # Everything else via brew
 {{ $casks := list -}}

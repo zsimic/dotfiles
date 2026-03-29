@@ -1,0 +1,112 @@
+#!/bin/zsh -eu
+
+typeset -gr cargo_home="${CARGO_HOME:-$HOME/.cargo}"
+typeset -gr cargo_bin_dir="$cargo_home/bin"
+typeset -gr cargo_env_file="$cargo_home/env"
+typeset -gr cargo_installed_file="$cargo_home/.crates.toml"
+
+typeset -ga desired_rust_packages=(
+    cargo-update
+    bat
+    dua-cli
+    eza
+    fd-find
+    git-delta
+    ripgrep
+    tokei
+    tre-command
+    zoxide
+)
+
+[[ "$USER" == "zoran" ]] && desired_rust_packages+=(uv)
+
+prepend_to_path() {
+    local dir="$1"
+
+    [[ -d "$dir" ]] || return 0
+
+    case ":$PATH:" in
+        *":$dir:"*) ;;
+        *) export PATH="$dir:$PATH" ;;
+    esac
+}
+
+ensure_cargo_path() {
+    prepend_to_path "$cargo_bin_dir"
+
+    if ! command -v cargo > /dev/null && [[ -f "$cargo_env_file" ]]; then
+        source "$cargo_env_file"
+        prepend_to_path "$cargo_bin_dir"
+    fi
+}
+
+ensure_rustup() {
+    if [[ ! -x "$cargo_bin_dir/rustup" ]]; then
+        echo Installing rustup
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --profile minimal
+    fi
+
+    ensure_cargo_path
+    command -v cargo > /dev/null
+    command -v rustup > /dev/null
+}
+
+ensure_cargo_binstall() {
+    if [[ ! -x "$cargo_bin_dir/cargo-binstall" ]]; then
+        echo Installing cargo-binstall
+        curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
+    fi
+
+    ensure_cargo_path
+    command -v cargo-binstall > /dev/null
+}
+
+configure_binstall() {
+    export BINSTALL_STRATEGIES="${BINSTALL_STRATEGIES:-crate-meta-data}"
+}
+
+cargo_installed_packages() {
+    [[ -r "$cargo_installed_file" ]] || return 0
+    cargo install --list | awk '/^[^ ]+ v[^ ]+:$/ { print $1 }'
+}
+
+bootstrap_rust_cli_tools() {
+    local -a installed_packages
+    local pkg_name
+
+    ensure_rustup
+    ensure_cargo_binstall
+    configure_binstall
+
+    installed_packages=($(cargo_installed_packages))
+    for pkg_name in "${desired_rust_packages[@]}"; do
+        if (( ${installed_packages[(Ie)$pkg_name]} == 0 )); then
+            cargo binstall --no-confirm -- "$pkg_name" || print "WARN: skipped $pkg_name: no binary"
+        fi
+    done
+}
+
+upgrade_rust_cli_tools() {
+    local -a installed_packages
+    local pkg_name
+
+    ensure_rustup
+    rustup self update
+    rustup update
+    ensure_cargo_binstall
+    configure_binstall
+
+    installed_packages=($(cargo_installed_packages))
+    for pkg_name in "${installed_packages[@]}"; do
+        cargo binstall --no-confirm -- "$pkg_name" || print "WARN: skipped $pkg_name: no binary"
+    done
+}
+
+case "${1:-}" in
+    bootstrap) bootstrap_rust_cli_tools ;;
+    upgrade) upgrade_rust_cli_tools ;;
+    *)
+        print -u2 "usage: $0 bootstrap|upgrade"
+        exit 1
+        ;;
+esac

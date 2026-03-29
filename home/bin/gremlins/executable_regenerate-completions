@@ -1,0 +1,83 @@
+#!/bin/zsh -eu
+
+typeset -gr comp_dir="$HOME/.local/share/zsh/site-functions"
+typeset -gr zcompdump_dir="$HOME/.cache/zsh"
+typeset -g temp_dir=
+
+cleanup() {
+    if [[ -n "$temp_dir" && -d "$temp_dir" ]]; then
+        rm -rf -- "$temp_dir"
+    fi
+}
+
+ensure_dirs() {
+    mkdir -p "$comp_dir" "$zcompdump_dir"
+}
+
+prepare_temp_dir() {
+    temp_dir="$(mktemp -d "${TMPDIR:-/tmp}/regenerate-completions.XXXXXX")"
+}
+
+render_completion() {
+    local target="$1"
+    shift
+
+    local tmp_file="$temp_dir/$target"
+    print -r -- "regen $target: '$*'"
+    "$@" > "$tmp_file"
+    [[ -s "$tmp_file" ]]
+    mv -- "$tmp_file" "$comp_dir/$target"
+}
+
+fetch_completion() {
+    local target="$1"
+    local url="$2"
+    local tmp_file="$temp_dir/$target"
+
+    print -r -- "regen $target: from $url"
+    curl -fsSL "$url" -o "$tmp_file"
+    [[ -s "$tmp_file" ]]
+    mv -- "$tmp_file" "$comp_dir/$target"
+}
+
+clear_zcompdump() {
+    local -a dump_files
+
+    setopt local_options null_glob
+    dump_files=("$zcompdump_dir"/zcompdump-*)
+    if (( ${#dump_files[@]} )); then
+        rm -f -- "${dump_files[@]}"
+    fi
+}
+
+regenerate_completions() {
+    # Keep one completion source per configured tool so any interface break fails early.
+    # Remove a line here when the tool leaves this dotfiles set.
+    # Keep instructions alphabetically sorted by tool.
+
+    render_completion _bat bat --completion zsh
+    fetch_completion _delta https://raw.githubusercontent.com/dandavison/delta/HEAD/etc/completion/completion.zsh
+    # dua: no maintained completion source wired in here yet.
+    fetch_completion _eza https://raw.githubusercontent.com/eza-community/eza/HEAD/completions/zsh/_eza
+    render_completion _fd fd --gen-completions zsh
+    render_completion _rg rg --generate complete-zsh
+    render_completion _rustup rustup completions zsh
+    # tokei: upstream no longer ships a checked-in completion source, and no supported `tokei completion` command was found.
+    # tre: no shell completion subcommand is exposed; keep only if this changes.
+    render_completion _uv uv generate-shell-completion zsh
+}
+
+refresh_zcompdump() {
+    clear_zcompdump
+    zsh -ilc 'echo zcompdump regenerated'
+}
+
+main() {
+    trap cleanup EXIT INT TERM
+    ensure_dirs
+    prepare_temp_dir
+    regenerate_completions
+    refresh_zcompdump
+}
+
+main "$@"

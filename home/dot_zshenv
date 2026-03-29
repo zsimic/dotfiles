@@ -2,4 +2,6 @@
 # sourced by all zsh runs (interactive and non-interactive); keep this minimal
 # debug with: env -i HOME="$HOME" PATH="/usr/bin:/bin" zsh -xc 'echo "PATH=$PATH"'
 
-[ -r "$HOME/.config/shell-path.sh" ] && . "$HOME/.config/shell-path.sh"
+if [ -r "$HOME/.config/shell-path.sh" ]; then
+    . "$HOME/.config/shell-path.sh"
+fi

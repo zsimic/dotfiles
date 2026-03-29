@@ -23,8 +23,7 @@ cleanup_path() {  # Dedupe and cleanup entries from a PATH-like value that point
             input=${input#*:}
         fi
 
-        [ -z "$part" ] && continue
-        [ -d "$part" ] || continue
+        [[ -n "$part" && -d "$part" ]] || continue
 
         case ":$seen:" in
             *":$part:"*) ;;
@@ -38,8 +37,20 @@ cleanup_path() {  # Dedupe and cleanup entries from a PATH-like value that point
     printf '%s' "$output"
 }
 
-append_path() { [ -d "$1" ] && PATH="$PATH:$1"; }
-prepend_path() { [ -d "$1" ] && PATH="$1:$PATH"; }
+append_path() {
+    if [ -d "$1" ]; then
+        case ":$PATH:" in
+            *":$1:"*) return ;;
+        esac
+        PATH="$PATH:$1"
+    fi
+}
+
+prepend_path() {
+    if [ -d "$1" ]; then
+        PATH="$1:$PATH"
+    fi
+}
 
 append_path "/usr/local/bin"
 append_path "$HOME/Library/Application Support/JetBrains/Toolbox/scripts"
@@ -66,6 +77,8 @@ export LESSHISTFILE="$HOME/.local/state/lesshst"
 export LESS="-SFWJ --no-histdups --mouse --wheel-lines=3"
 
 # Optional machine-specific additions
-[ -r "$HOME/.local/shell-path.sh" ] && . "$HOME/.local/shell-path.sh"
+if [ -r "$HOME/.local/shell-path.sh" ]; then
+    . "$HOME/.local/shell-path.sh"
+fi
 
 PATH=$(cleanup_path "$PATH")

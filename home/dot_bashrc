@@ -3,7 +3,9 @@
 
 [ -z "$BASH_VERSION" ] && { echo "Source this in bash only"; return 1; }
 
-[ -r "$HOME/.config/shell-path.sh" ] && . "$HOME/.config/shell-path.sh"
+if [ -r "$HOME/.config/shell-path.sh" ]; then
+    . "$HOME/.config/shell-path.sh"
+fi
 [[ $- != *i* ]] && return
 
 shopt -s checkwinsize cmdhist histappend histverify no_empty_cmd_completion
