@@ -37,6 +37,7 @@ keybind = ctrl+delete=text:\x0b
 clipboard-paste-protection = true
 clipboard-trim-trailing-spaces = true
 confirm-close-surface = false
+# shell-integration = zsh
 shell-integration-features = no-cursor,no-title
 quit-after-last-window-closed = true
 

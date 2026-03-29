@@ -78,3 +78,7 @@ bindkey '^[[127;5u' backward-kill-word  # CSI-u for ctrl+backspace
 
 (( $+commands[fzf] )) && source <(fzf --zsh)
 (( $+commands[zoxide] )) && eval "$(zoxide init --cmd cd zsh)"
+
+#if [ -n "$GHOSTTY_RESOURCES_DIR" ]; then
+#    source "$GHOSTTY_RESOURCES_DIR"/shell-integration/zsh/ghostty-integration
+#fi
