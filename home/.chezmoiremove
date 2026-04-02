@@ -17,6 +17,5 @@
 # Old bin
 /bin/_gen-completions
 /bin/check-repo-status
-/bin/injectrc.py
 /bin/shrinky.py
 /bin/yo-mux
