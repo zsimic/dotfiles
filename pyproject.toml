@@ -1,3 +1,24 @@
+[project]
+name = "zorans-dotfiles"  # This is for conveniently using `uv sync` only
+version = "0.1.0"
+description = "Zoran's dotfiles"
+requires-python = ">=3.9"  # macOS is always lagging
+authors = [
+    {name = "Zoran Simic", email = "zoran@simicweb.com"},
+]
+
+[dependency-groups]
+test = [
+    "pkginfo",
+    "pytest-cov",
+    "seekablehttpfile",
+    "runez",
+]
+dev = [
+    { include-group = "test" },
+]
+
+
 [tool.ruff]
 cache-dir = ".tox/.ruff_cache"
 line-length = 140

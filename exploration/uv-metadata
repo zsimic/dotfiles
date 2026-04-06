@@ -1,0 +1,279 @@
+#!/usr/bin/env python3
+
+"""
+Exploration: metadata extraction for indexed packages.
+
+Strategy:
+  1. `uv pip compile --no-deps --universal --format pylock.toml --fork-strategy fewest --no-sources`
+     resolves the latest version AND discovers available wheels/sdist across all platforms.
+     Without --python-version: gives the absolute latest.
+     With --python-version (via -p flag): gives latest for that python.
+  2. If wheels available: stream metadata from the wheel via HTTP range requests (seekablehttpfile).
+     Only reads the zip central directory + METADATA entry — not the full wheel.
+  3. If sdist only: download it, read PKG-INFO with pkginfo.SDist (no build needed).
+"""
+
+import argparse
+import glob
+import json
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import time
+import urllib.request
+import zipfile
+from email.parser import Parser
+from functools import cached_property
+from importlib.metadata import PathDistribution
+from pathlib import Path
+
+import pkginfo
+from seekablehttpfile import SeekableHttpFile
+
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
+
+CANONICAL_KEY = {"classifier": "classifiers"}
+
+
+def run_uv(*args, input=None):
+    uv = shutil.which("uv")
+    if not uv:
+        sys.exit("'uv' is not installed")
+
+    return subprocess.run([uv, *args], input=input, capture_output=True, text=True, check=False)
+
+
+def canonical_key(key):
+    key = re.sub(r"[^\w]", "_", key).lower()
+    return CANONICAL_KEY.get(key, key)
+
+
+def metadata_bytes_to_dict(raw):
+    """Parse METADATA bytes (email format) into a clean dict"""
+    msg = Parser().parsestr(raw.decode())
+    result = {}
+    for key, value in msg.items():
+        if key == "Dynamic":
+            continue
+
+        normalized = canonical_key(key)
+        prev = result.get(normalized)
+        if prev is None:
+            result[normalized] = value
+        elif isinstance(prev, list):
+            prev.append(value)
+        else:
+            result[normalized] = [prev, value]
+
+    return result
+
+
+# Unused here — kept from earlier exploration. Handy for reading metadata from a local .dist-info
+# directory (e.g., after `uv pip install --no-deps --target <dir>`). Handles METADATA, entry_points.txt,
+# and top_level.txt via stdlib importlib.metadata.PathDistribution.
+# Usage: dist_info_path = glob.glob(str(target / "*.dist-info"))[0]
+#        result = dist_info_to_dict(Path(dist_info_path))
+def dist_info_to_dict(dist_info_path):
+    """Convert a .dist-info directory to a clean metadata dict using importlib.metadata"""
+    dist = PathDistribution(dist_info_path)
+    result = {}
+    for key, value in dist.metadata.items():
+        if key == "Dynamic":
+            continue
+
+        normalized = canonical_key(key)
+        prev = result.get(normalized)
+        if prev is None:
+            result[normalized] = value
+        elif isinstance(prev, list):
+            prev.append(value)
+        else:
+            result[normalized] = [prev, value]
+
+    eps = dist.entry_points
+    if eps:
+        grouped = {}
+        for ep in eps:
+            grouped.setdefault(ep.group, {})[ep.name] = ep.value
+
+        result["entry_points"] = grouped
+
+    top_level = dist.read_text("top_level.txt")
+    if top_level:
+        result["top_level"] = top_level.strip().splitlines()
+
+    return result
+
+
+def resolve_pylock(pip_spec, python_version=None):
+    """Resolve version and discover available wheels/sdist via pylock.toml."""
+    print(f"resolving: '{pip_spec}'" + (f" (python {python_version})" if python_version else ""), file=sys.stderr)
+    started = time.time()
+    cmd = ["-q", "pip", "compile", "--no-deps", "--no-header", "--universal",
+           "--format", "pylock.toml", "--fork-strategy", "fewest", "--no-sources", "-"]
+    if python_version:
+        cmd += ["--python-version", python_version]
+
+    r = run_uv(*cmd, input=pip_spec)
+    elapsed = time.time() - started
+    if r.returncode:
+        sys.exit(r.stderr.strip() or f"Failed to resolve '{pip_spec}'")
+
+    data = tomllib.loads(r.stdout)
+    packages = data.get("packages", [])
+    if len(packages) != 1:
+        sys.exit(f"Expected 1 package, got {len(packages)}")
+
+    pkg = packages[0]
+    wheels = pkg.get("wheels", [])
+    sdist = pkg.get("sdist")
+    print(f"  -> {pkg['name']}=={pkg['version']}: {len(wheels)} wheels, sdist={'yes' if sdist else 'no'}"
+          f" ({elapsed:.1f}s)", file=sys.stderr)
+
+    return {
+        "name": pkg["name"],
+        "version": pkg["version"],
+        "wheels": wheels,
+        "sdist_url": sdist["url"] if sdist else None,
+    }
+
+
+class RemoteWheelInfo:
+    """
+    Stream metadata from a remote wheel via HTTP range requests — no full download.
+    Uses SeekableHttpFile + ZipFile to read only the zip central directory + individual entries.
+    """
+
+    def __init__(self, wheel_url):
+        self.wheel_url = wheel_url
+
+    @cached_property
+    def zip_file(self):
+        return zipfile.ZipFile(SeekableHttpFile(self.wheel_url))
+
+    @cached_property
+    def info_dir(self):
+        """Top-level .dist-info dir"""
+        subdirs = {p.split("/", 1)[0] for p in self.zip_file.namelist()}
+        info_dirs = [s for s in subdirs if s.endswith(".dist-info")]
+        assert len(info_dirs) == 1
+        return info_dirs[0]
+
+    def _read(self, filename):
+        """Read a file from .dist-info, return bytes or None if missing"""
+        path = f"{self.info_dir}/{filename}"
+        if path in self.zip_file.namelist():
+            return self.zip_file.read(path)
+
+        return None
+
+    @cached_property
+    def metadata(self):
+        return self._read("METADATA")
+
+    @cached_property
+    def entry_points(self):
+        return self._read("entry_points.txt")
+
+    @cached_property
+    def top_level(self):
+        return self._read("top_level.txt")
+
+
+def metadata_from_wheel(wheel_url):
+    """Stream metadata from a remote wheel via HTTP range requests — no full download"""
+    print(f"streaming wheel: {wheel_url.rsplit('/', 1)[-1]}", file=sys.stderr)
+    started = time.time()
+    wheel = RemoteWheelInfo(wheel_url)
+    result = metadata_bytes_to_dict(wheel.metadata)
+
+    if wheel.entry_points:
+        from configparser import ConfigParser
+
+        config = ConfigParser()
+        config.read_string(wheel.entry_points.decode())
+        eps = {section: dict(config.items(section)) for section in config.sections()}
+        if eps:
+            result["entry_points"] = eps
+
+    if wheel.top_level:
+        lines = wheel.top_level.decode().strip().splitlines()
+        if lines:
+            result["top_level"] = lines
+
+    elapsed = time.time() - started
+    print(f"  -> got {result.get('name', '?')}=={result.get('version', '?')} via streaming ({elapsed:.1f}s)",
+          file=sys.stderr)
+    return result
+
+
+def metadata_from_sdist(sdist_url):
+    """Download sdist and extract metadata with pkginfo — no build needed"""
+    filename = sdist_url.rsplit("/", 1)[-1]
+    print(f"downloading sdist: {filename}", file=sys.stderr)
+    started = time.time()
+    with tempfile.NamedTemporaryFile(suffix=".tar.gz") as tmp:
+        urllib.request.urlretrieve(sdist_url, tmp.name)
+        info = pkginfo.SDist(tmp.name)
+        elapsed = time.time() - started
+        print(f"  -> got {info.name}=={info.version} via pkginfo.SDist ({elapsed:.1f}s)", file=sys.stderr)
+        result = {}
+        for attr in info:
+            value = getattr(info, attr, None)
+            if value and value != "UNKNOWN":
+                if isinstance(value, (list, tuple)) and not value:
+                    continue
+                result[attr] = value
+
+    return result
+
+
+def get_metadata(pip_spec, python_version=None):
+    if pip_spec.startswith((".", "/", "~", "git+")):
+        sys.exit(f"'{pip_spec}' not supported by this script")
+
+    resolved = resolve_pylock(pip_spec, python_version=python_version)
+
+    if resolved["wheels"]:
+        # Pick any wheel — metadata is identical across platforms
+        wheel = resolved["wheels"][0]
+        return metadata_from_wheel(wheel["url"])
+
+    if resolved["sdist_url"]:
+        return metadata_from_sdist(resolved["sdist_url"])
+
+    sys.exit(f"No wheels or sdist found for '{pip_spec}'")
+
+
+def main(args=None):
+    """
+    Output the metadata of a package, in machine-readable format
+
+    Examples:
+        uv-metadata requests
+        uv-metadata 'requests<2'
+        uv-metadata 'grpcio-tools<1.70'
+        uv-metadata -p3.7 setuptools
+    """
+    parser = argparse.ArgumentParser(description=main.__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("-p", "--python", default=None, help="Python version to resolve for (e.g., 3.7)")
+    parser.add_argument("-k", "--key", help="Show only this key from the metadata")
+    parser.add_argument("package", default=".", nargs="?", help="Show metadata for specified package")
+    args = parser.parse_args(args=args)
+
+    metadata = get_metadata(args.package, python_version=args.python)
+    if args.key:
+        if args.key not in metadata:
+            sys.exit(f"'{args.key}' not found in metadata")
+        print(metadata[args.key])
+    else:
+        print(json.dumps(metadata, indent=4, sort_keys=True))
+
+
+if __name__ == "__main__":
+    sys.exit(main())

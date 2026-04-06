@@ -7,6 +7,7 @@ See https://github.com/zsimic/uv-metadata
 
 import argparse
 import configparser
+import glob
 import json
 import os
 import re
@@ -30,15 +31,12 @@ def abort_if(condition, msg: str):
         sys.exit(msg)
 
 
-def run_command(exe, *args, fatal=True):
+def run_command(exe, *args):
     exe = shutil.which(exe)
-    full_cmd = [exe, *args]
-    result = subprocess.run(full_cmd, capture_output=True, text=True, check=False)
-    if result.returncode:
-        description = "%s %s" % (exe, " ".join(str(x) for x in args))
-        abort_if(fatal, f"'{description}' failed with exit code {result.returncode}:\n{result.stderr}")
+    if not exe:
+        sys.exit(f"'{exe}' is not installed")
 
-    return result
+    return subprocess.run([exe, *args], capture_output=True, text=True, check=False)
 
 
 def canonical_key(key: str) -> str:
@@ -75,44 +73,49 @@ def get_metadata_dict(path):
     return result
 
 
-def get_metadata(pip_spec: str, python: str) -> dict:
+def get_metadata(pip_spec: str, pythons: str) -> dict:
+    if pip_spec.startswith((".", "/", "~")):
+        pip_spec = str(Path(pip_spec).expanduser().absolute())
+
     os.environ["UV_VENV_SEED"] = "0"
+    last_error = None
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
-        venv_folder = tmpdir / ".venv"
-        os.environ["VIRTUAL_ENV"] = str(venv_folder)
-        run_command("uv", "venv", f"-p{python}", venv_folder)
-        run_command("uv", "pip", "install", "--no-deps", pip_spec)
-        r = run_command("uv", "pip", "freeze")
-        frozen = r.stdout.splitlines()
-        abort_if(len(frozen) != 1, f"Unexpected pip freeze output:\n{r.stdout}")
-        package_name = frozen[0]
-        if "@" in package_name:
-            package_name = package_name.partition("@")[0].strip()
+        for python_version in pythons.split(","):
+            venv_folder = tmpdir / f"resolved{python_version}"
+            # Would `--no-build` or `--prefix` be useful here?
+            r = run_command("uv", "pip", "install", "--no-deps", "--python-version", python_version, "--target", venv_folder, pip_spec)
+            if r.returncode:
+                if "build backend returned an error" in r.stderr:
+                    # Recognize a "version is too old" case, and try with an older python
+                    last_error = r.stderr
+                    continue
 
-        else:
-            package_name = package_name.partition("=")[0].strip()
+                # We don't care about the full on uv error here, but would like a nice reason as to why metadata could not be obtained
+                sys.exit(r.stderr)
 
-        r = run_command("uv", "pip", "show", package_name)
-        raw_metadata = Parser().parsestr(r.stdout)
-        version = raw_metadata["Version"]
-        wheel_name = re.sub(r"[^\w]", "_", raw_metadata["Name"]).lower()
-        full_path = Path(raw_metadata["Location"]) / f"{wheel_name}-{version}.dist-info"
-        metadata = get_metadata_dict(full_path / "METADATA")
-        entry_points = full_path / "entry_points.txt"
-        if entry_points.exists():
-            config = configparser.ConfigParser()
-            config.read(entry_points)
-            eps = {section: dict(config.items(section)) for section in config.sections()}
-            if eps:
-                metadata["entry_points"] = eps
+            info = glob.glob(str(venv_folder / "*.dist-info"), recursive=True)
+            abort_if(len(info) != 1 or not info[0], f"Internal error, expecting exactly 1 dist-info folder, got: '{info}'")
+            info = info[0]
+            full_path = Path(info)
+            abort_if(not full_path.is_dir(), f"Internal error: '{venv_folder}' is not a directory")
+            metadata = get_metadata_dict(full_path / "METADATA")
+            entry_points = full_path / "entry_points.txt"
+            if entry_points.exists():
+                config = configparser.ConfigParser()
+                config.read(entry_points)
+                eps = {section: dict(config.items(section)) for section in config.sections()}
+                if eps:
+                    metadata["entry_points"] = eps
 
-        top_level = full_path / "top_level.txt"
-        if top_level.exists():
-            with open(top_level, "r") as fh:
-                metadata["top_level"] = fh.read().splitlines()
+            top_level = full_path / "top_level.txt"
+            if top_level.exists():
+                with open(top_level, "r") as fh:
+                    metadata["top_level"] = fh.read().splitlines()
 
-        return metadata
+            return metadata
+
+    sys.exit(last_error)
 
 
 def main(args=None):
@@ -125,18 +128,13 @@ def main(args=None):
         uv-metadata git+https://github.com/zsimic/uv-metadata@main
     """
     parser = argparse.ArgumentParser(description=main.__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("-p", "--python", default="3.14", help="Python interpreter to use (default: %(default)s)")
+    parser.add_argument("-p", "--pythons", default="3.14,3.10,3.7", help="Python interpreters to use (default: %(default)s)")
     parser.add_argument("-k", "--key", help="Show only this key from the metadata")
     parser.add_argument("package", default=".", nargs="?", help="Show metadata for specified package")
     args = parser.parse_args(args=args)
 
     key = args.key
-    package = args.package
-    python = args.python
-    if package.startswith((".", "/", "~")):
-        package = (Path(package).expanduser()).absolute()
-
-    metadata = get_metadata(package, python)
+    metadata = get_metadata(args.package, args.pythons)
     if key:
         abort_if(key not in metadata, f"'{key}' not found in metadata")
         text = metadata[key]

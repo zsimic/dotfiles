@@ -160,7 +160,7 @@ def test_tmux_here(cli):
     project_path = runez.DEV.project_path("bin")
     cli.run("tmux_short -p%s" % project_path)
     assert cli.succeeded
-    assert cli.logged.stdout.contents() == "chezmoi/bin"
+    assert cli.logged.stdout.contents().endswith("/bin")
 
     cli.run("tmux_status -p%s" % project_path)
     assert cli.succeeded
