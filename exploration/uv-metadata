@@ -14,7 +14,6 @@ Strategy:
 """
 
 import argparse
-import glob
 import json
 import re
 import shutil
@@ -24,8 +23,6 @@ import tempfile
 import time
 import urllib.request
 import zipfile
-from email.parser import Parser
-from functools import cached_property
 from importlib.metadata import PathDistribution
 from pathlib import Path
 
@@ -53,31 +50,6 @@ def canonical_key(key):
     return CANONICAL_KEY.get(key, key)
 
 
-def metadata_bytes_to_dict(raw):
-    """Parse METADATA bytes (email format) into a clean dict"""
-    msg = Parser().parsestr(raw.decode())
-    result = {}
-    for key, value in msg.items():
-        if key == "Dynamic":
-            continue
-
-        normalized = canonical_key(key)
-        prev = result.get(normalized)
-        if prev is None:
-            result[normalized] = value
-        elif isinstance(prev, list):
-            prev.append(value)
-        else:
-            result[normalized] = [prev, value]
-
-    return result
-
-
-# Unused here — kept from earlier exploration. Handy for reading metadata from a local .dist-info
-# directory (e.g., after `uv pip install --no-deps --target <dir>`). Handles METADATA, entry_points.txt,
-# and top_level.txt via stdlib importlib.metadata.PathDistribution.
-# Usage: dist_info_path = glob.glob(str(target / "*.dist-info"))[0]
-#        result = dist_info_to_dict(Path(dist_info_path))
 def dist_info_to_dict(dist_info_path):
     """Convert a .dist-info directory to a clean metadata dict using importlib.metadata"""
     dist = PathDistribution(dist_info_path)
@@ -143,69 +115,33 @@ def resolve_pylock(pip_spec, python_version=None):
     }
 
 
-class RemoteWheelInfo:
-    """
-    Stream metadata from a remote wheel via HTTP range requests — no full download.
-    Uses SeekableHttpFile + ZipFile to read only the zip central directory + individual entries.
-    """
-
-    def __init__(self, wheel_url):
-        self.wheel_url = wheel_url
-
-    @cached_property
-    def zip_file(self):
-        return zipfile.ZipFile(SeekableHttpFile(self.wheel_url))
-
-    @cached_property
-    def info_dir(self):
-        """Top-level .dist-info dir"""
-        subdirs = {p.split("/", 1)[0] for p in self.zip_file.namelist()}
-        info_dirs = [s for s in subdirs if s.endswith(".dist-info")]
-        assert len(info_dirs) == 1
-        return info_dirs[0]
-
-    def _read(self, filename):
-        """Read a file from .dist-info, return bytes or None if missing"""
-        path = f"{self.info_dir}/{filename}"
-        if path in self.zip_file.namelist():
-            return self.zip_file.read(path)
-
-        return None
-
-    @cached_property
-    def metadata(self):
-        return self._read("METADATA")
-
-    @cached_property
-    def entry_points(self):
-        return self._read("entry_points.txt")
-
-    @cached_property
-    def top_level(self):
-        return self._read("top_level.txt")
+DIST_INFO_FILES = ("METADATA", "entry_points.txt", "top_level.txt")
 
 
-def metadata_from_wheel(wheel_url):
+def extract_dist_info(wheel_url, target_dir):
+    """Stream .dist-info files from a remote wheel into target_dir via HTTP range requests.
+    Only reads the zip central directory + the few small files we need — not the full wheel."""
+    zf = zipfile.ZipFile(SeekableHttpFile(wheel_url))
+    subdirs = {p.split("/", 1)[0] for p in zf.namelist()}
+    info_dirs = [s for s in subdirs if s.endswith(".dist-info")]
+    assert len(info_dirs) == 1
+    info_dir = info_dirs[0]
+    local_dir = target_dir / info_dir
+    local_dir.mkdir(parents=True)
+    for filename in DIST_INFO_FILES:
+        path = f"{info_dir}/{filename}"
+        if path in zf.namelist():
+            (local_dir / filename).write_bytes(zf.read(path))
+
+    return local_dir
+
+
+def metadata_from_wheel(wheel_url, tmpdir):
     """Stream metadata from a remote wheel via HTTP range requests — no full download"""
     print(f"streaming wheel: {wheel_url.rsplit('/', 1)[-1]}", file=sys.stderr)
     started = time.time()
-    wheel = RemoteWheelInfo(wheel_url)
-    result = metadata_bytes_to_dict(wheel.metadata)
-
-    if wheel.entry_points:
-        from configparser import ConfigParser
-
-        config = ConfigParser()
-        config.read_string(wheel.entry_points.decode())
-        eps = {section: dict(config.items(section)) for section in config.sections()}
-        if eps:
-            result["entry_points"] = eps
-
-    if wheel.top_level:
-        lines = wheel.top_level.decode().strip().splitlines()
-        if lines:
-            result["top_level"] = lines
-
+    dist_info_path = extract_dist_info(wheel_url, tmpdir)
+    result = dist_info_to_dict(dist_info_path)
     elapsed = time.time() - started
     print(f"  -> got {result.get('name', '?')}=={result.get('version', '?')} via streaming ({elapsed:.1f}s)",
           file=sys.stderr)
@@ -239,13 +175,14 @@ def get_metadata(pip_spec, python_version=None):
 
     resolved = resolve_pylock(pip_spec, python_version=python_version)
 
-    if resolved["wheels"]:
-        # Pick any wheel — metadata is identical across platforms
-        wheel = resolved["wheels"][0]
-        return metadata_from_wheel(wheel["url"])
+    with tempfile.TemporaryDirectory() as tmpdir:
+        if resolved["wheels"]:
+            # Pick any wheel — metadata is identical across platforms
+            wheel = resolved["wheels"][0]
+            return metadata_from_wheel(wheel["url"], Path(tmpdir))
 
-    if resolved["sdist_url"]:
-        return metadata_from_sdist(resolved["sdist_url"])
+        if resolved["sdist_url"]:
+            return metadata_from_sdist(resolved["sdist_url"])
 
     sys.exit(f"No wheels or sdist found for '{pip_spec}'")
 

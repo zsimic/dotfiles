@@ -36,6 +36,7 @@ These cases should all produce correct results:
 | `uv-metadata -p3.7 setuptools -k version` | 68.0.0 | wheel (streaming) | Latest for python 3.7 |
 | `uv-metadata 'pycparser<2.17' -k version` | 2.16 | sdist | Old, no wheels |
 | `uv-metadata pytest -k entry_points` | (dict) | wheel (streaming) | Verifies entry_points extraction |
+| `uv-metadata pytest -k top_level` | (list) | wheel (streaming) | Verifies top_level extraction |
 | `uv-metadata 'non-existent-project22'` | error exit | — | Clear error from uv |
 
 
@@ -65,13 +66,18 @@ The flags:
 
 Adding `--python-version 3.7` (via the `-p` flag) rephrases the question to "latest for this python".
 
-### Metadata extraction: two paths
+### Metadata extraction: two paths, one parser
 
-#### Wheels (most packages): streaming via `RemoteWheelInfo`
+Both paths produce a `.dist-info` directory on disk, then `dist_info_to_dict()` handles
+all parsing via stdlib `importlib.metadata.PathDistribution` — METADATA, entry_points.txt,
+and top_level.txt in one place.
 
-Uses `seekablehttpfile` to read metadata directly from a remote wheel without downloading it.
-Pick any wheel from the resolved list — metadata is identical across platforms.
-Inspired by `metadata_please`, but inlined since all we need is `zf.read()` on a few files.
+#### Wheels (most packages): streaming via HTTP range requests
+
+Uses `seekablehttpfile` to stream just the `.dist-info` files from a remote wheel
+without downloading it. Inspired by `metadata_please`, but inlined since all we need
+is `zf.read()` on a few files. Pick any wheel from the resolved list — metadata is
+identical across platforms.
 
 ```python
 from seekablehttpfile import SeekableHttpFile
@@ -79,22 +85,22 @@ import zipfile
 
 zf = zipfile.ZipFile(SeekableHttpFile(wheel_url))
 # Find the .dist-info dir from the zip central directory
-raw_metadata = zf.read(f"{info_dir}/METADATA")
-raw_entry_points = zf.read(f"{info_dir}/entry_points.txt")  # if present
-raw_top_level = zf.read(f"{info_dir}/top_level.txt")        # if present
+# Extract METADATA, entry_points.txt, top_level.txt into a temp dir
+# Then use dist_info_to_dict() to parse — same as local .dist-info
 ```
 
 How it works:
 1. `SeekableHttpFile(url)` wraps a remote URL as a seekable file-like object using HTTP range requests
 2. `ZipFile` reads the central directory from the end of the file (a few KB, regardless of wheel size)
-3. Each `zf.read()` fetches just that entry — `METADATA`, `entry_points.txt`, `top_level.txt`
+3. `zf.read()` fetches each `.dist-info` entry individually (METADATA, entry_points.txt, top_level.txt)
+4. Files are written to a temp `.dist-info` dir, then `PathDistribution` parses everything
 
 This means an 80MB torch wheel only transfers a few KB over the wire.
 
 **Why not `pkginfo.Wheel`?**
 `pkginfo.Wheel(path)` requires a file path — it calls `os.path.exists()` internally
 and creates its own `ZipFile`. It cannot accept a `ZipFile` or file-like object,
-which is what makes the streaming pattern impossible with it.
+which makes the streaming pattern impossible with it.
 
 #### Sdist (rare fallback): download + pkginfo
 
@@ -103,6 +109,17 @@ download the sdist tarball and use `pkginfo.SDist(path)` to read PKG-INFO.
 No build needed — PKG-INFO is at the top of the tarball.
 
 The sdist URL comes directly from the pylock.toml resolution output.
+
+### `dist_info_to_dict`: single metadata parser
+
+All wheel metadata goes through `dist_info_to_dict(path)`, which uses stdlib
+`importlib.metadata.PathDistribution`. It handles:
+- `.metadata` — the METADATA file (name, version, requires_dist, etc.)
+- `.entry_points` — parsed entry_points.txt (console_scripts, etc.)
+- `.read_text("top_level.txt")` — top-level package names
+
+This function also works standalone with any local `.dist-info` directory
+(e.g., after `uv pip install --no-deps --target`).
 
 ### Why `--python-version` is NOT passed by default
 
@@ -114,13 +131,6 @@ Passing `--python-version 3.12` would discover more wheels (broadest coverage), 
 - Adds a default that needs to be maintained
 - The sdist fallback works well for the few cases where it matters
 - Keeps the code simpler
-
-### Unused but handy: `dist_info_to_dict`
-
-The script also includes a `dist_info_to_dict()` function (currently unused) that reads metadata
-from a local `.dist-info` directory using stdlib `importlib.metadata.PathDistribution`.
-Handles `METADATA`, `entry_points.txt`, and `top_level.txt` with no external deps.
-Useful when you already have a `.dist-info` on disk (e.g., after `uv pip install --no-deps --target`).
 
 ### Dependencies
 
