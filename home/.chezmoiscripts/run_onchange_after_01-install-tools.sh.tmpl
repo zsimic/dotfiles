@@ -19,6 +19,10 @@
     {{- $casks = append $casks "font-symbols-only-nerd-font" -}}
     {{- $casks = append $casks "ghostty" -}}
     {{- $casks = append $casks "iterm2" -}}
+    {{- $casks = append $casks "pearcleaner" -}}
+    {{- if eq .chezmoi.username "zoran" }}
+        {{- $casks = append $casks "iina" -}}
+    {{ end -}}
 {{ end -}}
 
 export HOMEBREW_NO_ENV_HINTS=1
