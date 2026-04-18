@@ -12,6 +12,7 @@ JOIN_TMUX = str(PROJECT_DIR / "home/bin/executable_join-tmux")
 def load_join_tmux_module():
     loader = importlib.machinery.SourceFileLoader("join_tmux_module", JOIN_TMUX)
     spec = importlib.util.spec_from_loader(loader.name, loader)
+    assert spec and spec.loader  # noqa: PT018
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module

@@ -2,7 +2,7 @@
 name = "zorans-dotfiles"  # This is for conveniently using `uv sync` only
 version = "0.1.0"
 description = "Zoran's dotfiles"
-requires-python = ">=3.9"  # macOS is always lagging
+requires-python = ">=3.9"  # due to macOS system python (Apple lives in the past)
 authors = [
     {name = "Zoran Simic", email = "zoran@simicweb.com"},
 ]
@@ -18,6 +18,9 @@ dev = [
     { include-group = "test" },
 ]
 
+[tool.pyright]
+pythonVersion = "3.10"
+include = ["home", "scripts", "tests"]
 
 [tool.ruff]
 cache-dir = ".tox/.ruff_cache"

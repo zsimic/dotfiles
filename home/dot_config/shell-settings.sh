@@ -6,6 +6,7 @@ export TERMINFO_DIRS
 
 export RIPGREP_CONFIG_PATH="$HOME/.config/ripgrep/config"
 export PYTHON_HISTORY="$HOME/.local/state/history/python.history"
+export PYTHONSTARTUP="$HOME/.config/python/startup.py"
 
 alias cz="$HOME/.local/share/chezmoi/cz.sh"
 
