@@ -15,17 +15,17 @@ Notes:
 
 | Crate | Binary | Elapsed | Notes |
 | --- | --- | ---: | --- |
-| `uv` | `🐧` | 128.578s | Clear outlier; multi-minute class. |
-| `bat` | `🐧` | 35.543s | Heavier than the rest of the non-`uv` set. |
-| `dua-cli` | `-` | 26.804s | Mid-weight compile. |
-| `eza` | `🐧` | 24.398s | Mid-weight compile. |
-| `git-delta` | `-` | 23.904s | Built successfully with `--locked`; Cargo warned about yanked lockfile deps. Metadata resolution looked broken on both targets. |
-| `fd-find` | `🐧` | 21.205s | Fairly quick source build. |
-| `cargo-update` | `-` | 14.544s | Fast enough that source builds seem tolerable. |
-| `tokei` | `-` | 13.839s | Built successfully with `--locked`; Cargo warned about a yanked lockfile dep. |
-| `zoxide` | `` | 11.150s | Quick source build. |
-| `ripgrep` | `` | 7.520s | Very quick source build. |
-| `tre-command` | `` | 6.182s | Fastest in the set. |
+| `uv` | `🐧` | 129s | Clear outlier; multi-minute class. |
+| `bat` | `🐧` | 36s | Heavier than the rest of the non-`uv` set. |
+| `dua-cli` | `-` | 27s | Mid-weight compile. |
+| `eza` | `🐧` | 24s | Mid-weight compile. |
+| `git-delta` | `-` | 24s | Built successfully with `--locked`; Cargo warned about yanked lockfile deps. Metadata resolution looked broken on both targets. |
+| `fd-find` | `🐧` | 21s | Fairly quick source build. |
+| `cargo-update` | `-` | 15s | Fast enough that source builds seem tolerable. |
+| `tokei` | `-` | 14s | Built successfully with `--locked`; Cargo warned about a yanked lockfile dep. |
+| `zoxide` | `` | 11s | Quick source build. |
+| `ripgrep` | `` | 7.5s | Very quick source build. |
+| `tre-command` | `` | 6.2s | Fastest in the set. |
 
 ## Sorted takeaways
 
