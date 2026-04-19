@@ -1,6 +1,4 @@
 #!/bin/zsh -euf
 
 echo 'Monthly upgrade: {{ now | date "2006-01" }}'
-
-# Avoid building Rust tools from source during the monthly upgrade
-BINSTALL_STRATEGIES=crate-meta-data ~/bin/gremlins/monthly-upgrade
+~/bin/gremlins/monthly-upgrade

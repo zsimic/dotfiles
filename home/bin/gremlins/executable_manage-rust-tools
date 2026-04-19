@@ -18,7 +18,14 @@ typeset -ga desired_rust_packages=(
     zoxide
 )
 
+typeset -ga avoid_compile=(
+    uv
+)
+
 [[ "$USER" == "zoran" ]] && desired_rust_packages+=(uv)
+
+typeset -gr default_binstall_strategies="crate-meta-data,compile"
+typeset -gr metadata_only_binstall_strategies="crate-meta-data"
 
 prepend_to_path() {
     local dir="$1"
@@ -66,6 +73,18 @@ cargo_installed_packages() {
     cargo install --list | awk '/^[^ ]+ v[^ ]+:$/ { print $1 }'
 }
 
+install_rust_package() {
+    local pkg_name="$1"
+    local strategies="$default_binstall_strategies"
+
+    if (( ${avoid_compile[(Ie)$pkg_name]} != 0 )); then
+        strategies="$metadata_only_binstall_strategies"
+    fi
+
+    BINSTALL_STRATEGIES="$strategies" cargo binstall --no-confirm -- "$pkg_name" ||
+        print "WARN: skipped $pkg_name: no binary"
+}
+
 bootstrap_rust_cli_tools() {
     local -a installed_packages
     local pkg_name
@@ -76,7 +95,7 @@ bootstrap_rust_cli_tools() {
     installed_packages=($(cargo_installed_packages))
     for pkg_name in "${desired_rust_packages[@]}"; do
         if (( ${installed_packages[(Ie)$pkg_name]} == 0 )); then
-            cargo binstall --no-confirm -- "$pkg_name" || print "WARN: skipped $pkg_name: no binary"
+            install_rust_package "$pkg_name"
         fi
     done
 }
@@ -92,7 +111,7 @@ upgrade_rust_cli_tools() {
 
     installed_packages=($(cargo_installed_packages))
     for pkg_name in "${installed_packages[@]}"; do
-        cargo binstall --no-confirm -- "$pkg_name" || print "WARN: skipped $pkg_name: no binary"
+        install_rust_package "$pkg_name"
     done
 }
 
