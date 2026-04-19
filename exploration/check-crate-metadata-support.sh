@@ -17,7 +17,9 @@ Check whether crates resolve with:
 If no crates are given, the default crate list is extracted from:
   $manage_rust_tools
 
-If no targets are given, the current host target is used.
+If no targets are given, the defaults are:
+  aarch64-apple-darwin
+  x86_64-unknown-linux-gnu
 EOF
 }
 
@@ -37,10 +39,6 @@ default_crates() {
         grep -q '^\[\[ "\$USER" == "zoran" \]\] && desired_rust_packages+=(uv)$' "$manage_rust_tools"; then
         print uv
     fi
-}
-
-host_target() {
-    rustc -vV | awk '/^host:/ { print $2 }'
 }
 
 check_crate() {
@@ -91,12 +89,15 @@ check_crate() {
 }
 
 command -v cargo > /dev/null
-command -v rustc > /dev/null
 
 typeset -a crates
 typeset -a requested_targets
 typeset -a errors
 typeset -gr tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/check-crate-metadata-support.XXXXXX")"
+typeset -gra default_targets=(
+    aarch64-apple-darwin
+    x86_64-unknown-linux-gnu
+)
 
 cleanup() {
     [[ -d "$tmp_dir" ]] || return 0
@@ -141,7 +142,7 @@ while (( $# > 0 )); do
 done
 
 if (( ${#requested_targets[@]} == 0 )); then
-    requested_targets=("$(host_target)")
+    requested_targets=("${default_targets[@]}")
 fi
 
 if (( ${#crates[@]} == 0 )); then
