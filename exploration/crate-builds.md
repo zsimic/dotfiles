@@ -9,12 +9,13 @@ Notes:
 - These are not fully cold builds: Cargo still reused the normal registry/index/download cache between runs.
 - `uv` is included because the current user is `zoran`, matching the conditional in `executable_manage-rust-tools`.
 - `Binary` shows where `crate-meta-data` resolved on Apr 19 2026: `` for `aarch64-apple-darwin`, `🐧` for `x86_64-unknown-linux-gnu`, `-` for neither.
+- Availability was refreshed with `./exploration/check-crate-metadata-support.sh`; this rerun did not hit rate limiting.
 
 ## Results
 
 | Crate | Binary | Elapsed | Notes |
 | --- | --- | ---: | --- |
-| `uv` | `` | 128.578s | Clear outlier; multi-minute class. |
+| `uv` | `🐧` | 128.578s | Clear outlier; multi-minute class. |
 | `bat` | `🐧` | 35.543s | Heavier than the rest of the non-`uv` set. |
 | `dua-cli` | `-` | 26.804s | Mid-weight compile. |
 | `eza` | `🐧` | 24.398s | Mid-weight compile. |

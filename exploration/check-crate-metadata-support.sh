@@ -60,7 +60,12 @@ check_crate() {
     )" ||
         rc=$?
 
-    if (( rc == 0 )); then
+    if [[ "$output" == *"403 Forbidden"* ]] ||
+        [[ "$output" == *"rate limit"* ]] ||
+        [[ "$output" == *"will wait for 120s and retry"* ]]; then
+        crate_status="rate-limited"
+        detail="GitHub API rate limit hit while resolving metadata"
+    elif (( rc == 0 )); then
         crate_status="supported"
         if [[ "$output" == *"has been downloaded from github.com"* ]]; then
             detail="resolved via github.com"
@@ -93,6 +98,7 @@ command -v cargo > /dev/null
 typeset -a crates
 typeset -a requested_targets
 typeset -a errors
+typeset -a rate_limited
 typeset -gr tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/check-crate-metadata-support.XXXXXX")"
 typeset -gra default_targets=(
     aarch64-apple-darwin
@@ -163,10 +169,20 @@ for target in "${requested_targets[@]}"; do
         if check_crate "$target" "$crate_name"; then
             errors+=("$target/$crate_name")
         fi
+
+        if [[ -f "$tmp_dir/$target-$crate_name.log" ]] &&
+            grep -qiE '403 Forbidden|rate limit|will wait for 120s and retry' "$tmp_dir/$target-$crate_name.log"; then
+            rate_limited+=("$target/$crate_name")
+        fi
     done
 
     print
 done
+
+if (( ${#rate_limited[@]} != 0 )); then
+    print -u2 "Warning: rate limiting was encountered for: ${rate_limited[*]}"
+    print -u2 "Those results may be incomplete."
+fi
 
 if (( ${#errors[@]} != 0 )); then
     print -u2 "Unexpected errors were captured for: ${errors[*]}"
