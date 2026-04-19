@@ -61,10 +61,6 @@ ensure_cargo_binstall() {
     command -v cargo-binstall > /dev/null
 }
 
-configure_binstall() {
-    export BINSTALL_STRATEGIES="${BINSTALL_STRATEGIES:-crate-meta-data}"
-}
-
 cargo_installed_packages() {
     [[ -r "$cargo_installed_file" ]] || return 0
     cargo install --list | awk '/^[^ ]+ v[^ ]+:$/ { print $1 }'
@@ -76,7 +72,6 @@ bootstrap_rust_cli_tools() {
 
     ensure_rustup
     ensure_cargo_binstall
-    configure_binstall
 
     installed_packages=($(cargo_installed_packages))
     for pkg_name in "${desired_rust_packages[@]}"; do
@@ -94,7 +89,6 @@ upgrade_rust_cli_tools() {
     rustup self update
     rustup update
     ensure_cargo_binstall
-    configure_binstall
 
     installed_packages=($(cargo_installed_packages))
     for pkg_name in "${installed_packages[@]}"; do
