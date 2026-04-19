@@ -6,7 +6,6 @@ typeset -gr cargo_env_file="$cargo_home/env"
 typeset -gr cargo_installed_file="$cargo_home/.crates.toml"
 
 typeset -ga desired_rust_packages=(
-    cargo-update
     bat
     dua-cli
     eza
@@ -19,6 +18,7 @@ typeset -ga desired_rust_packages=(
 )
 
 typeset -ga avoid_compile=(
+    bat
     uv
 )
 
