@@ -30,6 +30,15 @@
     {{- $obsolete_brews = append $obsolete_brews "wget" -}}
 {{ end -}}
 
+cleanup_obsolete_brews() {
+    local formula
+
+    for formula in "$@"; do
+        brew list --formula "$formula" > /dev/null 2>&1 || continue
+        brew uninstall --formula "$formula"
+    done
+}
+
 export HOMEBREW_NO_ENV_HINTS=1
 brew bundle install --file=/dev/stdin <<EOF
 {{ range ($brews | compact | sortAlpha | uniq) -}}
@@ -40,6 +49,4 @@ cask "{{ . }}"
 {{ end -}}
 EOF
 
-{{- range ($obsolete_brews | compact | sortAlpha | uniq) }}
-brew list --formula "{{ . }}" > /dev/null 2>&1 && brew uninstall --formula "{{ . }}"
-{{- end }}
+cleanup_obsolete_brews {{ range ($obsolete_brews | compact | sortAlpha | uniq) }}"{{ . }}" {{ end }}
