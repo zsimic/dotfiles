@@ -21,6 +21,7 @@ exit_past_line_start = false  # exit TUI when scrolling left while the cursor is
 accept_past_line_end = true  # right arrow key performs the same functionality as Tab
 
 [search]
+authors = ["$all-user", "$all-agent"]
 filters = ["session-preload", "directory", "workspace", "host", "session"]
 recency_score_multiplier = 2.0
 frequency_score_multiplier = 1.0
