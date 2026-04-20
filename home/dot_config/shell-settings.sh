@@ -1,12 +1,14 @@
 # source by interactive shells (keep compatible with bash and zsh)
 
 unset MAILCHECK
+
 : "${TERMINFO_DIRS:=/usr/share/terminfo}"
 export TERMINFO_DIRS
 
-export RIPGREP_CONFIG_PATH="$HOME/.config/ripgrep/config"
+export FZF_CTRL_R_OPTS='--bind=tab:accept'
 export PYTHON_HISTORY="$HOME/.local/state/history/python.history"
 export PYTHONSTARTUP="$HOME/.config/python/startup.py"
+export RIPGREP_CONFIG_PATH="$HOME/.config/ripgrep/config"
 
 alias cz="$HOME/.local/share/chezmoi/cz.sh"
 

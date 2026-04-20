@@ -31,6 +31,7 @@ zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 zstyle ':completion:*' completer _complete
 
 zstyle ':completion:*' menu no  # Let fzf-tab handle completion list rendering
+zstyle ':fzf-tab:*' fzf-flags --bind=tab:accept  # Tab accepts the current match
 zstyle ':fzf-tab:complete:*' switch-group '<' '>'  # Switch completion groups using `<` and `>`
 zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
 
