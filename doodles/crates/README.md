@@ -1,8 +1,7 @@
 # Rust crate source-build timings
 
 Measured on Apr 19 2026 by running `./doodles/crates/build-crate-from-source.sh <crate>`
-for each crate managed by `home/bin/gremlins/executable_manage-rust-tools`, plus `atuin`
-as a candidate tool.
+for each crate managed by `home/bin/gremlins/executable_manage-rust-tools`.
 
 Notes:
 - Each run used a temporary `cargo install --root` and a temporary `CARGO_TARGET_DIR`.

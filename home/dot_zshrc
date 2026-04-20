@@ -30,11 +30,6 @@ zstyle ':completion:*:descriptions' format '[%d]'
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 zstyle ':completion:*' completer _complete
 
-zstyle ':completion:*' menu no  # Let fzf-tab handle completion list rendering
-zstyle ':fzf-tab:*' fzf-flags --bind=tab:accept  # Tab accepts the current match
-zstyle ':fzf-tab:complete:*' switch-group '<' '>'  # Switch completion groups using `<` and `>`
-zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
-
 [ -r "$HOME/.config/shell-settings.sh" ] && . "$HOME/.config/shell-settings.sh"
 
 fpath+=("$HOME/.local/share/zsh/site-functions")
@@ -55,8 +50,8 @@ else
 fi
 
 # Load plugins after compinit
-source "$HOME/.local/share/zsh/plugins/fzf-tab/fzf-tab.plugin.zsh"
 source "$HOME/.local/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
+(( $+commands[atuin] )) && eval "$(atuin init zsh)"
 
 zmodload zsh/terminfo 2>/dev/null  # Ensure $terminfo is available
 
@@ -77,7 +72,6 @@ bindkey '^[[3;5~' kill-line  # ctrl+delete
 bindkey '^H' backward-kill-word  # Ctrl+Backspace
 bindkey '^[[127;5u' backward-kill-word  # CSI-u for ctrl+backspace
 
-(( $+commands[fzf] )) && source <(fzf --zsh)
 (( $+commands[zoxide] )) && eval "$(zoxide init --cmd cd zsh)"
 
 #if [ -n "$GHOSTTY_RESOURCES_DIR" ]; then

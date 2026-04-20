@@ -18,5 +18,5 @@ HISTFILE="$HOME/.local/state/history/bash.history"
 export INPUTRC="$HOME/.inputrc"
 
 [ -r "$HOME/.config/shell-settings.sh" ] && . "$HOME/.config/shell-settings.sh"
-type -p fzf >/dev/null && eval "$(fzf --bash)"
+type -p atuin >/dev/null && eval "$(atuin init bash)"
 type -p zoxide >/dev/null && eval "$(zoxide init --cmd cd bash)"
