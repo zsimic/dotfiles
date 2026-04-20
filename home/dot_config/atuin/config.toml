@@ -14,7 +14,7 @@ show_tabs = false  # tabs for search and inspect
 # defaults for shell up-key
 search_mode_shell_up_key_binding = "fuzzy"
 filter_mode_shell_up_key_binding = "host"
-inline_height_shell_up_key_binding = 3
+inline_height_shell_up_key_binding = 6
 
 #[daemon]
 #enabled = true
