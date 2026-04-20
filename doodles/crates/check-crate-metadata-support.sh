@@ -4,7 +4,7 @@ setopt pipefail
 
 typeset -gr script_path="${0:A}"
 typeset -gr script_dir="${script_path:h}"
-typeset -gr repo_root="${script_dir:h}"
+typeset -gr repo_root="${script_dir:h:h}"
 typeset -gr manage_rust_tools="$repo_root/home/bin/gremlins/executable_manage-rust-tools"
 
 usage() {

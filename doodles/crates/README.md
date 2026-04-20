@@ -1,7 +1,8 @@
 # Rust crate source-build timings
 
 Measured on Apr 19 2026 by running `./doodles/crates/build-crate-from-source.sh <crate>`
-for each crate managed by `home/bin/gremlins/executable_manage-rust-tools`.
+for each crate managed by `home/bin/gremlins/executable_manage-rust-tools`, plus `atuin`
+as a candidate tool.
 
 Notes:
 - Each run used a temporary `cargo install --root` and a temporary `CARGO_TARGET_DIR`.
@@ -17,6 +18,7 @@ Notes:
 | Crate | Binary | Elapsed | Notes |
 | --- | --- | ---: | --- |
 | `uv` | `🐧` | 129s | Clear outlier; multi-minute class. |
+| `atuin` | `🐧` | 65s | Heavy source build, but metadata binaries resolved on both targets. |
 | `bat` | `🐧` | 36s | Heavier than the rest of the non-`uv` set. |
 | `dua-cli` | `-` | 27s | Mid-weight compile. |
 | `eza` | `🐧` | 24s | Mid-weight compile. |
@@ -33,5 +35,6 @@ Notes:
 If the goal is "avoid the painful source builds during monthly upgrade", this run suggests:
 
 - `uv` is the strongest candidate to keep off the source-build path.
+- `atuin` is also fairly heavy from source, though still much lighter than `uv`.
 - `bat` is the next most noticeable one, but still under 40 seconds.
 - Everything else landed roughly between 6 and 27 seconds on this machine.
