@@ -8,7 +8,6 @@ My dotfiles, managed with [chezmoi](https://github.com/twpayne/chezmoi).
 - [atuin](https://github.com/atuinsh/atuin) _(rust)_ - Shell history in sqlite
 - [bat](https://github.com/sharkdp/bat) _(rust)_ - A `cat(1)` clone with wings
 - [btop](https://github.com/aristocratos/btop) _(C++)_ - Resource monitor
-- [curlie](https://github.com/rs/curlie) _(go)_ - The power of curl, the ease of use of httpie
 - [dua-cli](https://github.com/Byron/dua-cli) _(rust)_ - Like `du`, but better
 - [duf](https://github.com/muesli/duf) _(go)_ - Disk Usage/Free utility - a better `df` alternative
 - [eza](https://github.com/eza-community/eza) _(rust)_ - Modern alternative to `ls`
@@ -22,6 +21,7 @@ My dotfiles, managed with [chezmoi](https://github.com/twpayne/chezmoi).
 
 Not automated:
 
+- [curlie](https://github.com/rs/curlie) _(go)_ - The power of curl, the ease of use of httpie
 - [grpcurl](https://github.com/fullstorydev/grpcurl) _(go)_ - Like cURL, but for gRPC
 - [htop](https://htop.dev/) _(C)_ - Interactive process viewer
 
