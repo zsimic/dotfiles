@@ -5,6 +5,7 @@ My dotfiles, managed with [chezmoi](https://github.com/twpayne/chezmoi).
 
 # CLIs
 
+- [atuin](https://github.com/atuinsh/atuin) _(rust)_ - Shell history in sqlite
 - [bat](https://github.com/sharkdp/bat) _(rust)_ - A `cat(1)` clone with wings
 - [btop](https://github.com/aristocratos/btop) _(C++)_ - Resource monitor
 - [curlie](https://github.com/rs/curlie) _(go)_ - The power of curl, the ease of use of httpie
@@ -12,7 +13,6 @@ My dotfiles, managed with [chezmoi](https://github.com/twpayne/chezmoi).
 - [duf](https://github.com/muesli/duf) _(go)_ - Disk Usage/Free utility - a better `df` alternative
 - [eza](https://github.com/eza-community/eza) _(rust)_ - Modern alternative to `ls`
 - [fd](https://github.com/sharkdp/fd) _(rust)_ - Fast and user-friendly alternative to `find`
-- [fzf](https://github.com/junegunn/fzf) _(go)_ - Command-line fuzzy finder
 - [git-delta](https://github.com/dandavison/delta) _(rust)_ - Syntax-highlighting pager for git, diff, grep, and blame output
 - [ripgrep](https://github.com/BurntSushi/ripgrep) _(rust)_ - `grep` on steroids
 - [tmux](https://github.com/tmux/tmux) _(C)_ - Terminal multiplexer
