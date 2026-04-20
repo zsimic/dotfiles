@@ -1,6 +1,7 @@
 # Rust crate source-build timings
 
-Measured on Apr 19 2026 by running `./exploration/build-crate-from-source.sh <crate>` for each crate managed by `home/bin/gremlins/executable_manage-rust-tools`.
+Measured on Apr 19 2026 by running `./doodles/crates/build-crate-from-source.sh <crate>`
+for each crate managed by `home/bin/gremlins/executable_manage-rust-tools`.
 
 Notes:
 - Each run used a temporary `cargo install --root` and a temporary `CARGO_TARGET_DIR`.
@@ -9,7 +10,7 @@ Notes:
 - These are not fully cold builds: Cargo still reused the normal registry/index/download cache between runs.
 - `uv` is included because the current user is `zoran`, matching the conditional in `executable_manage-rust-tools`.
 - `Binary` shows where `crate-meta-data` resolved on Apr 19 2026: `` for `aarch64-apple-darwin`, `🐧` for `x86_64-unknown-linux-gnu`, `-` for neither.
-- Availability was refreshed with `./exploration/check-crate-metadata-support.sh`; this rerun did not hit rate limiting.
+- Availability was refreshed with `./doodles/crates/check-crate-metadata-support.sh`; this rerun did not hit rate limiting.
 
 ## Results
 
