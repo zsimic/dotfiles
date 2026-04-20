@@ -8,7 +8,7 @@ Notes:
 - The helper cleaned up its temporary directory after each run.
 - Timings are wall-clock `Elapsed` values reported by the helper.
 - These are not fully cold builds: Cargo still reused the normal registry/index/download cache between runs.
-- `uv` is included because the current user is `zoran`, matching the conditional in `executable_manage-rust-tools`.
+- `uv` remains listed as a `no-compile` reference crate, though it is not bootstrapped by default.
 - `Binary` shows where `crate-meta-data` resolved on Apr 19 2026: `` for `aarch64-apple-darwin`, `🐧` for `x86_64-unknown-linux-gnu`, `-` for neither.
 - Availability was refreshed with `./doodles/crates/check-crate-metadata-support.sh`; this rerun did not hit rate limiting.
 
