@@ -51,7 +51,28 @@ fi
 
 # Load plugins after compinit
 source "$HOME/.local/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
-(( $+commands[atuin] )) && eval "$(atuin init zsh)"
+if (( $+commands[atuin] )); then
+    autoload -Uz add-zle-hook-widget
+    eval "$(atuin init zsh --disable-up-arrow)"
+
+    typeset -gi _atuin_prompt_histno=0
+
+    _atuin_capture_prompt_histno() {
+        _atuin_prompt_histno=$HISTNO
+    }
+    add-zle-hook-widget line-init _atuin_capture_prompt_histno
+
+    _atuin_up_or_history() {
+        if (( HISTNO != _atuin_prompt_histno )); then
+            zle up-line-or-history
+        elif [[ -n ${BUFFER//[[:space:]]/} ]]; then
+            zle atuin-up-search
+        else
+            zle up-line-or-history
+        fi
+    }
+    zle -N _atuin_up_or_history
+fi
 
 zmodload zsh/terminfo 2>/dev/null  # Ensure $terminfo is available
 
@@ -71,6 +92,12 @@ bindkey '^[[4~' end-of-line
 bindkey '^[[3;5~' kill-line  # ctrl+delete
 bindkey '^H' backward-kill-word  # Ctrl+Backspace
 bindkey '^[[127;5u' backward-kill-word  # CSI-u for ctrl+backspace
+
+if (( $+commands[atuin] )); then
+    [[ -n ${terminfo[kcuu1]} ]] && bindkey "${terminfo[kcuu1]}" _atuin_up_or_history
+    bindkey '^[[A' _atuin_up_or_history
+    bindkey '^[OA' _atuin_up_or_history
+fi
 
 (( $+commands[zoxide] )) && eval "$(zoxide init --cmd cd zsh)"
 
