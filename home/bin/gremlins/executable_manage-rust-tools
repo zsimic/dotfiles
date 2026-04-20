@@ -24,18 +24,13 @@ typeset -gr default_binstall_strategies="crate-meta-data,compile"
 typeset -gr metadata_only_binstall_strategies="crate-meta-data"
 
 no_compile_packages_from_comments() {
-    awk '
-        /^[[:space:]]*typeset -ga desired_rust_packages=\(/ { in_list = 1; next }
-        in_list && /^[[:space:]]*\)/ { exit }
-        in_list && /#[[:space:]]*no-compile([[:space:]]|$)/ {
-            line = $0
-            sub(/^[[:space:]]*#?[[:space:]]*/, "", line)
-            sub(/[[:space:]#].*$/, "", line)
-            if (line != "") {
-                print line
+    sed -nE '
+        /^[[:space:]]*typeset -ga desired_rust_packages=\(/,/^[[:space:]]*\)/ {
+            /#[[:space:]]*no-compile([[:space:]]|$)/ {
+                s/^[[:space:]]*#?[[:space:]]*([^[:space:]#]+).*$/\1/p
             }
         }
-    ' -- "$this_script"
+    ' "$this_script"
 }
 
 typeset -ga no_compile_packages=("${(@f)$(no_compile_packages_from_comments)}")
