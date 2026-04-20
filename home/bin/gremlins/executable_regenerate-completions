@@ -40,6 +40,16 @@ fetch_completion() {
     mv -- "$tmp_file" "$comp_dir/$target"
 }
 
+render_completion_to_dir() {
+    local target="$1"
+    shift
+
+    print -r -- "regen $target: '$* --out-dir $temp_dir'"
+    "$@" --out-dir "$temp_dir"
+    [[ -s "$temp_dir/$target" ]]
+    mv -- "$temp_dir/$target" "$comp_dir/$target"
+}
+
 clear_zcompdump() {
     local -a dump_files
 
@@ -54,7 +64,9 @@ regenerate_completions() {
     # Keep one completion source per configured tool so any interface break fails early.
     # Remove a line here when the tool leaves this dotfiles set.
     # Keep instructions alphabetically sorted by tool.
+    # Note: brew-installed tools should already come with completions handled by brew (if not present: tool probably doesn't have completions)
 
+    render_completion_to_dir _atuin atuin gen-completions --shell zsh
     render_completion _bat bat --completion zsh
     fetch_completion _delta https://raw.githubusercontent.com/dandavison/delta/HEAD/etc/completion/completion.zsh
     # dua: no maintained completion source wired in here yet.
@@ -65,6 +77,11 @@ regenerate_completions() {
     # tokei: upstream no longer ships a checked-in completion source, and no supported `tokei completion` command was found.
     # tre: no shell completion subcommand is exposed; keep only if this changes.
     render_completion _uv uv generate-shell-completion zsh
+    fetch_completion _zoxide https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/contrib/completions/_zoxide
+
+    # Brew tools (listed here as a reminder... so we don't look again)
+    # duf: upstream CLI exposes no completion subcommand, and upstream does not ship a checked-in zsh completion source.
+    # tmux: upstream README only points to an external bash-completion file; tmux itself ships no checked-in zsh completion or generator.
 }
 
 refresh_zcompdump() {
@@ -78,6 +95,7 @@ main() {
     prepare_temp_dir
     regenerate_completions
     refresh_zcompdump
+    echo completions are in $comp_dir
 }
 
 main "$@"
