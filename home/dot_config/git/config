@@ -1,3 +1,7 @@
+[user]
+    name = Zoran Simic
+    email = zoran@simicweb.com
+
 [core]
     # See https://dandavison.github.io/delta/get-started.html
     pager = delta
@@ -18,3 +22,16 @@
     file-decoration-style = none
     hunk-header-style = file line-number
     hunk-header-decoration-style = omit
+
+[url "git@github.com:"]
+    pushInsteadOf = https://github.com/
+
+# Work machines layer on top of this via config-work (file is silently skipped if missing).
+[include]
+    path = config-work
+
+# Always use the personal email for github.com repos, even on work machines.
+[includeIf "hasconfig:remote.*.url:git@github.com:**"]
+    path = config-personal
+[includeIf "hasconfig:remote.*.url:https://github.com/**"]
+    path = config-personal

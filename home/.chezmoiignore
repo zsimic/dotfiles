@@ -8,5 +8,4 @@ Library
 {{- end }}
 {{- if ne .chezmoi.username "zoran" }}
 .chezmoiscripts/personal/**
-.gitconfig
 {{- end }}
