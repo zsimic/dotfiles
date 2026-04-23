@@ -1,0 +1,11 @@
+#!/bin/zsh -euf
+
+# ssh config {{ include "../resources/personal-github.config" | sha256sum }}
+if [ ! -d "$HOME/.ssh" ]; then
+    mkdir -p "$HOME/.ssh"
+    chmod 700 "$HOME/.ssh"
+fi
+
+if [ -r "$HOME/.ssh/id_ed25519" ]; then
+    uvx snip-stitch file personal-github "$HOME/.ssh/config" "$CHEZMOI_WORKING_TREE/resources/personal-github.config"
+fi
