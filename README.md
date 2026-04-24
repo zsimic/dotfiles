@@ -17,6 +17,7 @@ My dotfiles, managed with [chezmoi](https://github.com/twpayne/chezmoi).
 - [tmux](https://github.com/tmux/tmux) _(C)_ - Terminal multiplexer
 - [tokei](https://github.com/XAMPPRocky/tokei) _(rust)_ - Count lines of code in a project
 - [tre-command](https://github.com/dduan/tre) _(rust)_ - Like `tree`, but way better
+- [xh](https://github.com/ducaale/xh) _(rust)_ - Friendly and fast tool for sending HTTP requests
 - [zoxide](https://github.com/ajeetdsouza/zoxide) _(rust)_ - Smarter `cd` command
 
 Not automated:

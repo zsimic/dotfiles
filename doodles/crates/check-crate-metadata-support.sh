@@ -28,6 +28,7 @@ default_crates() {
         /^typeset -ga desired_rust_packages=\(/ { in_block = 1; next }
         in_block && /^[[:space:]]*\)/ { exit }
         in_block {
+            sub(/[[:space:]]*#.*/, "", $0)
             gsub(/^[[:space:]]+|[[:space:]]+$/, "", $0)
             if ($0 != "") {
                 print $0

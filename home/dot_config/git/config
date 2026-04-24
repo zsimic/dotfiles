@@ -30,7 +30,7 @@
 [include]
     path = config-work
 
-# Always use the personal email for github.com repos, even on work machines.
+# Always use the personal email for github.com repos, on all machines
 [includeIf "hasconfig:remote.*.url:git@github.com:**"]
     path = config-personal
 [includeIf "hasconfig:remote.*.url:https://github.com/**"]

@@ -16,6 +16,7 @@ typeset -ga desired_rust_packages=(
     ripgrep
     tokei
     tre-command
+    xh
     zoxide
     # uv  # no-compile
 )
