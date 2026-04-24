@@ -13,10 +13,10 @@
 -}}
 {{ $obsolete_brews := list
     "fzf"
+    "wget"
 -}}
 
 {{- if eq .chezmoi.os "darwin" }}
-    {{- $brews = append $brews "wget" -}}
     {{- $casks = append $casks "font-symbols-only-nerd-font" -}}
     {{- $casks = append $casks "ghostty" -}}
     {{- $casks = append $casks "iterm2" -}}
@@ -26,8 +26,6 @@
         {{- $casks = append $casks "onyx" -}}
         {{- $casks = append $casks "quicklook-video" -}}
     {{ end -}}
-{{- else }}
-    {{- $obsolete_brews = append $obsolete_brews "wget" -}}
 {{ end -}}
 
 cleanup_obsolete_brews() {

@@ -29,13 +29,13 @@ if command -v dua > /dev/null; then alias du='dua'; else alias du='du -sh'; fi
 if command -v duf > /dev/null; then alias df='duf'; else alias df='df -h'; fi
 if command -v fdfind > /dev/null; then alias fd='fdfind --hidden'; elif command -v fd > /dev/null; then alias fd='fd --hidden'; fi
 if command -v tre > /dev/null; then alias tree='tre'; fi
+if command -v xh > /dev/null; then alias wget='xh --download'; fi
 alias ll='ls -l'
 alias la='ls -lA'
 alias l='ls -lA'
 alias ..='cd ..'
 alias ...='cd ../..'
 alias grep='grep --color=auto'
-alias wget='wget --hsts-file="$HOME/.local/share/wget-hsts"'
 
 mptree() {
     for name in "${@:-$$}"; do
