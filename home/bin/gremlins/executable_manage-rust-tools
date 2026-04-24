@@ -10,10 +10,13 @@ typeset -ga desired_rust_packages=(
     atuin  # no-compile
     bat  # no-compile
     dua-cli
+    # dust
     eza
     fd-find
     git-delta
+    # hyperfine
     ripgrep
+    # tailspin
     tokei
     tre-command
     xh

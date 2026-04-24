@@ -22,9 +22,8 @@ My dotfiles, managed with [chezmoi](https://github.com/twpayne/chezmoi).
 
 Not automated:
 
-- [curlie](https://github.com/rs/curlie) _(go)_ - The power of curl, the ease of use of httpie
-- [grpcurl](https://github.com/fullstorydev/grpcurl) _(go)_ - Like cURL, but for gRPC
 - [htop](https://htop.dev/) _(C)_ - Interactive process viewer
+- [tailspin](https://github.com/bensadeh/tailspin) _(rust)_ - Log file highlighter
 
 
 # Terminals
@@ -42,6 +41,8 @@ Not automated:
 
 # Seldom used
 
+- [curlie](https://github.com/rs/curlie) _(go)_ - The power of curl, the ease of use of httpie
+- [grpcurl](https://github.com/fullstorydev/grpcurl) _(go)_ - Like cURL, but for gRPC
 - https://github.com/sharkdp/hyperfine _(rust)_ - Command-line benchmarking tool
 - https://dev.yorhel.nl/ncdu _(C)_ - Ncurses Disk Usage
 - https://github.com/bensadeh/tailspin _(rust)_ - Log file highlighter
