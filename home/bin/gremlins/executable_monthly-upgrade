@@ -1,6 +1,6 @@
 #!/bin/zsh -eu
 
-"$HOME/bin/gremlins/manage-rust-tools" upgrade
+"$HOME/bin/gremlins/manage-rust-tools"
 
 if command -v brew > /dev/null; then
     # Avoid running brew update on the very first run (where brew may not yet have been picked up in PATH)

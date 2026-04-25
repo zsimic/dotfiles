@@ -24,6 +24,11 @@ typeset -ga desired_rust_packages=(
     # uv  # no-compile
 )
 
+typeset -ga obsolete_rust_packages=(
+    cargo-cache
+    cargo-update
+)
+
 typeset -gr default_binstall_strategies="crate-meta-data,compile"
 typeset -gr metadata_only_binstall_strategies="crate-meta-data"
 
@@ -85,6 +90,18 @@ cargo_installed_packages() {
     cargo install --list | awk '/^[^ ]+ v[^ ]+:$/ { print $1 }'
 }
 
+cleanup_obsolete_rust_packages() {
+    local -a installed_packages
+    local pkg_name
+
+    installed_packages=($(cargo_installed_packages))
+    for pkg_name in "${obsolete_rust_packages[@]}"; do
+        if (( ${installed_packages[(Ie)$pkg_name]} != 0 )); then
+            cargo uninstall "$pkg_name"
+        fi
+    done
+}
+
 install_rust_package() {
     local pkg_name="$1"
     local strategies="$default_binstall_strategies"
@@ -97,41 +114,38 @@ install_rust_package() {
         print "WARN: skipped $pkg_name: no binary"
 }
 
-bootstrap_rust_cli_tools() {
+manage_rust_cli_tools() {
     local -a installed_packages
+    local -a package_names
     local pkg_name
+    local -i rustup_was_installed=0
+
+    if [[ -x "$cargo_bin_dir/rustup" ]]; then
+        rustup_was_installed=1
+    fi
 
     ensure_rustup
+
+    if (( rustup_was_installed )); then
+        rustup self update
+        rustup update
+    fi
+
     ensure_cargo_binstall
+    cleanup_obsolete_rust_packages
 
     installed_packages=($(cargo_installed_packages))
-    for pkg_name in "${desired_rust_packages[@]}"; do
-        if (( ${installed_packages[(Ie)$pkg_name]} == 0 )); then
+    package_names=("${(@f)$(print -rl -- "${desired_rust_packages[@]}" "${installed_packages[@]}" | LC_ALL=C sort -u)}")
+    for pkg_name in "${package_names[@]}"; do
+        if (( rustup_was_installed || ${installed_packages[(Ie)$pkg_name]} == 0 )); then
             install_rust_package "$pkg_name"
         fi
     done
 }
 
-upgrade_rust_cli_tools() {
-    local -a installed_packages
-    local pkg_name
+if (( $# != 0 )); then
+    print -u2 "usage: $0"
+    exit 1
+fi
 
-    ensure_rustup
-    rustup self update
-    rustup update
-    ensure_cargo_binstall
-
-    installed_packages=($(cargo_installed_packages))
-    for pkg_name in "${installed_packages[@]}"; do
-        install_rust_package "$pkg_name"
-    done
-}
-
-case "${1:-}" in
-    bootstrap) bootstrap_rust_cli_tools ;;
-    upgrade) upgrade_rust_cli_tools ;;
-    *)
-        print -u2 "usage: $0 bootstrap|upgrade"
-        exit 1
-        ;;
-esac
+manage_rust_cli_tools
