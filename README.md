@@ -5,6 +5,7 @@ My dotfiles, managed with [chezmoi](https://github.com/twpayne/chezmoi).
 # CLIs
 
 Rust CLIs managed via [cargo binstall](home/bin/gremlins/executable_manage-rust-tools).
+On Linux, prebuilt binaries are only used from musl targets; other packages build from source.
 
 - [atuin](https://github.com/atuinsh/atuin) - Shell history in sqlite
 - [bat](https://github.com/sharkdp/bat) - A `cat(1)` clone with wings

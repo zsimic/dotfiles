@@ -12,7 +12,8 @@ Notes:
 - These are not fully cold builds: Cargo still reused the normal registry/index/download cache between runs.
 - `uv` remains listed as a `no-compile` reference crate, though it is not bootstrapped by default.
 - `du-dust` is the Cargo package for the `dust` executable; `cargo install dust` resolves to a library crate with no binaries.
-- `Binary` shows where `crate-meta-data` resolved: `` for `aarch64-apple-darwin`, `🐧` for `x86_64-unknown-linux-gnu`, `-` for neither.
+- `Binary` shows where `crate-meta-data` resolved: `` for `aarch64-apple-darwin`, `🐧` for `x86_64-unknown-linux-musl`, `-` for neither.
+- Linux checks use the musl target because `x86_64-unknown-linux-gnu` does not encode a glibc version floor.
 - Times and sizes are indicative source-build time and installed binary size.
 - Availability was refreshed with `./doodles/crates/check-crate-metadata-support.sh`; this rerun did not hit rate limiting.
 
@@ -26,15 +27,15 @@ Notes:
 | dua-cli | - 27s 2.2M | Mid-weight compile. |
 | eza | 🐧 24s 1.7M | Mid-weight compile. |
 | git-delta | - 24s 5.5M | Built successfully with `--locked`; Cargo warned about yanked lockfile deps. Metadata resolution looked broken on both targets. |
-| tailspin |  23s 2.6M | Built successfully with `--locked`; Cargo warned about a yanked lockfile dep. Executable is `tspin`. |
+| tailspin | 🐧 23s 2.6M | Built successfully with `--locked`; Cargo warned about a yanked lockfile dep. Executable is `tspin`. |
 | fd-find | 🐧 21s 2.8M | Fairly quick source build. |
-| xh |  21s 7.4M | Fairly quick source build; metadata binary resolved for macOS only. |
+| xh | 🐧 21s 7.4M | Fairly quick source build; metadata binary resolved on both targets. |
 | du-dust | 🐧 20s 2.2M | Fairly quick source build; installs executable `dust`. Metadata binary resolved for Linux only. |
 | tokei | - 14s 3.0M | Built successfully with `--locked`; Cargo warned about a yanked lockfile dep. |
 | hyperfine | 🐧 14s 1.1M | Quick source build; metadata binaries resolved on both targets. |
-| zoxide |  11s 916K | Quick source build. |
-| ripgrep |  7.5s 3.9M | Very quick source build. |
-| tre-command |  6.2s 1.5M | Fastest in the set. |
+| zoxide | 🐧 11s 916K | Quick source build. |
+| ripgrep | 🐧 7.5s 3.9M | Very quick source build. |
+| tre-command | 🐧 6.2s 1.5M | Fastest in the set. |
 
 ## Sorted takeaways
 

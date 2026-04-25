@@ -20,7 +20,7 @@ commented entries in:
 
 If no targets are given, the defaults are:
   aarch64-apple-darwin
-  x86_64-unknown-linux-gnu
+  x86_64-unknown-linux-musl
 EOF
 }
 
@@ -102,7 +102,7 @@ typeset -a rate_limited
 typeset -gr tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/check-crate-metadata-support.XXXXXX")"
 typeset -gra default_targets=(
     aarch64-apple-darwin
-    x86_64-unknown-linux-gnu
+    x86_64-unknown-linux-musl
 )
 
 cleanup() {
