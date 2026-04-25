@@ -22,6 +22,7 @@ My dotfiles, managed with [chezmoi](https://github.com/twpayne/chezmoi).
 
 Not automated:
 
+- [dust](https://github.com/bootandy/dust) _(rust)_ - A more intuitive version of du in rust
 - [htop](https://htop.dev/) _(C)_ - Interactive process viewer
 - [tailspin](https://github.com/bensadeh/tailspin) _(rust)_ - Log file highlighter
 

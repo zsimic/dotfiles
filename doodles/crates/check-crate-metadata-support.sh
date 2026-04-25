@@ -14,7 +14,8 @@ usage: $script_path [--target <triple> ...] [crate...]
 Check whether crates resolve with:
   cargo binstall --dry-run --force --no-confirm --strategies crate-meta-data
 
-If no crates are given, the default crate list is extracted from:
+If no crates are given, the default crate list is extracted from active and
+commented entries in:
   $manage_rust_tools
 
 If no targets are given, the defaults are:
@@ -28,7 +29,8 @@ default_crates() {
         /^typeset -ga desired_rust_packages=\(/ { in_block = 1; next }
         in_block && /^[[:space:]]*\)/ { exit }
         in_block {
-            sub(/[[:space:]]*#.*/, "", $0)
+            sub(/^[[:space:]]*#[[:space:]]*/, "", $0)
+            sub(/[[:space:]]+#.*/, "", $0)
             gsub(/^[[:space:]]+|[[:space:]]+$/, "", $0)
             if ($0 != "") {
                 print $0
@@ -36,10 +38,6 @@ default_crates() {
         }
     ' "$manage_rust_tools"
 
-    if [[ "$USER" == "zoran" ]] &&
-        grep -q '^\[\[ "\$USER" == "zoran" \]\] && desired_rust_packages+=(uv)$' "$manage_rust_tools"; then
-        print uv
-    fi
 }
 
 check_crate() {
@@ -77,7 +75,8 @@ check_crate() {
         [[ "$output" == *"bin file "*' not found'* ]]; then
         crate_status="broken-metadata"
         detail="release found, but expected binary layout did not match"
-    elif [[ "$output" == *"Fallback to cargo-install is disabled"* ]]; then
+    elif [[ "$output" == *"Fallback to cargo-install is disabled"* ]] ||
+        [[ "$output" == *"no binaries specified nor inferred"* ]]; then
         crate_status="no-metadata-binary"
         detail="no crate-meta-data binary resolved"
     else
