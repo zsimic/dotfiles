@@ -11,8 +11,11 @@ usage() {
     cat <<EOF
 usage: $script_path [--target <triple> ...] [crate...]
 
-Check whether crates resolve with:
+Check whether crates have prebuilt binaries that resolve with:
   cargo binstall --dry-run --force --no-confirm --strategies crate-meta-data
+
+This mirrors only the metadata-binary phase of manage-rust-tools. Its source
+compile fallback intentionally uses the host target instead.
 
 If no crates are given, the default crate list is extracted from active and
 commented entries in:
@@ -21,6 +24,9 @@ commented entries in:
 If no targets are given, the defaults are:
   aarch64-apple-darwin
   x86_64-unknown-linux-musl
+
+Linux uses a musl metadata target because linux-gnu release assets do not encode
+a glibc version floor. Do not treat that as the source-build target.
 EOF
 }
 
@@ -160,7 +166,7 @@ typeset -U crates
 
 for target in "${requested_targets[@]}"; do
     print "Target: $target"
-    print "Strategy: crate-meta-data"
+    print "Strategy: crate-meta-data (prebuilt binaries only)"
     print
     printf '%-15s %-20s %s\n' "crate" "status" "detail"
     printf '%-15s %-20s %s\n' "-----" "------" "------"

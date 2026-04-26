@@ -12,14 +12,15 @@ Notes:
 - These are not fully cold builds: Cargo still reused the normal registry/index/download cache between runs.
 - `uv` remains listed as a `no-compile` reference crate, though it is not bootstrapped by default.
 - `du-dust` is the Cargo package for the `dust` executable; `cargo install dust` resolves to a library crate with no binaries.
-- `Binary` shows where `crate-meta-data` resolved: `` for `aarch64-apple-darwin`, `🐧` for `x86_64-unknown-linux-musl`, `-` for neither.
+- `Prebuilt` shows where `crate-meta-data` resolved: `` for `aarch64-apple-darwin`, `🐧` for `x86_64-unknown-linux-musl`, `-` for neither.
 - Linux checks use the musl target because `x86_64-unknown-linux-gnu` does not encode a glibc version floor.
+- The musl target is only for prebuilt-binary lookup; source-build fallback uses the host target.
 - Times and sizes are indicative source-build time and installed binary size.
 - Availability was refreshed with `./doodles/crates/check-crate-metadata-support.sh`; this rerun did not hit rate limiting.
 
 ## Results
 
-| Crate | Binary | Notes |
+| Crate | Prebuilt | Notes |
 | --- | ---: | :--- |
 | uv | 🐧 129s 48M | Clear outlier; multi-minute class. |
 | atuin | 🐧 65s 25M | Heavy source build, but metadata binaries resolved on both targets. |
