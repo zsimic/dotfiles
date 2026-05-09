@@ -71,6 +71,11 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
     float coreIn = mix(-0.005, -0.009, heat);
     float coreOut = mix(0.001, 0.002, heat);
     float trailThickness = mix(0.04, 0.06, heat);
+    float cursorChangeAge = iTime - iTimeCursorChange;
+    // Hide stale repaints after sleep or background pauses.
+    if (cursorChangeAge < 0.0 || cursorChangeAge >= duration || iTimeDelta >= duration) {
+        return;
+    }
     vec2 vu = normalize(fragCoord, 1.);
     vec4 currentCursor = vec4(normalize(iCurrentCursor.xy, 1.), normalize(iCurrentCursor.zw, 0.));
     vec4 previousCursor = vec4(normalize(iPreviousCursor.xy, 1.), normalize(iPreviousCursor.zw, 0.));
@@ -89,7 +94,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
     vec2 v2 = vec2(prevLeft + trailW * invertedVertexFactor, prevTop);
     vec2 v3 = vec2(prevLeft + trailW * vertexFactor,         prevTop - trailH);
 
-    float progress = blend(clamp((iTime - iTimeCursorChange) / duration, 0.0, 1.0));
+    float progress = blend(clamp(cursorChangeAge / duration, 0.0, 1.0));
     // Distance between cursors determines total length of parallelogram
     vec2 centerCC = getRectangleCenter(currentCursor);
     vec2 centerCP = getRectangleCenter(previousCursor);
