@@ -7,8 +7,8 @@ float seg(in vec2 p, in vec2 a, in vec2 b, inout float s, float d) {
     vec2 e = b - a;
     vec2 w = p - a;
     vec2 proj = a + e * clamp(dot(w, e) / dot(e, e), 0.0, 1.0);
-    float segd = dot(p - proj, p - proj);
-    d = min(d, segd);
+    float seg_d = dot(p - proj, p - proj);
+    d = min(d, seg_d);
     float c0 = step(0.0, p.y - a.y);
     float c1 = 1.0 - step(0.0, p.y - b.y);
     float c2 = 1.0 - step(0.0, e.x * w.y - e.y * w.x);
@@ -36,7 +36,7 @@ float blend(float t)
     float sqr = t * t;
     return sqr / (2.0 * (sqr - t) + 1.0);
 }
-float antialising(float distance) {
+float antialiasing(float distance) {
     return 1. - smoothstep(0., normalize(vec2(2., 2.), 0.).x, distance);
 }
 float determineStartVertexFactor(vec2 a, vec2 b) {
@@ -80,7 +80,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
     vec4 currentCursor = vec4(normalize(iCurrentCursor.xy, 1.), normalize(iCurrentCursor.zw, 0.));
     vec4 previousCursor = vec4(normalize(iPreviousCursor.xy, 1.), normalize(iPreviousCursor.zw, 0.));
 
-    // Parellelogram between cursors for the trail
+    // Parallelogram between cursors for the trail
     float vertexFactor = determineStartVertexFactor(currentCursor.xy, previousCursor.xy);
     float invertedVertexFactor = 1.0 - vertexFactor;
     float trailW = currentCursor.z * trailThickness;
@@ -110,7 +110,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
     vec4 newColor = vec4(fragColor);
     newColor = mix(newColor, trailColor, 1.0 - smoothstep(coreIn, coreOut, sdfTrail));
     newColor = mix(newColor, trailColor, 1.0 - smoothstep(sdfTrail, coreIn, coreOut));
-    newColor = mix(newColor, trailColor, antialising(sdfTrail));
+    newColor = mix(newColor, trailColor, antialiasing(sdfTrail));
     newColor = mix(fragColor, newColor, 1.0 - alphaModifier);
     newColor = mix(newColor, trailColor, glow);
     fragColor = mix(newColor, fragColor, step(sdfCursor, 0.));
