@@ -73,7 +73,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
     float trailThickness = mix(0.04, 0.06, heat);
     float cursorChangeAge = iTime - iTimeCursorChange;
     // Hide stale repaints after sleep or background pauses.
-    if (cursorChangeAge < 0.0 || cursorChangeAge >= duration || iTimeDelta >= duration) {
+    if (iFocus <= 0 || cursorChangeAge < 0.0 || cursorChangeAge >= duration || iTimeDelta >= duration) {
         return;
     }
     vec2 vu = normalize(fragCoord, 1.);
