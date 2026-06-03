@@ -2,6 +2,14 @@
 
 My dotfiles, managed with [chezmoi](https://github.com/twpayne/chezmoi).
 
+# Want your own?
+
+[`docs/getting-started.md`](./docs/getting-started.md) is a setup guide written for an AI coding
+assistant. Point yours at it — *"Read `docs/getting-started.md` from `github.com/zsimic/dotfiles`
+and help me set up the same thing"* — and it'll walk you through chezmoi, the `cz` wrapper,
+and a one-command `bootstrap.sh`.
+You can also layer a thin private repo on top for machine- or work-specific config.
+
 # CLIs
 
 Rust CLIs managed via [cargo binstall](home/bin/gremlins/executable_manage-rust-tools).
