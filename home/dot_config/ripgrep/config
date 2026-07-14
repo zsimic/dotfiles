@@ -2,5 +2,6 @@
 --hidden
 --max-count=100
 --max-columns=200
+--max-columns-preview
 --smart-case
 --sort=path
