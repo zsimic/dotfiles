@@ -29,8 +29,8 @@ These cases should all produce correct results:
 |---|---|---|---|
 | `uv-metadata requests -k version` | 2.33.1 | wheel (streaming) | Pure python wheel |
 | `uv-metadata 'requests<2' -k version` | 1.2.3 | sdist | Ancient, no wheels exist |
-| `uv-metadata 'grpcio-tools<1.70' -k version` | 1.69.0 | sdist | C extension, no wheels for default python (cp314) |
-| `uv-metadata torch -k version` | 2.11.0 | wheel (streaming) | 80MB wheel, no sdist — streaming reads only a few KB |
+| `uv-metadata 'grpcio-tools<1.70' -k version` | 1.69.0 | sdist | C extension; no cp314 wheel |
+| `uv-metadata torch -k version` | 2.11.0 | wheel (streaming) | 80 MB; only a few KB streamed |
 | `uv-metadata mysqlclient -k version` | 2.2.8 | wheel (streaming) | Windows-only wheels, no linux wheels |
 | `uv-metadata setuptools -k version` | 82.0.1 | wheel (streaming) | Latest |
 | `uv-metadata -p3.7 setuptools -k version` | 68.0.0 | wheel (streaming) | Latest for python 3.7 |
@@ -60,7 +60,8 @@ This outputs a pylock.toml with:
 The flags:
 - `--no-deps`: we only care about the package itself
 - `--universal`: show wheels for ALL platforms, not just the current one
-- `--fork-strategy fewest`: always produces exactly one package entry (avoids multiple entries for different python ranges)
+- `--fork-strategy fewest`: always produces exactly one package entry, avoiding entries for
+  different Python ranges
 - `--no-sources`: ignore local pyproject.toml sources
 - No `--python-version` by default: resolves to the absolute latest version
 

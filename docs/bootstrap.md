@@ -22,7 +22,8 @@ Fresh-machine checklist:
    chezmoi status
    ```
 
-On macOS, the script requests administrator authorization for the first Homebrew install; Homebrew may ask again when adopting applications already in `/Applications`.
+On macOS, the script requests administrator authorization for the first Homebrew install. Homebrew
+may ask again when adopting applications already in `/Applications`.
 
 If an apply is interrupted:
 

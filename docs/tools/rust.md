@@ -1,10 +1,16 @@
 # Rust tool management
 
-[`manage-rust-tools`](../../home/bin/gremlins/executable_manage-rust-tools) keeps a curated set of Rust CLIs installed without requiring a separate package manager or compiling every tool on every machine.
+[manage-rust-tools] keeps a curated set of Rust CLIs installed without requiring a separate package
+manager or compiling every tool on every machine.
+
+[manage-rust-tools]: ../../home/bin/gremlins/executable_manage-rust-tools
 
 ## Apply lifecycle
 
-The [`run_onchange_after_01-install-rust-tools.sh.tmpl`](../../home/.chezmoiscripts/run_onchange_after_01-install-rust-tools.sh.tmpl) hook includes a hash of the manager. Chezmoi therefore runs it on the first apply and whenever the manager changes.
+The [Rust install hook] includes a hash of the manager. Chezmoi therefore runs it on the first apply
+and whenever the manager changes.
+
+[Rust install hook]: ../../home/.chezmoiscripts/run_onchange_after_01-install-rust-tools.sh.tmpl
 
 The manager then:
 
@@ -16,9 +22,12 @@ The manager then:
 
 ## Binary-first installation
 
-`cargo-binstall` first uses crate metadata to locate a release binary. On Linux x86-64 and ARM64, the lookup requests a musl target so a downloaded binary does not silently require a newer glibc than the host provides.
+`cargo-binstall` first uses crate metadata to locate a release binary. On Linux x86-64 and ARM64,
+the lookup requests a musl target so a downloaded binary does not silently require a newer glibc
+than the host provides.
 
-If no suitable binary is available, the manager compiles against the host target. Packages marked `no-compile` are skipped with a warning instead of triggering that fallback.
+If no suitable binary is available, the manager compiles against the host target. Packages marked
+`no-compile` are skipped with a warning instead of triggering that fallback.
 
 Run the manager directly with:
 
@@ -28,7 +37,11 @@ Run the manager directly with:
 
 ## Monthly upgrade
 
-[`run_onchange_after_90-monthly-upgrade.sh.tmpl`](../../home/.chezmoiscripts/run_onchange_after_90-monthly-upgrade.sh.tmpl) renders the current year and month into the script. The first `chezmoi apply` in a new month therefore runs [`monthly-upgrade`](../../home/bin/gremlins/executable_monthly-upgrade), which:
+The [monthly hook] renders the current year and month into the script. The first `chezmoi apply` in
+a new month therefore runs [monthly-upgrade], which:
+
+[monthly hook]: ../../home/.chezmoiscripts/run_onchange_after_90-monthly-upgrade.sh.tmpl
+[monthly-upgrade]: ../../home/bin/gremlins/executable_monthly-upgrade
 
 1. Runs the Rust manager.
 2. Updates and upgrades Homebrew packages and casks, including greedy cask upgrades.
@@ -41,4 +54,5 @@ This is apply-driven, not a background scheduler. It can also be run explicitly:
 ~/bin/gremlins/monthly-upgrade
 ```
 
-Edit `desired_rust_packages` in the manager to change the automated Rust inventory; keep [Automated tools](./automated.md) in sync as the readable index.
+Edit `desired_rust_packages` in the manager to change the automated Rust inventory; keep
+[Automated tools](./automated.md) in sync as the readable index.

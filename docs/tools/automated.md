@@ -1,6 +1,8 @@
 # Automated tools
 
-This is a readable inventory of the current desired state. The linked [Rust manager](../../home/bin/gremlins/executable_manage-rust-tools) and [Brewfile](../../home/dot_config/homebrew/Brewfile) are authoritative.
+This is a readable inventory of the current desired state. The linked
+[Rust manager](../../home/bin/gremlins/executable_manage-rust-tools) and
+[Brewfile](../../home/dot_config/homebrew/Brewfile) are authoritative.
 
 ## Rust CLIs
 
@@ -36,7 +38,7 @@ Installed on every macOS target:
 | Cask | Use |
 | --- | --- |
 | [1Password](https://formulae.brew.sh/cask/1password) | Password manager |
-| [Symbols Only Nerd Font](https://formulae.brew.sh/cask/font-symbols-only-nerd-font) | Icon glyphs for terminal prompts and tools |
+| [Symbols Only Nerd Font][symbols-font] | Icon glyphs for terminal prompts and tools |
 | [Ghostty](https://formulae.brew.sh/cask/ghostty) | Primary terminal emulator |
 | [Google Chrome](https://formulae.brew.sh/cask/google-chrome) | Browser |
 | [iTerm2](https://formulae.brew.sh/cask/iterm2) | Retained terminal emulator |
@@ -44,6 +46,8 @@ Installed on every macOS target:
 | [Shottr](https://formulae.brew.sh/cask/shottr) | Screenshot utility |
 | [Sublime Text](https://formulae.brew.sh/cask/sublime-text) | Text editor |
 | [Raycast](https://formulae.brew.sh/cask/raycast) | Launcher and productivity tool |
+
+[symbols-font]: https://formulae.brew.sh/cask/font-symbols-only-nerd-font
 
 Additionally installed for the `zoran` account:
 
@@ -53,4 +57,6 @@ Additionally installed for the `zoran` account:
 | [Firefox](https://formulae.brew.sh/cask/firefox) | Browser |
 | [IINA](https://formulae.brew.sh/cask/iina) | Media player |
 | [OnyX](https://formulae.brew.sh/cask/onyx) | macOS maintenance utility |
-| [QuickLook Video](https://formulae.brew.sh/cask/quicklook-video) | Finder Quick Look support for more video formats |
+| [QuickLook Video][quicklook-video] | Quick Look support for more video formats |
+
+[quicklook-video]: https://formulae.brew.sh/cask/quicklook-video
