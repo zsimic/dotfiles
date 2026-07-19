@@ -1,66 +1,34 @@
 # Zoran's dotfiles
 
-My dotfiles, managed with [chezmoi](https://github.com/twpayne/chezmoi).
+A compact, public-safe [chezmoi](https://www.chezmoi.io/) source state for a consistent shell and
+tool setup across macOS and Linux. It is deliberately framework-free: zsh is the daily shell, bash
+remains a supported peer, and shared settings stay in ordinary shell files.
 
-# Want your own?
+[Documentation](./docs/index.md) · [Tool inventory](./docs/tools/index.md) · [Fresh-machine checklist](./docs/bootstrap.md)
 
-[`docs/getting-started.md`](./docs/getting-started.md) is a setup guide written for an AI coding
-assistant. Point yours at it — *"Read `docs/getting-started.md` from `github.com/zsimic/dotfiles`
-and help me set up the same thing"* — and it'll walk you through chezmoi, the `cz` wrapper,
-and a one-command `bootstrap.sh`.
-You can also layer a thin private repo on top for machine- or work-specific config.
+## What is interesting here
 
-# CLIs
+- Bash and zsh share their PATH and most interactive settings through [`shell-path.sh`](./home/dot_config/shell-path.sh) and [`shell-settings.sh`](./home/dot_config/shell-settings.sh).
+- System tools and macOS applications live in a checked-in, condition-aware [`Brewfile`](./home/dot_config/homebrew/Brewfile); the resulting inventory is documented under [Tools](./docs/tools/index.md).
+- Rust CLIs are installed with `cargo-binstall`, including a Linux musl fallback for binaries with newer glibc requirements; see [Rust tool management](./docs/tools/rust.md).
+- Chezmoi `run_onchange_` hooks keep side effects tied to the files that drive them, rather than running a general provisioning pass on every apply; see the [development conventions](./docs/dev/index.md).
+- The repository intentionally contains no secrets or machine-specific credentials.
 
-Rust CLIs managed via [cargo binstall](home/bin/gremlins/executable_manage-rust-tools).
-On Linux, prebuilt binary lookup uses musl targets to avoid glibc floor issues;
-source fallbacks build for the host target.
+## Daily workflow
 
-- [atuin](https://github.com/atuinsh/atuin) - Shell history in sqlite
-- [bat](https://github.com/sharkdp/bat) - A `cat(1)` clone with wings
-- [dua](https://github.com/Byron/dua-cli) - Like `du`, but better
-- [eza](https://github.com/eza-community/eza) - Modern alternative to `ls`
-- [fd](https://github.com/sharkdp/fd) - Fast and user-friendly alternative to `find`
-- [git-delta](https://github.com/dandavison/delta) - Syntax-highlighting pager for git, diff, grep, and blame output
-- [ripgrep](https://github.com/BurntSushi/ripgrep) - `grep` on steroids
-- [tokei](https://github.com/XAMPPRocky/tokei) - Count lines of code in a project
-- [tre](https://github.com/dduan/tre) - Like `tree`, but way better
-- [xh](https://github.com/ducaale/xh) - Friendly and fast tool for sending HTTP requests
-- [zoxide](https://github.com/ajeetdsouza/zoxide) - Smarter `cd` command
+[`cz.sh`](./cz.sh) is a small wrapper around chezmoi:
 
-Not automated (or seldom used):
+```console
+cz          # pull and show pending changes
+cz fetch    # check the remote
+cz apply    # apply the source state
+cz update   # pull and apply
+```
 
-- [bandwhich](https://github.com/imsnif/bandwhich) - Terminal bandwidth utilization tool
-- [dust](https://github.com/bootandy/dust) - A more intuitive version of `du` in Rust; Cargo package is `du-dust`
-- [hyperfine](https://github.com/sharkdp/hyperfine) - Command-line benchmarking tool
-- [tailspin](https://github.com/bensadeh/tailspin) - Log file highlighter; executable is `tspin`
-- [uv](https://github.com/astral-sh/uv) - An extremely fast Python package and project manager, written in Rust
+## Layout
 
-Managed with brew.
-
-- [btop](https://github.com/aristocratos/btop) _(C++)_ - Resource monitor
-- [duf](https://github.com/muesli/duf) _(go)_ - Disk Usage/Free utility - a better `df` alternative
-- [tmux](https://github.com/tmux/tmux) _(C)_ - Terminal multiplexer
-
-Other/older used in the past:
-
-- [curlie](https://github.com/rs/curlie) _(go)_ - The power of curl, the ease of use of httpie
-- [grpcurl](https://github.com/fullstorydev/grpcurl) _(go)_ - Like cURL, but for gRPC
-- [htop](https://htop.dev/) _(C)_ - Interactive process viewer
-- [ncdu](https://dev.yorhel.nl/ncdu) _(C)_ - Ncurses Disk Usage
-
-# Terminals
-
-- [ghostty](https://ghostty.org/) _(zig)_ - My current daily-driver terminal emulator
-- [iTerm2](https://iterm2.com/) _(Objective-C)_  - Previous classic
-
-# Ghostty
-
-- Default config: `ghostty +show-config --default --docs > ghostty-default.conf`
-- http://shadertoy.com/
-- https://github.com/linkarzu/dotfiles-latest/tree/main/ghostty/shaders
-
-# Tests
-
-Some scripts have [tests](./tests), run `tox` to exercise the tests.
-`tox -e venv` can be used to conveniently get a `.venv/`.
+- [`home/`](./home/) — chezmoi source state, lifecycle scripts, and managed configuration.
+- [`bootstrap.sh`](./bootstrap.sh) — installs Homebrew and chezmoi, then applies this repository.
+- [`resources/`](./resources/) — source material used by managed configuration.
+- [`tests/`](./tests/) — tests for the non-trivial helpers; run `tox` and `tox -e style`.
+- [`docs/`](./docs/) — concise operational documentation.
