@@ -1,53 +1,6 @@
 #!/bin/zsh -euf
 
-# Brew tools
-{{ $casks := list -}}
-{{ $brews := list
-    "btop"
-    "duf"
-    "pstree"
-    "tmux"
--}}
-{{ $obsolete_brews := list
-    "curlie"
-    "dust"
-    "fzf"
-    "hyperfine"
-    "less"
-    "tailspin"
-    "the_silver_searcher"
-    "wget"
--}}
-
-{{- if eq .chezmoi.os "darwin" }}
-    {{- $casks = append $casks "font-symbols-only-nerd-font" -}}
-    {{- $casks = append $casks "ghostty" -}}
-    {{- $casks = append $casks "iterm2" -}}
-    {{- $casks = append $casks "pearcleaner" -}}
-    {{- if eq .chezmoi.username "zoran" }}
-        {{- $casks = append $casks "iina" -}}
-        {{- $casks = append $casks "onyx" -}}
-        {{- $casks = append $casks "quicklook-video" -}}
-    {{ end -}}
-{{ end -}}
-
-cleanup_obsolete_brews() {
-    local formula
-
-    for formula in "$@"; do
-        brew list --formula "$formula" > /dev/null 2>&1 || continue
-        brew uninstall --formula "$formula"
-    done
-}
-
+# Brewfile {{ include "dot_config/homebrew/Brewfile" | sha256sum }}
+export HOMEBREW_NO_ASK=1
 export HOMEBREW_NO_ENV_HINTS=1
-brew bundle install --file=/dev/stdin <<EOF
-{{ range ($brews | compact | sortAlpha | uniq) -}}
-brew "{{ . }}"
-{{ end -}}
-{{ range ($casks | compact | sortAlpha | uniq) -}}
-cask "{{ . }}"
-{{ end -}}
-EOF
-
-cleanup_obsolete_brews {{ range ($obsolete_brews | compact | sortAlpha | uniq) }}"{{ . }}" {{ end }}
+brew bundle install --file="$HOME/.config/homebrew/Brewfile"

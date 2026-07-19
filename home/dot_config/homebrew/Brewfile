@@ -1,0 +1,20 @@
+brew "btop"
+brew "duf"
+brew "pstree"
+brew "tmux"
+
+if OS.mac?
+  cask "font-symbols-only-nerd-font"
+  cask "ghostty"
+  cask "iterm2"
+  cask "pearcleaner"
+  cask "sublime-text"
+
+  if ENV["USER"] == "zoran"
+    cask "discord"
+    cask "firefox"
+    cask "iina"
+    cask "onyx"
+    cask "quicklook-video"
+  end
+end
