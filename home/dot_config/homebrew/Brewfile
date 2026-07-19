@@ -5,6 +5,7 @@ brew "tmux"
 
 if OS.mac?
   cask "1password"
+  cask "cleanshot"
   cask "font-symbols-only-nerd-font"
   cask "ghostty"
   cask "google-chrome"
