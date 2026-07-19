@@ -1,1 +1,0 @@
-launch zsh -c "$HOME/bin/join-tmux main"
