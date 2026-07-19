@@ -4,11 +4,14 @@ brew "pstree"
 brew "tmux"
 
 if OS.mac?
+  cask "1password"
   cask "font-symbols-only-nerd-font"
   cask "ghostty"
+  cask "google-chrome"
   cask "iterm2"
   cask "pearcleaner"
   cask "sublime-text"
+  cask "raycast"
 
   if ENV["USER"] == "zoran"
     cask "discord"
