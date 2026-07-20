@@ -41,6 +41,9 @@ defaults -currentHost write com.apple.Spotlight MenuItemHidden -bool true
 defaults write com.apple.menuextra.clock ShowDayOfWeek -bool false
 defaults write com.apple.menuextra.clock FlashDateSeparators -bool false
 
+# Date & time
+defaults write NSGlobalDomain AppleICUForce24HourTime -bool true
+
 # Text input
 defaults write NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false
 defaults write NSGlobalDomain NSAutomaticCapitalizationEnabled -bool false
