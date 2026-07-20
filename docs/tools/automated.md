@@ -33,6 +33,9 @@ Installed with `cargo-binstall`; package names that differ from their primary ex
 
 ## macOS casks
 
+Chezmoi installs or adopts missing casks without upgrading existing ones. Monthly maintenance leaves
+self-updating casks to their own updaters and upgrades only casks that do not declare `auto_updates`.
+
 Installed on every macOS target:
 
 | Cask | Use |

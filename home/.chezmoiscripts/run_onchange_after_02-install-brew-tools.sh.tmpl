@@ -3,4 +3,4 @@
 # Brewfile {{ include "dot_config/homebrew/Brewfile" | sha256sum }}
 export HOMEBREW_NO_ASK=1
 export HOMEBREW_NO_ENV_HINTS=1
-brew bundle install --file="$HOME/.config/homebrew/Brewfile"
+brew bundle install --no-upgrade --file="$HOME/.config/homebrew/Brewfile"

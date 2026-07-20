@@ -44,7 +44,7 @@ a new month therefore runs [monthly-upgrade], which:
 [monthly-upgrade]: ../../home/bin/gremlins/executable_monthly-upgrade
 
 1. Runs the Rust manager.
-2. Updates and upgrades Homebrew packages and casks, including greedy cask upgrades.
+2. Updates Homebrew and upgrades formulae plus casks that do not manage their own updates.
 3. Cleans Homebrew's old artifacts.
 4. Regenerates managed zsh completions.
 
