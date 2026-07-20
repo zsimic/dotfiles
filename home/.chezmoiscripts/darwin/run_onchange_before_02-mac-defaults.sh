@@ -17,9 +17,22 @@ defaults write com.apple.screencapture location -string "${HOME}/Pictures/"
 defaults write com.apple.screencapture name -string "ScreenShot"
 defaults write com.apple.screencapture show-thumbnail -bool false
 
-# dock settings
+# Dock
 defaults write com.apple.dock tilesize -int 30
+defaults write com.apple.dock magnification -bool false
+defaults write com.apple.dock orientation -string "left"
+defaults write com.apple.dock show-recents -bool false
 defaults write com.apple.dock recent-apps -array ""
+defaults write NSGlobalDomain AppleActionOnDoubleClick -string "None"
+defaults write NSGlobalDomain AppleMiniaturizeOnDoubleClick -bool false
+
+# Desktop & Stage Manager
+defaults write com.apple.WindowManager StandardHideDesktopIcons -bool true
+defaults write com.apple.WindowManager HideDesktop -bool true
+defaults write com.apple.WindowManager EnableStandardClickToShowDesktop -bool false
+
+# Window tiling
+defaults write com.apple.WindowManager EnableTopTilingByEdgeDrag -bool false
 
 # Use F1, F2, etc. as standard function keys
 defaults write NSGlobalDomain com.apple.keyboard.fnState -bool true
