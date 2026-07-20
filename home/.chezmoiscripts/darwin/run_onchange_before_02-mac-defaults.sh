@@ -35,3 +35,16 @@ defaults write com.googlecode.iterm2 PrefsCustomFolder "$CHEZMOI_WORKING_TREE/re
 #defaults write com.googlecode.iterm2 NoSyncNeverRemindPrefsChangesLostForFile -bool true
 #defaults write com.googlecode.iterm2 NoSyncNeverRemindPrefsChangesLostForFile_selection -int 2
 #defaults write com.googlecode.iterm2 NoSyncTipsDisabled -bool true
+
+# Disable the "Turn Dock Hiding On/Off" keyboard shortcut (Option-Command-D)
+defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 52 '<dict><key>enabled</key><false/></dict>'
+
+# Disable Spotlight keyboard shortcuts
+defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 64 '<dict><key>enabled</key><false/></dict>'
+defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 65 '<dict><key>enabled</key><false/></dict>'
+
+# Reload keyboard shortcut settings in the current session
+shortcut_activator="/System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings"
+if [[ -x "$shortcut_activator" ]]; then
+    "$shortcut_activator" -u
+fi
