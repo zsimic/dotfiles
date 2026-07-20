@@ -94,10 +94,6 @@ for hotkey in "${disabled_hotkeys[@]}"; do
     defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add "$hotkey" '<dict><key>enabled</key><false/></dict>'
 done
 
-# Keep Control-scroll zoom enabled without enabling its separate keyboard shortcuts
-defaults write com.apple.universalaccess closeViewHotkeysEnabled -bool false
-defaults write com.apple.universalaccess closeViewScrollWheelToggle -bool true
-
 # Reload keyboard shortcut settings in the current session
 shortcut_activator="/System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings"
 if [[ -x "$shortcut_activator" ]]; then
