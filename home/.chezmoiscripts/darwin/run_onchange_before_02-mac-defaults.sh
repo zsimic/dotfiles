@@ -34,6 +34,21 @@ defaults write com.apple.WindowManager EnableStandardClickToShowDesktop -bool fa
 # Window tiling
 defaults write com.apple.WindowManager EnableTopTilingByEdgeDrag -bool false
 
+# Menu bar
+defaults -currentHost write com.apple.Spotlight MenuItemHidden -bool true
+
+# Menu bar clock
+defaults write com.apple.menuextra.clock ShowDayOfWeek -bool false
+defaults write com.apple.menuextra.clock FlashDateSeparators -bool false
+
+# Text input
+defaults write NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false
+defaults write NSGlobalDomain NSAutomaticCapitalizationEnabled -bool false
+defaults write NSGlobalDomain NSAutomaticInlinePredictionEnabled -bool false
+defaults write NSGlobalDomain NSAutomaticPeriodSubstitutionEnabled -bool false
+defaults write NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false
+defaults write NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false
+
 # Use F1, F2, etc. as standard function keys
 defaults write NSGlobalDomain com.apple.keyboard.fnState -bool true
 
