@@ -4,11 +4,11 @@ brew "pstree"
 brew "tmux"
 
 if OS.mac?
+  cask "appcleaner"
   cask "font-symbols-only-nerd-font"
   cask "ghostty"
   cask "google-chrome"
   cask "iterm2"
-  cask "pearcleaner"
   cask "shottr"
   cask "sublime-text"
   cask "raycast"
