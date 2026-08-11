@@ -7,8 +7,8 @@ typeset -gr cargo_installed_file="$cargo_home/.crates.toml"
 typeset -gr this_script="${${(%):-%N}:A}"
 
 typeset -ga desired_rust_packages=(
-    atuin  # no-compile
-    bat  # no-compile
+    atuin
+    bat
     dua-cli
     # du-dust
     eza
