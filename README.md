@@ -1,8 +1,8 @@
 # Zoran's dotfiles
 
-A compact, public-safe [chezmoi](https://www.chezmoi.io/) source state for a consistent shell and
-tool setup across macOS and Linux. It is deliberately framework-free: zsh is the daily shell, bash
-remains a supported peer, and shared settings stay in ordinary shell files.
+My dotfiles, using [chezmoi](https://www.chezmoi.io/), for a consistent shell and tool setup across
+macOS and Linux. It is deliberately framework-free: zsh is the daily shell, bash remains a supported
+peer, and shared settings stay in ordinary shell files.
 
 [Documentation](./docs/index.md) · [Reuse this setup](./docs/reuse/index.md) ·
 [Tool inventory](./docs/tools/index.md) · [Fresh-machine checklist](./docs/bootstrap.md)
@@ -28,7 +28,6 @@ remains a supported peer, and shared settings stay in ordinary shell files.
 
 ```console
 cz          # pull and show pending changes
-cz fetch    # check the remote
 cz apply    # apply the source state
 cz update   # pull and apply
 ```
@@ -38,5 +37,5 @@ cz update   # pull and apply
 - [`home/`](./home/) — chezmoi source state, lifecycle scripts, and managed configuration.
 - [`bootstrap.sh`](./bootstrap.sh) — installs Homebrew and chezmoi, then applies this repository.
 - [`resources/`](./resources/) — source material used by managed configuration.
-- [`tests/`](./tests/) — tests for the non-trivial helpers; run `tox` and `tox -e style`.
+- [`tests/`](./tests/) — tests for the non-trivial helpers; run `tox` or `tox -e style`.
 - [`docs/`](./docs/) — concise operational documentation.
