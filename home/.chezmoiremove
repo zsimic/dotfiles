@@ -1,2 +1,3 @@
 .python_history
 .local/share/zsh/plugins/fzf-tab
+bin/uv-metadata

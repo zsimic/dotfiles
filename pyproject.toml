@@ -9,18 +9,15 @@ authors = [
 
 [dependency-groups]
 test = [
-    "pkginfo",
     "pytest-cov",
-    "seekablehttpfile",
     "runez",
 ]
 dev = [
     { include-group = "test" },
 ]
 
-[tool.pyright]
-pythonVersion = "3.10"
-include = ["home", "scripts", "tests"]
+[tool.ty.environment]
+root = ["./home", "./scripts", "./tests"]
 
 [tool.ruff]
 cache-dir = ".tox/.ruff_cache"

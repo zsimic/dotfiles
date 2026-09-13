@@ -74,7 +74,7 @@ def test_ps1(cli):
     # This test's own venv
     venv_path = os.path.dirname(os.path.dirname(sys.executable))
     py_version = ".".join(str(x) for x in sys.version_info[:2])
-    cli.run("ps1", "-czsh", "-x1", "-v%s" % venv_path)
+    cli.run("ps1", "-czsh", "-x1", f"-v{venv_path}")
     assert cli.succeeded
     output = cli.logged.stdout.contents()
     assert py_version in output
@@ -93,11 +93,11 @@ def test_ps1(cli):
 def test_ps1_deep(cli, monkeypatch):
     cli.main = SHRINKY
     sample = "sample/some/very/deep/folder/with/way/too/many/characters/tests"
-    runez.touch("%s/.git" % sample)
-    full_path = os.path.abspath("%s/foo/bar/baz/even/more/tests" % sample)
-    venv = "%s/.venv" % full_path
-    runez.write("%s/bin/activate" % venv, '\nPS1="(some-very-long-venv-prompt) ${PS1:-}"')
-    cli.run('ps1 -cplain -p"%s" -v"%s/.venv"' % (full_path, full_path))
+    runez.touch(f"{sample}/.git")
+    full_path = os.path.abspath(f"{sample}/foo/bar/baz/even/more/tests")
+    venv = f"{full_path}/.venv"
+    runez.write(f"{venv}/bin/activate", '\nPS1="(some-very-long-venv-prompt) ${PS1:-}"')
+    cli.run("ps1", "-cplain", f'-p"{full_path}"', f'-v"{full_path}/.venv"')
     assert cli.succeeded
     expected = "(𓈓me-very-long-venv-prompt None) /𓈓/f/b/b/e/more/tests$ "
     assert cli.logged.stdout.contents() == expected
@@ -125,7 +125,7 @@ def test_tmux(cli, monkeypatch):
     cli.main = SHRINKY
     monkeypatch.setenv("SHRINKY_LOG", "shrinky.log")
     assert not os.path.exists("shrinky.log")
-    cli.run("tmux_short -p%s" % os.environ.get("HOME"))
+    cli.run("tmux_short", f"-p{os.environ.get('HOME')}")
     assert cli.succeeded
     assert cli.logged.stdout.contents() == "~"
     assert os.path.exists("shrinky.log")
@@ -158,11 +158,11 @@ def test_tmux_here(cli):
     # Exercise real case (this repo)
     cli.main = SHRINKY
     project_path = runez.DEV.project_path("bin")
-    cli.run("tmux_short -p%s" % project_path)
+    cli.run("tmux_short", f"-p{project_path}")
     assert cli.succeeded
     assert cli.logged.stdout.contents().endswith("/bin")
 
-    cli.run("tmux_status -p%s" % project_path)
+    cli.run("tmux_status", f"-p{project_path}")
     assert cli.succeeded
     logged = cli.logged.stdout.contents().strip()
     assert "┆" in logged
