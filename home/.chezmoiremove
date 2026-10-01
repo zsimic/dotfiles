@@ -4,3 +4,4 @@ bin/uv-metadata
 .local/share/zsh/site-functions/_fd
 .local/share/zsh/site-functions/_xh
 .local/share/zsh/site-functions/_zoxide
+.local/share/zsh/site-functions/_uv
