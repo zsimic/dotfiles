@@ -9,12 +9,9 @@ typeset -gr cargo_installed_file="$cargo_home/.crates.toml"
 typeset -ga desired_rust_packages=(
     atuin
     bat
-    # du-dust
     eza
     git-delta
-    # hyperfine
     ripgrep
-    # tailspin
 )
 
 # Uninstalled from ~/.cargo/bin if present (moved to the Brewfile, or no longer used)

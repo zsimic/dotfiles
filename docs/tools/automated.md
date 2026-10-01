@@ -20,6 +20,10 @@ their primary executable are shown explicitly.
 
 ## Homebrew formulae
 
+Formulae listed in `obsolete_brew_formulae` in the [brew install hook] are uninstalled if present.
+
+[brew install hook]: ../../home/.chezmoiscripts/run_onchange_after_02-install-brew-tools.sh.tmpl
+
 | Tool | Use |
 | --- | --- |
 | [btop](https://formulae.brew.sh/formula/btop) | Interactive resource monitor |

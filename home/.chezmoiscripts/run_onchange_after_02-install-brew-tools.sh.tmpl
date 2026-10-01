@@ -1,6 +1,22 @@
 #!/bin/zsh -euf
 
 # Brewfile {{ include "dot_config/homebrew/Brewfile" | sha256sum }}
+
+# Uninstalled if present (no longer used)
+typeset -ga obsolete_brew_formulae=(
+    curlie
+    fzf
+    less
+    the_silver_searcher
+    wget
+)
+
 export HOMEBREW_NO_ASK=1
 export HOMEBREW_NO_ENV_HINTS=1
 brew bundle install --no-upgrade --file="$HOME/.config/homebrew/Brewfile"
+
+for formula in "${obsolete_brew_formulae[@]}"; do
+    if brew list --formula "$formula" > /dev/null 2>&1; then
+        brew uninstall --formula "$formula"
+    fi
+done
