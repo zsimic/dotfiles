@@ -13,8 +13,6 @@ an install manifest.
   commented candidate in the Brewfile.
 - [tailspin](https://github.com/bensadeh/tailspin) — log highlighting; executable `tspin`, retained
   as a commented candidate in the Brewfile.
-- [uv](https://github.com/astral-sh/uv) — Python package and project management; not wired into
-  the installer.
 
 ## Previous or occasional tools
 

@@ -12,6 +12,10 @@ brew "tre-command"
 brew "xh"
 brew "zoxide"
 
+if ENV["USER"] == "zoran"
+    brew "uv"
+end
+
 if OS.mac?
   cask "appcleaner"
   cask "font-symbols-only-nerd-font"

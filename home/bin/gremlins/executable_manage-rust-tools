@@ -23,6 +23,7 @@ typeset -ga obsolete_rust_packages=(
     fd-find
     tokei
     tre-command
+    uv
     xh
     zoxide
 )

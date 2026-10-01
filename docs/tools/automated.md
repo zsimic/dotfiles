@@ -35,6 +35,7 @@ Formulae listed in `obsolete_brew_formulae` in the [brew install hook] are unins
 | [tokei](https://formulae.brew.sh/formula/tokei) | Source-code statistics |
 | [tre-command](https://formulae.brew.sh/formula/tre-command) | Tree view with sensible ignores |
 | [xh](https://formulae.brew.sh/formula/xh) | Friendly HTTP client |
+| [uv](https://formulae.brew.sh/formula/uv) | Python package and project management |
 | [zoxide](https://formulae.brew.sh/formula/zoxide) | Frecency-based directory jumping |
 
 ## macOS casks
