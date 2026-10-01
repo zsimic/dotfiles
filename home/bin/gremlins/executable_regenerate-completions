@@ -69,20 +69,16 @@ regenerate_completions() {
     render_completion_to_dir _atuin atuin gen-completions --shell zsh
     render_completion _bat bat --completion zsh
     fetch_completion _delta https://raw.githubusercontent.com/dandavison/delta/HEAD/etc/completion/completion.zsh
-    # dua: no maintained completion source wired in here yet.
     fetch_completion _eza https://raw.githubusercontent.com/eza-community/eza/HEAD/completions/zsh/_eza
-    render_completion _fd fd --gen-completions zsh
     render_completion _rg rg --generate complete-zsh
     render_completion _rustup rustup completions zsh
-    # tokei: upstream no longer ships a checked-in completion source, and no supported `tokei completion` command was found.
-    # tre: no shell completion subcommand is exposed; keep only if this changes.
     render_completion _uv uv generate-shell-completion zsh
-    render_completion _xh xh --generate complete-zsh
-    fetch_completion _zoxide https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/contrib/completions/_zoxide
 
     # Brew tools (listed here as a reminder... so we don't look again)
+    # dua: no maintained completion source wired in here yet.
     # duf: upstream CLI exposes no completion subcommand, and upstream does not ship a checked-in zsh completion source.
     # tmux: upstream README only points to an external bash-completion file; tmux itself ships no checked-in zsh completion or generator.
+    # tokei: upstream no longer ships a checked-in completion source, and no supported `tokei completion` command was found.
 }
 
 refresh_zcompdump() {

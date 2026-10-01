@@ -15,8 +15,8 @@ peer, and shared settings stay in ordinary shell files.
 - System tools and macOS applications live in a checked-in, condition-aware
   [`Brewfile`](./home/dot_config/homebrew/Brewfile); the resulting inventory is documented under
   [Tools](./docs/tools/index.md).
-- Rust CLIs not (yet) in the Brewfile are compiled with `cargo install`; see
-  [Rust tool management](./docs/tools/rust.md).
+- Rust CLIs whose Homebrew formulae would pull in extra libraries are compiled with `cargo install`
+  instead; see [Rust tool management](./docs/tools/rust.md).
 - Chezmoi `run_onchange_` hooks keep side effects tied to the files that drive them instead of
   running a general provisioning pass on every apply; see the
   [development conventions](./docs/dev/index.md).

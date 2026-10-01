@@ -6,30 +6,32 @@ This is a readable inventory of the current desired state. The linked
 
 ## Rust CLIs
 
-Compiled with `cargo install`; package names that differ from their primary executable are shown explicitly.
+Compiled with `cargo install` to avoid the extra libraries their Homebrew formulae pull in (see
+[Rust tool management](./rust.md#why-some-tools-stay-on-cargo)); package names that differ from
+their primary executable are shown explicitly.
 
 | Tool | Cargo package | Use |
 | --- | --- | --- |
 | [atuin](https://github.com/atuinsh/atuin) | `atuin` | Searchable, SQLite-backed shell history |
 | [bat](https://github.com/sharkdp/bat) | `bat` | `cat` with syntax highlighting and paging |
-| [dua](https://github.com/Byron/dua-cli) | `dua-cli` | Interactive disk-usage inspection |
 | [eza](https://github.com/eza-community/eza) | `eza` | Modern `ls` replacement |
-| [fd](https://github.com/sharkdp/fd) | `fd-find` | Fast, friendly `find` replacement |
 | [delta](https://github.com/dandavison/delta) | `git-delta` | Syntax-aware pager for Git and diffs |
 | [ripgrep](https://github.com/BurntSushi/ripgrep) | `ripgrep` | Fast recursive text search; executable is `rg` |
-| [tre](https://github.com/dduan/tre) | `tre-command` | Tree view with sensible ignores |
-| [xh](https://github.com/ducaale/xh) | `xh` | Friendly HTTP client |
-| [zoxide](https://github.com/ajeetdsouza/zoxide) | `zoxide` | Frecency-based directory jumping |
 
 ## Homebrew formulae
 
 | Tool | Use |
 | --- | --- |
 | [btop](https://formulae.brew.sh/formula/btop) | Interactive resource monitor |
+| [dua-cli](https://formulae.brew.sh/formula/dua-cli) | Interactive disk-usage inspection |
 | [duf](https://formulae.brew.sh/formula/duf) | Disk usage/free summary |
+| [fd](https://formulae.brew.sh/formula/fd) | Fast, friendly `find` replacement |
 | [pstree](https://formulae.brew.sh/formula/pstree) | Process hierarchy display |
 | [tmux](https://formulae.brew.sh/formula/tmux) | Terminal multiplexer |
 | [tokei](https://formulae.brew.sh/formula/tokei) | Source-code statistics |
+| [tre-command](https://formulae.brew.sh/formula/tre-command) | Tree view with sensible ignores |
+| [xh](https://formulae.brew.sh/formula/xh) | Friendly HTTP client |
+| [zoxide](https://formulae.brew.sh/formula/zoxide) | Frecency-based directory jumping |
 
 ## macOS casks
 

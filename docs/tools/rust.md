@@ -1,10 +1,36 @@
 # Rust tool management
 
-[manage-rust-tools] keeps a curated set of Rust CLIs installed by compiling them with `cargo install`.
-Tools are being moved to the [Brewfile](../../home/dot_config/homebrew/Brewfile) over time, as
-Homebrew now bottles all of them natively for macOS and Linux.
+[manage-rust-tools] keeps a small set of Rust CLIs installed by compiling them with `cargo install`.
+Rust CLIs default to the [Brewfile] (native bottles for macOS and Linux, upgraded monthly); only
+those whose formula would pull in extra libraries stay here.
 
 [manage-rust-tools]: ../../home/bin/gremlins/executable_manage-rust-tools
+[Brewfile]: ../../home/dot_config/homebrew/Brewfile
+
+## Why some tools stay on cargo
+
+Their Homebrew formulae depend on shared libraries that would then be installed system-wide in the
+Homebrew prefix:
+
+| Tool | Extra Homebrew dependencies |
+| --- | --- |
+| atuin | `openssl@4` (Linux only) |
+| bat | `libgit2`, `oniguruma` |
+| eza | `libgit2` |
+| git-delta | `libgit2`, `oniguruma` (+ `zlib-ng-compat` on Linux) |
+| ripgrep | `pcre2` |
+
+`libgit2` itself brings in `libssh2`, `openssl@3`, `ca-certificates` and `llhttp`.
+
+Such libraries in the Homebrew prefix used to interfere with otherwise clean builds, for example
+compiling CPython or Python wheels, which may pick up Homebrew's headers and libraries instead of
+the system ones. That was mostly a problem back when Homebrew lived in `/usr/local`, but keeping the
+prefix free of them is still preferred. The `cargo install` builds statically bundle `libgit2` and
+`oniguruma`, and ripgrep's PCRE2 support is an optional feature that is off by default, so the
+binaries have no such runtime dependencies.
+
+When adding a Rust CLI, check `brew deps <formula>`: if it is empty, add the formula to the
+Brewfile instead.
 
 ## Apply lifecycle
 

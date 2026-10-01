@@ -1,8 +1,13 @@
 brew "btop"
+brew "dua-cli"
 brew "duf"
+brew "fd"
 brew "pstree"
 brew "tmux"
 brew "tokei"
+brew "tre-command"
+brew "xh"
+brew "zoxide"
 
 if OS.mac?
   cask "appcleaner"
