@@ -6,7 +6,7 @@ This is a readable inventory of the current desired state. The linked
 
 ## Rust CLIs
 
-Installed with `cargo-binstall`; package names that differ from their primary executable are shown explicitly.
+Compiled with `cargo install`; package names that differ from their primary executable are shown explicitly.
 
 | Tool | Cargo package | Use |
 | --- | --- | --- |
@@ -17,7 +17,6 @@ Installed with `cargo-binstall`; package names that differ from their primary ex
 | [fd](https://github.com/sharkdp/fd) | `fd-find` | Fast, friendly `find` replacement |
 | [delta](https://github.com/dandavison/delta) | `git-delta` | Syntax-aware pager for Git and diffs |
 | [ripgrep](https://github.com/BurntSushi/ripgrep) | `ripgrep` | Fast recursive text search; executable is `rg` |
-| [tokei](https://github.com/XAMPPRocky/tokei) | `tokei` | Source-code statistics |
 | [tre](https://github.com/dduan/tre) | `tre-command` | Tree view with sensible ignores |
 | [xh](https://github.com/ducaale/xh) | `xh` | Friendly HTTP client |
 | [zoxide](https://github.com/ajeetdsouza/zoxide) | `zoxide` | Frecency-based directory jumping |
@@ -30,6 +29,7 @@ Installed with `cargo-binstall`; package names that differ from their primary ex
 | [duf](https://formulae.brew.sh/formula/duf) | Disk usage/free summary |
 | [pstree](https://formulae.brew.sh/formula/pstree) | Process hierarchy display |
 | [tmux](https://formulae.brew.sh/formula/tmux) | Terminal multiplexer |
+| [tokei](https://formulae.brew.sh/formula/tokei) | Source-code statistics |
 
 ## macOS casks
 

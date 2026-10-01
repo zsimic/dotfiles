@@ -2,6 +2,7 @@ brew "btop"
 brew "duf"
 brew "pstree"
 brew "tmux"
+brew "tokei"
 
 if OS.mac?
   cask "appcleaner"

@@ -4,7 +4,6 @@ typeset -gr cargo_home="${CARGO_HOME:-$HOME/.cargo}"
 typeset -gr cargo_bin_dir="$cargo_home/bin"
 typeset -gr cargo_env_file="$cargo_home/env"
 typeset -gr cargo_installed_file="$cargo_home/.crates.toml"
-typeset -gr this_script="${${(%):-%N}:A}"
 
 typeset -ga desired_rust_packages=(
     atuin
@@ -17,29 +16,18 @@ typeset -ga desired_rust_packages=(
     # hyperfine
     ripgrep
     # tailspin
-    tokei
     tre-command
     xh
     zoxide
-    # uv  # no-compile
 )
 
+# Uninstalled from ~/.cargo/bin if present (moved to the Brewfile, or no longer used)
 typeset -ga obsolete_rust_packages=(
+    cargo-binstall
     cargo-cache
     cargo-update
+    tokei
 )
-
-no_compile_packages_from_comments() {
-    sed -nE '
-        /^[[:space:]]*typeset -ga desired_rust_packages=\(/,/^[[:space:]]*\)/ {
-            /#[[:space:]]*no-compile([[:space:]]|$)/ {
-                s/^[[:space:]]*#?[[:space:]]*([^[:space:]#]+).*$/\1/p
-            }
-        }
-    ' "$this_script"
-}
-
-typeset -ga no_compile_packages=("${(@f)$(no_compile_packages_from_comments)}")
 
 prepend_to_path() {
     local dir="$1"
@@ -72,29 +60,9 @@ ensure_rustup() {
     command -v rustup > /dev/null
 }
 
-ensure_cargo_binstall() {
-    if [[ ! -x "$cargo_bin_dir/cargo-binstall" ]]; then
-        echo Installing cargo-binstall
-        curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
-    fi
-
-    ensure_cargo_path
-    command -v cargo-binstall > /dev/null
-}
-
 cargo_installed_packages() {
     [[ -r "$cargo_installed_file" ]] || return 0
     cargo install --list | awk '/^[^ ]+ v[^ ]+:$/ { print $1 }'
-}
-
-linux_metadata_binstall_target() {
-    [[ "$(uname -s)" == Linux ]] || return 1
-
-    case "$(uname -m)" in
-        x86_64|amd64) print x86_64-unknown-linux-musl ;;
-        aarch64|arm64) print aarch64-unknown-linux-musl ;;
-        *) return 1 ;;
-    esac
 }
 
 cleanup_obsolete_rust_packages() {
@@ -107,31 +75,17 @@ cleanup_obsolete_rust_packages() {
             cargo uninstall "$pkg_name"
         fi
     done
+
+    # State left behind by cargo-binstall, no longer used
+    rm -rf "$cargo_home/binstall" "$cargo_home/binstall.toml"
 }
 
 install_rust_package() {
     local pkg_name="$1"
-    local -a metadata_args=(--no-confirm)
-    local metadata_target
 
-    # linux-gnu release assets do not encode a glibc floor; musl binaries avoid that trap.
-    if metadata_target="$(linux_metadata_binstall_target)"; then
-        metadata_args+=(--targets "$metadata_target")
-    fi
-
-    if BINSTALL_STRATEGIES=crate-meta-data cargo binstall "${metadata_args[@]}" -- "$pkg_name"; then
-        return 0
-    fi
-
-    if (( ${no_compile_packages[(Ie)$pkg_name]} != 0 )); then
-        print "WARN: skipped $pkg_name: install failed"
-        return 0
-    fi
-
-    # Compile against the host target so we link to local glibc rather than cross-compiling
-    # to musl (which would need rustup target add and, for crates with C deps, musl-tools).
-    BINSTALL_STRATEGIES=compile cargo binstall --no-confirm -- "$pkg_name" ||
-        print "WARN: skipped $pkg_name: install failed"
+    # --locked builds with the crate's published Cargo.lock; some (e.g. git-delta) pull yanked deps otherwise.
+    # Already up-to-date packages are a no-op, so this doubles as the upgrade path.
+    cargo install --locked "$pkg_name" || print "WARN: skipped $pkg_name: install failed"
 }
 
 manage_rust_cli_tools() {
@@ -151,7 +105,6 @@ manage_rust_cli_tools() {
         rustup update
     fi
 
-    ensure_cargo_binstall
     cleanup_obsolete_rust_packages
 
     installed_packages=($(cargo_installed_packages))

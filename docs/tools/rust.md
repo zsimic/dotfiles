@@ -1,7 +1,8 @@
 # Rust tool management
 
-[manage-rust-tools] keeps a curated set of Rust CLIs installed without requiring a separate package
-manager or compiling every tool on every machine.
+[manage-rust-tools] keeps a curated set of Rust CLIs installed by compiling them with `cargo install`.
+Tools are being moved to the [Brewfile](../../home/dot_config/homebrew/Brewfile) over time, as
+Homebrew now bottles all of them natively for macOS and Linux.
 
 [manage-rust-tools]: ../../home/bin/gremlins/executable_manage-rust-tools
 
@@ -16,18 +17,14 @@ The manager then:
 
 1. Installs a minimal `rustup` without modifying shell startup files, if necessary.
 2. Updates rustup and installed Rust toolchains on later runs.
-3. Installs `cargo-binstall`, if necessary.
-4. Removes explicitly obsolete Cargo packages.
-5. Installs or upgrades the desired packages plus any other packages already recorded by Cargo.
+3. Uninstalls packages listed in `obsolete_rust_packages` (tools moved to the Brewfile, or no longer
+   used), plus any leftover `cargo-binstall` state.
+4. Installs or upgrades the desired packages plus any other packages already recorded by Cargo, with
+   `cargo install --locked` against the host target (so binaries link to the local glibc on Linux).
 
-## Binary-first installation
-
-`cargo-binstall` first uses crate metadata to locate a release binary. On Linux x86-64 and ARM64,
-the lookup requests a musl target so a downloaded binary does not silently require a newer glibc
-than the host provides.
-
-If no suitable binary is available, the manager compiles against the host target. Packages marked
-`no-compile` are skipped with a warning instead of triggering that fallback.
+`cargo-binstall` was dropped: its prebuilt-binary lookups often hit GitHub's unauthenticated API rate
+limit, and on Apple Silicon it upgraded itself to its x86_64 build, which then ran every compile under
+Rosetta (broken on macOS 27, whose `libxcrun` has no x86_64 slice).
 
 Run the manager directly with:
 
