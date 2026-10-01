@@ -14,6 +14,12 @@ typeset -ga desired_rust_packages=(
     ripgrep
 )
 
+# Extra `cargo install` arguments, per package
+typeset -gA rust_package_args=(
+    # Statically link OpenSSL (a no-op on macOS), Linux hosts often lack its headers (libssl-dev)
+    atuin "--features vendored-tls"
+)
+
 # Uninstalled from ~/.cargo/bin if present (moved to the Brewfile, or no longer used)
 typeset -ga obsolete_rust_packages=(
     cargo-binstall
@@ -84,7 +90,7 @@ install_rust_package() {
 
     # --locked builds with the crate's published Cargo.lock; some (e.g. git-delta) pull yanked deps otherwise.
     # Already up-to-date packages are a no-op, so this doubles as the upgrade path.
-    cargo install --locked "$pkg_name" || print "WARN: skipped $pkg_name: install failed"
+    cargo install --locked ${=rust_package_args[$pkg_name]-} "$pkg_name" || print "WARN: skipped $pkg_name: install failed"
 }
 
 manage_rust_cli_tools() {

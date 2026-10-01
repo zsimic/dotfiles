@@ -26,8 +26,9 @@ Such libraries in the Homebrew prefix used to interfere with otherwise clean bui
 compiling CPython or Python wheels, which may pick up Homebrew's headers and libraries instead of
 the system ones. That was mostly a problem back when Homebrew lived in `/usr/local`, but keeping the
 prefix free of them is still preferred. The `cargo install` builds statically bundle `libgit2` and
-`oniguruma`, and ripgrep's PCRE2 support is an optional feature that is off by default, so the
-binaries have no such runtime dependencies.
+`oniguruma`, atuin is built with its `vendored-tls` feature (OpenSSL statically linked on Linux), and
+ripgrep's PCRE2 support is an optional feature that is off by default, so the binaries have no such
+runtime dependencies.
 
 When adding a Rust CLI, check `brew deps <formula>`: if it is empty, add the formula to the
 Brewfile instead.
