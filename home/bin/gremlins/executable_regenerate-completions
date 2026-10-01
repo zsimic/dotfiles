@@ -72,7 +72,6 @@ regenerate_completions() {
     fetch_completion _eza https://raw.githubusercontent.com/eza-community/eza/HEAD/completions/zsh/_eza
     render_completion _rg rg --generate complete-zsh
     render_completion _rustup rustup completions zsh
-    render_completion _uv uv generate-shell-completion zsh
 
     # Brew tools (listed here as a reminder... so we don't look again)
     # dua: no maintained completion source wired in here yet.
