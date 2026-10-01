@@ -30,6 +30,7 @@ Formulae listed in `obsolete_brew_formulae` in the [brew install hook] are unins
 | [dua-cli](https://formulae.brew.sh/formula/dua-cli) | Interactive disk-usage inspection |
 | [duf](https://formulae.brew.sh/formula/duf) | Disk usage/free summary |
 | [fd](https://formulae.brew.sh/formula/fd) | Fast, friendly `find` replacement |
+| [jaq](https://formulae.brew.sh/formula/jaq) | `jq` clone focused on speed and correctness |
 | [pstree](https://formulae.brew.sh/formula/pstree) | Process hierarchy display |
 | [tmux](https://formulae.brew.sh/formula/tmux) | Terminal multiplexer |
 | [tokei](https://formulae.brew.sh/formula/tokei) | Source-code statistics |
