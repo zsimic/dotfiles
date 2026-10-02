@@ -26,7 +26,7 @@
 [url "git@github.com:"]
     pushInsteadOf = https://github.com/
 
-# Work machines layer on top of this via config-work (file is silently skipped if missing).
+# Work machines layer on top of this via config-work (file is silently skipped if missing)
 [include]
     path = config-work
 
