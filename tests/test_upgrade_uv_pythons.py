@@ -125,11 +125,41 @@ def test_missing_new_installation_prevents_cleanup(manager, monkeypatch):
 
 
 def test_no_downgrades_or_prereleases(manager, monkeypatch, capsys):
-    records = [installation("3.14.10"), installation("3.15.0rc1")]
-    calls = fake_uv(manager, monkeypatch, records, [installation("3.14.2"), installation("3.15.0")])
+    records = [installation("3.14.10")]
+    calls = fake_uv(manager, monkeypatch, records, [installation("3.14.2"), installation("3.14.11rc1"), installation("3.16.0a1")])
     assert manager["main"](["--commit"]) == 0
     assert len(calls) == 2
     assert capsys.readouterr().out == "up-to-date: 3.14\n"
+
+
+def test_prerelease_ordering(manager):
+    versions = ["3.16.0a1", "3.16.0a2", "3.16.0a10", "3.16.0b1", "3.16.0rc1", "3.16.0rc2", "3.16.0", "3.16.1"]
+    binaries = [manager["PythonBinary"].from_record(installation(version)) for version in versions]
+    assert all(older < newer for older, newer in zip(binaries, binaries[1:]))
+    assert binaries[0].minor_name == "3.16.0a1"
+    assert binaries[0].short_name == "3.16.0a1"
+
+
+@pytest.mark.parametrize(
+    ("older", "newer"), [("3.16.0a1", "3.16.0a2"), ("3.16.0a10", "3.16.0b1"), ("3.16.0b2", "3.16.0rc1"), ("3.16.0rc2", "3.16.0")]
+)
+def test_upgrade_prereleases(manager, monkeypatch, capsys, older, newer):
+    old, new = installation(older), installation(newer)
+    calls = fake_uv(manager, monkeypatch, [old], [new])
+    assert manager["main"](["--commit"]) == 0
+    assert calls[2] == ("python", "install", new["key"])
+    assert calls[-1] == ("python", "uninstall", old["key"])
+    assert f"Installing: {newer}" in capsys.readouterr().out
+
+
+def test_current_alpha_is_visible(manager, monkeypatch, capsys):
+    fake_uv(manager, monkeypatch, [installation("3.16.0a1")], [installation("3.16.0a1")])
+    assert manager["main"]([]) == 0
+    assert capsys.readouterr().out.endswith("up-to-date: 3.16.0a1\n")
+
+
+def test_unknown_version_is_ignored(manager):
+    assert manager["parse_inventory"]([installation("3.16.0.dev1")]) == set()
 
 
 @pytest.mark.parametrize("records", [[], [installation("3.10.22")]])

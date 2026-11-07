@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Upgrade uv-managed Pythons and retain one stable patch per implementation, minor, and platform."""
+"""Upgrade uv-managed Pythons and retain one version per implementation, minor, and platform."""
 
 import argparse
 import json
@@ -9,7 +9,8 @@ import sys
 from dataclasses import dataclass, field
 
 
-STABLE_VERSION = re.compile(r"(\d+)\.(\d+)\.(\d+)")
+PYTHON_VERSION = re.compile(r"(\d+)\.(\d+)\.(\d+)(?:(a|b|rc)(\d+))?")
+RELEASE_STAGES = ("a", "b", "rc", "")
 
 
 @dataclass(frozen=True, order=True)
@@ -25,15 +26,22 @@ class PythonBinary:
     libc: str
     patch: int
     key: str = field(compare=False)
+    release_stage: int = 3  # alpha < beta < release candidate < final
+    release_serial: int = 0
 
     @property
     def family(self):
         return self.implementation, self.major, self.minor, self.variant, self.os_name, self.arch, self.libc
 
+    @property
+    def is_prerelease(self):
+        return self.release_stage < 3
+
     def display_name(self, include_patch):
         prefix = "" if self.implementation == "cpython" else f"{self.implementation}-"
         suffix = {"default": "", "freethreaded": "t"}.get(self.variant, f"+{self.variant}")
-        patch = f".{self.patch}" if include_patch else ""
+        prerelease = f"{RELEASE_STAGES[self.release_stage]}{self.release_serial}" if self.is_prerelease else ""
+        patch = f".{self.patch}{prerelease}" if include_patch or self.is_prerelease else ""
         return f"{prefix}{self.major}.{self.minor}{patch}{suffix}"
 
     @property
@@ -51,19 +59,21 @@ class PythonBinary:
         version = record.get("version")
         if not isinstance(version, str):
             raise ValueError(f"Missing or invalid Python version: {record['key']}")
-        match = STABLE_VERSION.fullmatch(version)
+        match = PYTHON_VERSION.fullmatch(version)
         if not match:
             return None
-        major, minor, patch = (int(value) for value in match.groups())
+        major, minor, patch = (int(value) for value in match.group(1, 2, 3))
+        release_stage = RELEASE_STAGES.index(match.group(4) or "")
+        release_serial = int(match.group(5) or 0)
         fields = [record.get(name) for name in ("implementation", "variant", "os", "arch", "libc")]
         if any(not isinstance(value, str) or not re.fullmatch(r"[a-z0-9_]+", value) for value in fields):
             raise ValueError(f"Missing or invalid Python metadata: {record['key']}")
         implementation, variant, os_name, arch, libc = fields
         suffix = "" if variant == "default" else f"+{variant}"
-        expected_key = f"{implementation}-{major}.{minor}.{patch}{suffix}-{os_name}-{arch}-{libc}"
+        expected_key = f"{implementation}-{version}{suffix}-{os_name}-{arch}-{libc}"
         if record["key"] != expected_key or (not downloads and not record.get("path")):
             raise ValueError(f"Inconsistent Python record: {record['key']}")
-        return cls(implementation, major, minor, variant, os_name, arch, libc, patch, record["key"])
+        return cls(implementation, major, minor, variant, os_name, arch, libc, patch, record["key"], release_stage, release_serial)
 
 
 def run_uv(*args, capture=False):
@@ -75,14 +85,14 @@ def run_uv(*args, capture=False):
 
 def inventory(downloads=False):
     # --offline forbids network access; --no-cache avoids persistent cache writes during a preview.
-    # Use uv's current platform/architecture filter and include old patches to select stable releases ourselves.
+    # Use uv's current platform/architecture filter and include old patches/prereleases for version selection.
     selection = ["--only-downloads", "--all-versions"] if downloads else ["--only-installed", "--managed-python"]
     output = run_uv("--no-cache", "--offline", "python", "list", *selection, "--output-format", "json", capture=True)
     return parse_inventory(json.loads(output), downloads=downloads)
 
 
 def parse_inventory(records, downloads=False):
-    """Parse exact installations, excluding prereleases."""
+    """Parse exact installations, including alpha, beta, and release-candidate versions."""
     if not isinstance(records, list):
         raise ValueError("Expected a list from uv python list")
     binaries = set()
@@ -118,7 +128,10 @@ def maintain(commit=False):
     upgrades = set()
     current = set()
     for family, binaries in group_by_family(installed).items():
-        newest = max(binaries | available.get(family, set()))
+        # Installing a prerelease opts this minor into prereleases until it reaches a final release.
+        allow_prerelease = max(binaries).is_prerelease
+        candidates = {binary for binary in available.get(family, set()) if allow_prerelease or not binary.is_prerelease}
+        newest = max(binaries | candidates)
         if newest not in binaries:
             upgrades.add(newest)
         else:

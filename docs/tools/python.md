@@ -1,7 +1,7 @@
 # Python maintenance
 
 [upgrade-uv-pythons] upgrades Python implementations already installed by uv, then uninstalls superseded
-stable patches. It uses uv's normal storage and CPython minor-version symlinks.
+versions. It uses uv's normal storage and CPython minor-version symlinks.
 
 [upgrade-uv-pythons]: ../../home/bin/gremlins/executable_upgrade-uv-pythons
 
@@ -25,6 +25,7 @@ Would uninstall: 3.12.13, 3.13.13, 3.14.2
 Pending installs and removals include the patch version. Non-CPython names carry their implementation
 prefix. Free-threaded builds use the compact `t` suffix (such as `3.15t`); other non-default builds
 keep their variant suffix. uv commands still use the full installation keys.
+Prereleases display their full version, such as `3.16.0a1`, even in the up-to-date summary.
 
 Catalog downloads are limited to uv's current platform and architecture. `--offline` prevents network
 access while listing, and `--no-cache` avoids persistent cache writes during previews. `--no-config`
@@ -61,11 +62,14 @@ pickley -n install -f mgit
   also part of uv's installed inventory.
 - Select the latest stable Python patch known to the installed uv for each installed implementation,
   minor, build variant, OS, architecture, and libc. Never introduce another minor or implementation,
-  or downgrade a newer installed patch. Leave prerelease installations alone.
+  or downgrade a newer installed version.
+- Installing a prerelease opts that minor into alpha, beta, and release-candidate updates until it
+  reaches a final release (`a1 < a2 < b1 < rc1 < final`). Stable installations do not adopt prereleases
+  automatically. Superseded prereleases are cleaned up just like older patches.
 - Use `uv python install` with exact installation keys. Unlike `uv python upgrade`, this also handles
   PyPy, GraalPy, and Pyodide. uv maintains CPython's minor links when installing newer patches.
 - After all installs succeed, inventory again and verify the new installations are present. Retain
-  the newest installed stable patch in each family and uninstall older patches using exact keys.
+  the newest installed version in each family and uninstall older versions using exact keys.
 - Stop on errors before cleanup. Upgrading uv itself is outside this helper's scope.
 
 The version tracked here is the Python language version exposed by uv's catalog. A new PyPy or
