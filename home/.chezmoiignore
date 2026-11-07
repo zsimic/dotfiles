@@ -8,4 +8,5 @@ Library
 {{- end }}
 {{- if ne .chezmoi.username "zoran" }}
 .chezmoiscripts/personal/**
+.local/bin/.pk/config.json
 {{- end }}

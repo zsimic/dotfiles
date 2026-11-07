@@ -1,0 +1,161 @@
+#!/usr/bin/env python3
+"""Upgrade uv-managed Pythons and retain one stable patch per implementation, minor, and platform."""
+
+import argparse
+import json
+import re
+import subprocess
+import sys
+from dataclasses import dataclass, field
+
+
+STABLE_VERSION = re.compile(r"(\d+)\.(\d+)\.(\d+)")
+
+
+@dataclass(frozen=True, order=True)
+class PythonBinary:
+    """An exact uv installation, ordered by family and numeric patch version."""
+
+    implementation: str
+    major: int
+    minor: int
+    variant: str
+    os_name: str
+    arch: str
+    libc: str
+    patch: int
+    key: str = field(compare=False)
+
+    @property
+    def family(self):
+        return self.implementation, self.major, self.minor, self.variant, self.os_name, self.arch, self.libc
+
+    def display_name(self, include_patch):
+        prefix = "" if self.implementation == "cpython" else f"{self.implementation}-"
+        suffix = {"default": "", "freethreaded": "t"}.get(self.variant, f"+{self.variant}")
+        patch = f".{self.patch}" if include_patch else ""
+        return f"{prefix}{self.major}.{self.minor}{patch}{suffix}"
+
+    @property
+    def short_name(self):
+        return self.display_name(include_patch=True)
+
+    @property
+    def minor_name(self):
+        return self.display_name(include_patch=False)
+
+    @classmethod
+    def from_record(cls, record, downloads=False):
+        if not isinstance(record, dict) or not isinstance(record.get("key"), str):
+            raise ValueError("Missing installation key in uv python list")
+        version = record.get("version")
+        if not isinstance(version, str):
+            raise ValueError(f"Missing or invalid Python version: {record['key']}")
+        match = STABLE_VERSION.fullmatch(version)
+        if not match:
+            return None
+        major, minor, patch = (int(value) for value in match.groups())
+        fields = [record.get(name) for name in ("implementation", "variant", "os", "arch", "libc")]
+        if any(not isinstance(value, str) or not re.fullmatch(r"[a-z0-9_]+", value) for value in fields):
+            raise ValueError(f"Missing or invalid Python metadata: {record['key']}")
+        implementation, variant, os_name, arch, libc = fields
+        suffix = "" if variant == "default" else f"+{variant}"
+        expected_key = f"{implementation}-{major}.{minor}.{patch}{suffix}-{os_name}-{arch}-{libc}"
+        if record["key"] != expected_key or (not downloads and not record.get("path")):
+            raise ValueError(f"Inconsistent Python record: {record['key']}")
+        return cls(implementation, major, minor, variant, os_name, arch, libc, patch, record["key"])
+
+
+def run_uv(*args, capture=False):
+    # Ignore project/user uv.toml and pyproject.toml settings so results don't depend on the working directory.
+    # Environment overrides (e.g. UV_PYTHON_INSTALL_DIR) still apply; this does not force the default storage.
+    command = ["uv", "--no-config", *args]
+    return subprocess.run(command, check=True, text=True, stdout=subprocess.PIPE if capture else None).stdout  # noqa: S603
+
+
+def inventory(downloads=False):
+    # --offline forbids network access; --no-cache avoids persistent cache writes during a preview.
+    # Use uv's current platform/architecture filter and include old patches to select stable releases ourselves.
+    selection = ["--only-downloads", "--all-versions"] if downloads else ["--only-installed", "--managed-python"]
+    output = run_uv("--no-cache", "--offline", "python", "list", *selection, "--output-format", "json", capture=True)
+    return parse_inventory(json.loads(output), downloads=downloads)
+
+
+def parse_inventory(records, downloads=False):
+    """Parse exact installations, excluding prereleases."""
+    if not isinstance(records, list):
+        raise ValueError("Expected a list from uv python list")
+    binaries = set()
+    for record in records:
+        binary = PythonBinary.from_record(record, downloads=downloads)
+        if binary is not None:
+            binaries.add(binary)
+    return binaries
+
+
+def group_by_family(binaries):
+    groups = {}
+    for binary in binaries:
+        groups.setdefault(binary.family, set()).add(binary)
+    return groups
+
+
+def report(label, binaries, minor=False):
+    targets = sorted(binaries)
+    if minor:
+        # Newest minors first within each implementation; CPython sorts before the others.
+        targets.sort(key=lambda binary: (binary.implementation, -binary.major, -binary.minor))
+    if targets:
+        names = [binary.minor_name if minor else binary.short_name for binary in targets]
+        print(f"{label}: {', '.join(names)}", flush=True)
+
+
+def maintain(commit=False):
+    if not commit:
+        print("dryrun mode by default, use --commit to enact these changes")
+    installed = inventory()
+    available = group_by_family(inventory(downloads=True))
+    upgrades = set()
+    current = set()
+    for family, binaries in group_by_family(installed).items():
+        newest = max(binaries | available.get(family, set()))
+        if newest not in binaries:
+            upgrades.add(newest)
+        else:
+            current.add(newest)
+
+    report("up-to-date", current, minor=True)
+    if upgrades:
+        report("Installing" if commit else "Would install", upgrades)
+        if commit:
+            # All installs must succeed before any cleanup. uv maintains CPython's minor links.
+            run_uv("python", "install", *(binary.key for binary in sorted(upgrades)))
+            installed = inventory()
+            if not upgrades.issubset(installed):
+                raise ValueError("New Python installations missing from refreshed inventory; refusing cleanup")
+
+    obsolete = set()
+    # Include planned installs in the preview so cleanup describes the post-upgrade state.
+    for _, binaries in sorted(group_by_family(installed | upgrades).items()):
+        newest = max(binaries)
+        obsolete.update(binaries - {newest})
+    if obsolete:
+        report("Uninstalling" if commit else "Would uninstall", obsolete)
+        if commit:
+            run_uv("python", "uninstall", *(binary.key for binary in sorted(obsolete)))
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--commit", action="store_true", help="install newer patches and uninstall superseded patches")
+    args = parser.parse_args(argv)
+    try:
+        maintain(commit=args.commit)
+    except (OSError, ValueError, subprocess.CalledProcessError) as error:
+        print(f"upgrade-uv-pythons: {error}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,5 @@
+#!/bin/zsh -euf
+
+# Weekly refresh (Unix time / 7 days): {{ div now.Unix 604800 }}
+# Python helper {{ include "bin/gremlins/executable_upgrade-uv-pythons" | sha256sum }}
+"$HOME/bin/gremlins/upgrade-uv-pythons" --commit

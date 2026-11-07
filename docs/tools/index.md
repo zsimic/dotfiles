@@ -7,6 +7,7 @@ them.
 - [Automated](./automated.md) — Rust CLIs, Homebrew formulae, and macOS casks installed by chezmoi.
 - [Exploratory](./exploratory.md) — useful tools that are not currently part of the automated desired state.
 - [Rust tool management](./rust.md) — how `cargo install`, the install hook, and monthly upgrades fit together.
+- [Python maintenance](./python.md) — upgrade uv-managed Pythons and remove superseded stable patches.
 - [Terminals](./terminals.md) — the Ghostty-first setup, tmux session launcher, and retained iTerm2
   configuration.
 
