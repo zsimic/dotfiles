@@ -248,9 +248,9 @@ class Ps1Renderer(CommandRenderer):
             yield colors.cyan(" ")  #   
 
         elif os.environ.get("SSH_TTY"):
-            yield colors.cyan(" ")  # 📡   󰑔  󰢹
+            yield colors.cyan(" ")  # 📡   󰑔  󰢹
             hostname = socket.gethostname().partition(".")[0]
-            yield f"{colors.green(hostname)}:"
+            yield f"{colors.dim(hostname)} "
 
         elif os.environ.get("container"):
             yield "🐳 "
