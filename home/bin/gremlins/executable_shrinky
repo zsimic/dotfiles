@@ -6,6 +6,7 @@ Must work fast, with system python, std libs only
 
 import contextlib
 import os
+import socket
 import sys
 from pathlib import Path
 
@@ -248,6 +249,8 @@ class Ps1Renderer(CommandRenderer):
 
         elif os.environ.get("SSH_TTY"):
             yield colors.cyan(" ")  # 📡   󰑔  󰢹
+            hostname = socket.gethostname().partition(".")[0]
+            yield f"{colors.green(hostname)}:"
 
         elif os.environ.get("container"):
             yield "🐳 "

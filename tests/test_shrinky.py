@@ -1,4 +1,5 @@
 import os
+import socket
 import sys
 
 import runez
@@ -110,9 +111,10 @@ def test_ps1_deep(cli, monkeypatch):
 
     # Simulate ssh
     monkeypatch.setenv("SSH_TTY", "foo")
+    hostname = socket.gethostname().partition(".")[0]
     cli.run("ps1 -czsh")
     assert cli.succeeded
-    assert cli.logged.stdout.contents() == "%F{cyan} %f%F{green}$%f "
+    assert cli.logged.stdout.contents() == f"%F{{cyan}} %f%F{{green}}{hostname}%f:%F{{green}}$%f "
 
     # Simulate coder
     monkeypatch.setenv("CODER", "foo")
