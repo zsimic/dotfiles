@@ -4,6 +4,7 @@
 
 [core]
     # See https://dandavison.github.io/delta/get-started.html
+	autocrlf = input
     pager = delta
 
 [merge]
@@ -22,9 +23,6 @@
     file-decoration-style = none
     hunk-header-style = file line-number
     hunk-header-decoration-style = omit
-
-[url "git@github.com:"]
-    pushInsteadOf = https://github.com/
 
 # Work machines layer on top of this via config-work (file is silently skipped if missing)
 [include]
