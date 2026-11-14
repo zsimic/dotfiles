@@ -3,9 +3,8 @@
     email = zoran@simicweb.com
 
 [core]
-    # See https://dandavison.github.io/delta/get-started.html
 	autocrlf = input
-    pager = delta
+    pager = "if command -v delta >/dev/null 2>&1; then exec delta; else exec less; fi"
 
 [merge]
     conflictstyle = diff3

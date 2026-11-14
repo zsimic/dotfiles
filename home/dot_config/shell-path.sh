@@ -74,7 +74,7 @@ prepend_path "$HOME/bin"
 
 # less setup done via env vars because older less versions don't respect XDG...
 export LESSHISTFILE="$HOME/.local/state/lesshst"
-export LESS="-SFWJ --no-histdups --mouse --wheel-lines=3"
+export LESS="-RSFWJ --no-histdups --mouse --wheel-lines=3"
 
 # Optional machine-specific additions
 if [ -r "$HOME/.local/shell-path.sh" ]; then
