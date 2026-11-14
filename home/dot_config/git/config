@@ -6,25 +6,53 @@
 	autocrlf = input
     pager = "if command -v delta >/dev/null 2>&1; then exec delta; else exec less; fi"
 
-[merge]
-    conflictstyle = diff3
+[branch]
+    sort = -committerdate
 
 [diff]
+    algorithm = histogram
     colorMoved = default
 
 [delta]
-    features = line-numbers decorations
+    features = highlight-colors decorations  # line-numbers
     light = false
     navigate = true  # use n and N to move between diff sections
 
 [delta "decorations"]
+    # see `delta --no-gitconfig --show-config` or with `--diff-highlight`
     file-style = omit
     file-decoration-style = none
     hunk-header-style = file line-number
     hunk-header-decoration-style = omit
+    hunk-header-file-style = purple
+    hunk-header-line-number-style = purple
+    true-color = always
 
-# Work machines layer on top of this via config-work (file is silently skipped if missing)
+[delta "highlight-colors"]
+    minus-style = red
+    minus-non-emph-style = red
+    minus-emph-style = reverse red
+    minus-empty-line-marker-style = normal "#3f0001"
+    plus-style = green
+    plus-non-emph-style = green
+    plus-emph-style = reverse green
+    plus-empty-line-marker-style = normal "#002800"
+    grep-file-style = purple
+    grep-line-number-style = green
+    whitespace-error-style = reverse purple
+    blame-palette = "#000000" "#222222" "#444444"
+
+[fetch]
+    prune = true
+
+[merge]
+    conflictstyle = zdiff3
+
+[push]
+    autoSetupRemote = true
+
 [include]
+    # Work machines layer on top of this via config-work (file is silently skipped if missing)
     path = config-work
 
 # Always use the personal email for github.com repos, on all machines
