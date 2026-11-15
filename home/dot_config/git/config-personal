@@ -2,4 +2,5 @@
     email = zoran@simicweb.com
 
 [url "git@github.com:"]
-    insteadOf = https://github.com/
+    # Keep clones and pulls on HTTPS; use SSH only for pushes.
+    pushInsteadOf = https://github.com/
