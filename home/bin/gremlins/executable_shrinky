@@ -64,14 +64,17 @@ def get_path(path: str):
     return Path(path or os.getcwd())
 
 
-def get_py_venv_version(venv_path):
+def get_py_venv_version(venv_path) -> str:
     """Fast Python Version detection without subprocess calls, looking for lib/pythonM.m"""
-    lib_path = venv_path / "lib"
-    if not lib_path.exists():
-        return None
+    version = "?"
+    for lib_path in (venv_path / "lib", venv_path / "lib64"):
+        if lib_path.is_dir():
+            for d in lib_path.iterdir():
+                if d.name.startswith("python"):
+                    version = d.name.replace("python", "")
+                    break
 
-    py_dirs = [d.name for d in lib_path.iterdir() if d.name.startswith("python")]
-    return (py_dirs and py_dirs[0].replace("python", "")) or None
+    return version
 
 
 def git_branch_name(folder):
@@ -105,7 +108,7 @@ def scm_root(folder: Path):
 
 def capped_text(text: str, max_size: int):
     if max_size and text and len(text) > max_size:
-        text = f"𓈓{text[-max_size:]}"
+        text = f"…{text[-max_size:]}"
 
     return text
 
@@ -185,13 +188,13 @@ class ColorSet:
 def shortened_path(prefix, parts, max_parts=6):
     yield prefix
     if len(parts) > max_parts:
-        yield "𓈓"
+        yield "…"
         parts = parts[-max_parts:]
 
-    pivot = len(parts) - 2
+    pivot = len(parts) - 3
     for i, part in enumerate(parts):
         if i < pivot:
-            yield part[0] if part[0] != "." else part[0:2]
+            yield part[0] if part[0] not in (".", "_") else part[0:2]
 
         else:
             yield part
@@ -263,14 +266,15 @@ class Ps1Renderer(CommandRenderer):
             if activate.exists():
                 import re
 
-                regex = re.compile(r"""^\s*PS1="\(([\w-]+).+""")
+                regex = re.compile(r'''^\s*VIRTUAL_ENV_PROMPT="([^"]+)"''')
                 for line in activate.read_text().splitlines():
                     m = regex.match(line)
                     if m:
                         venv_name = m.group(1)
+                        break
 
             if not venv_name:
-                if venv.name == ".venv":
+                if venv.name.startswith(".venv") or venv.name.startswith("venv"):
                     venv = venv.parent
 
                 venv_name = venv.name
@@ -292,7 +296,7 @@ class Ps1Renderer(CommandRenderer):
             if dirname:
                 dirname += "/"
 
-            yield colors.yellow(f"{colors.dim(dirname)}{basename}")
+            yield colors.yellow(f"{colors.dim(dirname)}{basename} ")
 
         if self.exit_code:
             color = colors.green if self.exit_code == "0" else colors.red

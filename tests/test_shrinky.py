@@ -1,7 +1,11 @@
+import importlib.machinery
+import importlib.util
 import os
 import socket
 import sys
+from pathlib import Path
 
+import pytest
 import runez
 
 SHRINKY = "home/bin/gremlins/executable_shrinky"
@@ -26,7 +30,7 @@ def test_help(cli):
     assert "Example:\n  set -g status-right" in cli.logged.stderr
 
 
-def test_invalid(cli, monkeypatch):
+def test_invalid(cli):
     cli.main = SHRINKY
     cli.run("")
     assert cli.failed
@@ -41,69 +45,41 @@ def test_invalid(cli, monkeypatch):
     assert cli.failed
     assert "Unrecognized argument 'foo'" in cli.logged.stderr
 
-    cli.run("ps1")
-    assert cli.succeeded
-    assert cli.logged.stdout.contents() == "$ "
-
-    cli.run("ps1 -ctty")
-    assert cli.succeeded
-    assert cli.logged.stdout.contents() == "\x1b[32m$\x1b[39m "
-
     cli.run("ps1 -cfoo")
     assert cli.failed
     assert "No color set for 'foo'" in cli.logged.stderr
 
-    assert not os.path.exists("shrinky.log")
-    monkeypatch.setenv("SHRINKY_LOG", "shrinky.log")
-    cli.run("ps1 -z5")
-    assert cli.failed
-    assert "Unknown flag 'z'" in cli.logged.stderr
-    assert os.path.exists("shrinky.log")
 
-
-def test_ps1(cli):
+def test_ps1(cli, monkeypatch):
     cli.main = SHRINKY
-    cli.run("ps1 -czsh -uroot -x0 -p/tmp/foo/bar/baz -v")
+    cli.run("ps1")
     assert cli.succeeded
-    assert cli.logged.stdout.contents() == "❕ %F{yellow}%{\x1b[2m%}/t/f/bar/%{\x1b[22m%}baz%f%F{green}#%f "
+    assert cli.logged.stdout.contents() == "$ "
+
+    # Exercise bash and tty
+    cli.run("ps1 -cbash")
+    assert cli.succeeded
+    assert cli.logged.stdout.contents() == "\\[\x1b[32m\\]$\\[\x1b[39m\\] "
+
+    cli.run("ps1 -ctty")
+    assert cli.succeeded
+    assert cli.logged.stdout.contents() == "\x1b[32m$\x1b[39m "
 
     # User shown when not matching stated owner
     cli.run("ps1 -czsh -uuser1 -ouser2,user3 -x1")
     assert cli.succeeded
     assert cli.logged.stdout.contents() == "%F{blue}user1%f@%F{red}$%f "
 
-    # This test's own venv
-    venv_path = os.path.dirname(os.path.dirname(sys.executable))
-    py_version = ".".join(str(x) for x in sys.version_info[:2])
-    cli.run("ps1", "-czsh", "-x1", f"-v{venv_path}")
+    # Root
+    cli.run("ps1 -czsh -uroot -ouser1,root -x0 -p/tmp/foo/bar")
     assert cli.succeeded
-    output = cli.logged.stdout.contents()
-    assert py_version in output
+    assert cli.logged.stdout.contents() == "❕ %F{yellow}%{\x1b[2m%}/tmp/foo/%{\x1b[22m%}bar %f%F{green}#%f "
 
-    # A fictional venv
-    cli.run("ps1", "-czsh", "-vfoo/bar/.venv")
+    cli.run('ps1 -czsh -v"foo/bar/.venv"')
     assert cli.succeeded
-    assert cli.logged.stdout.contents() == "(%F{cyan}bar%f %F{blue}None%f) %F{green}$%f "
+    assert cli.logged.stdout.contents() == "(%F{cyan}bar%f %F{blue}?%f) %F{green}$%f "
 
-    # Minimal args
-    cli.run("ps1 -cbash")
-    assert cli.succeeded
-    assert cli.logged.stdout.contents() == "\\[\x1b[32m\\]$\\[\x1b[39m\\] "
-
-
-def test_ps1_deep(cli, monkeypatch):
-    cli.main = SHRINKY
-    sample = "sample/some/very/deep/folder/with/way/too/many/characters/tests"
-    runez.touch(f"{sample}/.git")
-    full_path = os.path.abspath(f"{sample}/foo/bar/baz/even/more/tests")
-    venv = f"{full_path}/.venv"
-    runez.write(f"{venv}/bin/activate", '\nPS1="(some-very-long-venv-prompt) ${PS1:-}"')
-    cli.run("ps1", "-cplain", f'-p"{full_path}"', f'-v"{full_path}/.venv"')
-    assert cli.succeeded
-    expected = "(𓈓me-very-long-venv-prompt None) /𓈓/f/b/b/e/more/tests$ "
-    assert cli.logged.stdout.contents() == expected
-
-    # Simulate docker
+    # Simulate docker (lowest prio)
     monkeypatch.setenv("container", "1")
     cli.run("ps1 -czsh")
     assert cli.succeeded
@@ -116,11 +92,55 @@ def test_ps1_deep(cli, monkeypatch):
     assert cli.succeeded
     assert cli.logged.stdout.contents() == f" {hostname} $ "
 
-    # Simulate coder
+    # Simulate coder (highest prio, even if SSH_TTY and container defined)
     monkeypatch.setenv("CODER", "foo")
     cli.run("ps1 -czsh")
     assert cli.succeeded
     assert cli.logged.stdout.contents() == "%F{cyan} %f%F{green}$%f "
+
+    # Verify logging works
+    assert not os.path.exists("shrinky.log")
+    monkeypatch.setenv("SHRINKY_LOG", "shrinky.log")
+    cli.run("ps1 -z5")
+    assert cli.failed
+    assert "Unknown flag 'z'" in cli.logged.stderr
+    assert os.path.exists("shrinky.log")
+
+
+def test_own_venv(cli):
+    cli.main = SHRINKY
+    venv_path = os.path.dirname(os.path.dirname(sys.executable))
+    py_version = ".".join(str(x) for x in sys.version_info[:2])
+    cli.run("ps1", "-czsh", "-x1", f"-v{venv_path}")
+    assert cli.succeeded
+    assert py_version in cli.logged.stdout
+
+
+@pytest.mark.parametrize(
+    ("full_path", "expected"),
+    [
+        ("~", "~"),
+        ("/some", "/some"),
+        ("/some/foo/bar", "/some/foo/bar"),
+        ("/some/foo/bar/baz", "/s/foo/bar/baz"),
+        ("~/dev/foo/bar/baz", "~/d/foo/bar/baz"),
+        ("/one/two/three/four/five/six", "/o/t/t/four/five/six"),
+        ("/one/two/three/four/five/six/seven", "/…/t/t/f/five/six/seven"),
+        ("/sample/foo/bar/baz/even/more/tests", "/…/f/b/b/even/more/tests"),
+        ("~/.config/_private/projects/foo/bar/baz", "~/.c/_p/p/foo/bar/baz"),
+    ],
+)
+def test_shortening(full_path, expected):
+    script = Path(__file__).parent.parent / SHRINKY
+    loader = importlib.machinery.SourceFileLoader("shrinky_module", str(script))
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    assert spec
+    assert spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    prefix, *parts = full_path.split("/")
+    assert "/".join(module.shortened_path(prefix, parts)) == expected
 
 
 def test_tmux(cli, monkeypatch):
@@ -132,40 +152,32 @@ def test_tmux(cli, monkeypatch):
     assert cli.logged.stdout.contents() == "~"
     assert os.path.exists("shrinky.log")
 
-    cli.run("tmux_short -p~/dev/foo/bar")
+    cli.run("tmux_short -p~/dev/foo/bar-omg-this-is-way-too-long")
     assert cli.succeeded
-    assert cli.logged.stdout.contents() == "bar"
+    assert cli.logged.stdout.contents() == "…this-is-way-too-long"
 
     # No git folder, no branch shown in tmux status
     cli.run("tmux_status")
     assert cli.succeeded
-    assert "fg=yellow" not in cli.logged.stdout.contents()
+    assert "fg=yellow" not in cli.logged.stdout
+    assert "┆" not in cli.logged.stdout
+
+    # Simulate git branch
+    runez.write("foo/my-project/.git/HEAD", "ref: refs/heads/g123", logger=None)
+    cli.run("tmux_status -pfoo/my-project")
+    assert cli.succeeded
+    assert "]g123#[default]" in cli.logged.stdout
+    assert "┆" in cli.logged.stdout
 
     # Simulate git detached head
-    runez.write(".git/HEAD", "g123", logger=None)
-    cli.run("tmux_status")
+    runez.write("foo/my-project/.git/HEAD", "g124", logger=None)
+    cli.run("tmux_status -pfoo/my-project")
     assert cli.succeeded
-    assert "]g123#[default]" in cli.logged.stdout.contents()
+    assert "]g124#[default]" in cli.logged.stdout
+    assert "┆" in cli.logged.stdout
 
     # Simulate invalid .git folder
-    runez.delete(".git/HEAD", logger=None)
-    runez.touch(".git/HEAD/foo", logger=None)
-    cli.run("tmux_status")
+    runez.touch("bad-project/.git/HEAD/foo", logger=None)
+    cli.run("tmux_status -pbad-project")
     assert cli.succeeded
-    logged = cli.logged.stdout.contents().strip()
-    assert "|" not in logged
-
-
-def test_tmux_here(cli):
-    # Exercise real case (this repo)
-    cli.main = SHRINKY
-    project_path = runez.DEV.project_path("bin")
-    cli.run("tmux_short", f"-p{project_path}")
-    assert cli.succeeded
-    assert cli.logged.stdout.contents().endswith("/bin")
-
-    cli.run("tmux_status", f"-p{project_path}")
-    assert cli.succeeded
-    logged = cli.logged.stdout.contents().strip()
-    assert "┆" in logged
-    assert "#[default]" in logged
+    assert "┆" not in cli.logged.stdout
