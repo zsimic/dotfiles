@@ -251,7 +251,7 @@ class Ps1Renderer(CommandRenderer):
             yield "❕ "
 
         elif os.environ.get("CODER"):
-            yield colors.cyan(" ")  #   
+            yield colors.cyan("  ")  #   
 
         elif os.environ.get("SSH_TTY"):
             yield colors.cyan(" ")  # 📡   󰑔  󰢹

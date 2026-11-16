@@ -107,7 +107,7 @@ def test_ps1(cli, monkeypatch):
     monkeypatch.setenv("CODER", "foo")
     cli.run("ps1 -czsh")
     assert cli.succeeded
-    assert cli.logged.stdout.contents() == "%F{cyan} %f%F{green}$%f "
+    assert cli.logged.stdout.contents() == "%F{cyan}  %f%F{green}$%f "
 
     # Verify logging works
     assert not os.path.exists("shrinky.log")
