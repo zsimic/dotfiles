@@ -12,5 +12,6 @@ them.
 
 Sources of truth:
 
-- [`Brewfile`](../../home/dot_config/homebrew/Brewfile)
+- [Brewfile](../../home/dot_config/homebrew/Brewfile)
+- [brew.env](../../home/dot_config/homebrew/brew.env)
 - [chezmoi lifecycle scripts](../../home/.chezmoiscripts/)

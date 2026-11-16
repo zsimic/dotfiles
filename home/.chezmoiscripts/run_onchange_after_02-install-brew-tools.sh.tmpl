@@ -12,8 +12,8 @@ typeset -ga obsolete_brew_formulae=(
 )
 
 export HOMEBREW_NO_ASK=1
-export HOMEBREW_NO_ENV_HINTS=1
-brew bundle install --no-upgrade --file="$HOME/.config/homebrew/Brewfile"
+brew update --quiet
+brew bundle install --quiet --no-upgrade --file="$HOME/.config/homebrew/Brewfile"
 
 for formula in "${obsolete_brew_formulae[@]}"; do
     if brew list --formula "$formula" > /dev/null 2>&1; then

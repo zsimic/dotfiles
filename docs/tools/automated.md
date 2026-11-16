@@ -1,17 +1,12 @@
 # Automated tools
 
 This is a readable inventory of the current desired state. The [Brewfile] is authoritative.
-Language names describe the main implementation languages, rather than dependencies or build tools.
-For closed-source apps, `Unverified` means the implementation language has not been established here.
+See [exploratory] for more tools mentions.
 
 [Brewfile]: ../../home/dot_config/homebrew/Brewfile
+[exploratory]: ./exploratory.md
 
 ## Homebrew formulae
-
-Homebrew manages all CLI tools, including the Rust programs, using bottles on supported platforms.
-Formulae listed in `obsolete_brew_formulae` in the [brew install hook] are uninstalled if present.
-
-[brew install hook]: ../../home/.chezmoiscripts/run_onchange_after_02-install-brew-tools.sh.tmpl
 
 | Tool | Language | Use |
 | --- | --- | --- |
@@ -32,7 +27,7 @@ Formulae listed in `obsolete_brew_formulae` in the [brew install hook] are unins
 | [xh] | Rust | Friendly HTTP client |
 | [zoxide] | Rust | Frecency-based directory jumping |
 
-Additionally installed for the `zoran` account:
+Additionally installed on a subset of personal machines:
 
 | Tool | Language | Use |
 | --- | --- | --- |
@@ -87,7 +82,7 @@ Installed on every macOS target:
 [sublime]: https://formulae.brew.sh/cask/sublime-text
 [Raycast]: https://formulae.brew.sh/cask/raycast
 
-Additionally installed for the `zoran` account:
+Additionally installed on a subset of personal machines:
 
 | Cask | Language | Use |
 | --- | --- | --- |
@@ -109,23 +104,34 @@ Additionally installed for the `zoran` account:
 
 ## Apply and monthly maintenance
 
+The shared [brew.env] applies to manual Homebrew commands and chezmoi maintenance. This setup exports
+`XDG_CONFIG_HOME=$HOME/.config`, so Homebrew reads `~/.config/homebrew/brew.env` automatically.
+It hides environment hints, leaves casks declaring `auto_updates` to their own updaters, and defers
+automatic install/upgrade cleanup to the explicit monthly cleanup step. Manual `brew upgrade` follows
+these same defaults; use `--greedy-auto-updates` to include self-updating casks explicitly, and
+`brew cleanup` to clean up between monthly runs. Only the automation scripts set `HOMEBREW_NO_ASK`,
+preserving normal confirmation prompts for manual commands. See [Homebrew's environment documentation].
+
+Other shared defaults disable analytics, highlight `brew cat` output with `bat`, quiet automatic update
+reports, and show formula installation times. `brew install` leaves already-installed packages at their
+current versions; use `brew upgrade` to update them.
+
 The [brew install hook] includes the Brewfile's hash, so it runs on the first apply and whenever the
 inventory changes. Existing packages are left at their installed versions during this step.
-Homebrew supplies shell completions; zsh loads them from Homebrew's `share/zsh/site-functions`.
 
 The [monthly hook] renders the current year and month into the script. The first `chezmoi apply` in
 a new month runs [monthly-upgrade] to update Homebrew, upgrade packages, and clean old artifacts.
+It runs `brew autoremove` for unused formula dependencies, then standard `brew cleanup` to remove old
+installed versions and stale downloads. Cache retention is set to 60 days: aged downloads are removed
+on the next cleanup after that threshold, while obsolete downloads can be removed sooner.
 This is apply-driven, not a background scheduler. Run it explicitly with:
 
 ```zsh
 ~/bin/gremlins/monthly-upgrade
 ```
 
+[brew install hook]: ../../home/.chezmoiscripts/run_onchange_after_02-install-brew-tools.sh.tmpl
 [monthly hook]: ../../home/.chezmoiscripts/run_onchange_after_90-monthly-upgrade.sh.tmpl
 [monthly-upgrade]: ../../home/bin/gremlins/executable_monthly-upgrade
-
-The [removal list] deletes the retired `~/.cargo` and `~/.rustup` trees, the old Rust manager and
-completion generator, their generated completion files, and old zsh completion dumps on apply.
-Zsh initializes Homebrew's completions with `compinit -D`, without reading or writing a dump cache.
-
-[removal list]: ../../home/.chezmoiremove
+[brew.env]: ../../home/dot_config/homebrew/brew.env
+[Homebrew's environment documentation]: https://docs.brew.sh/Manpage#environment

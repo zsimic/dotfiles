@@ -3,13 +3,9 @@
 # Avoid running brew update on the very first run (where brew may not yet have been picked up in PATH)
 if command -v brew > /dev/null; then
     export HOMEBREW_NO_ASK=1
-    export HOMEBREW_NO_ENV_HINTS=1
-    export HOMEBREW_NO_INSTALL_CLEANUP=1
-    # Leave self-updating casks to their own updaters while maintaining fonts, plugins, and similar casks.
-    export HOMEBREW_NO_UPGRADE_AUTO_UPDATES_CASKS=1
 
     brew update --quiet
     brew upgrade --quiet
     brew autoremove --quiet
-    brew cleanup --quiet --prune=all --scrub
+    brew cleanup --quiet
 fi
