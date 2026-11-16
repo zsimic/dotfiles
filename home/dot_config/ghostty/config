@@ -49,7 +49,7 @@ resize-overlay-position = top-right
 resize-overlay-duration = 10s
 
 macos-window-buttons = visible
-macos-titlebar-style = native
+macos-titlebar-style = transparent
 macos-titlebar-proxy-icon = hidden
 macos-option-as-alt = true
 
