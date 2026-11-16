@@ -69,7 +69,6 @@ done
 unset brew_folder
 
 prepend_path "$HOME/.local/bin"
-prepend_path "$HOME/.cargo/bin"
 prepend_path "$HOME/bin"
 
 # less setup done via env vars because older less versions don't respect XDG...

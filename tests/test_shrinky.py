@@ -160,35 +160,41 @@ def test_tmux(cli, monkeypatch):
     assert cli.succeeded
     assert cli.logged.stdout.contents() == "…this-is-way-too-long"
 
+    # Run with regular call to `uptime`, for test coverage
+    cli.run("tmux_status")
+    assert cli.succeeded
+
+    # Pretend `uptime` does not return an actual uptime (simpler `tmux_status` output)
+    module = shrinky_module()
+    cli.main = module.main
+    monkeypatch.setattr(module, "run_program", lambda *_args: "22:52, 2 users")
+
     # No git folder, no branch shown in tmux status
     cli.run("tmux_status")
     assert cli.succeeded
-    assert "fg=yellow" not in cli.logged.stdout
-    assert "┆" not in cli.logged.stdout
+    assert cli.logged.stdout.contents().strip() == ""
 
     # Simulate git branch
-    runez.write("foo/my-project/.git/HEAD", "ref: refs/heads/g123", logger=None)
+    runez.write("foo/my-project/.git/HEAD", "ref: refs/heads/release", logger=None)
     cli.run("tmux_status -pfoo/my-project")
     assert cli.succeeded
-    assert "]g123#[default]" in cli.logged.stdout
-    assert "┆" in cli.logged.stdout
+    assert cli.logged.stdout.contents().strip() == "#[fg=purple]release#[default]🚨"
 
     cli.run("tmux_short -pfoo/my-project/bar/baz")
     assert cli.succeeded
-    assert cli.logged.stdout.contents() == "my-project/baz"
+    assert cli.logged.stdout.contents().strip() == "my-project/baz"
 
     # Simulate git detached head
     runez.write("foo/my-project/.git/HEAD", "g124", logger=None)
     cli.run("tmux_status -pfoo/my-project")
     assert cli.succeeded
-    assert "]g124#[default]" in cli.logged.stdout
-    assert "┆" in cli.logged.stdout
+    assert cli.logged.stdout.contents().strip() == "#[fg=magenta]g124#[default]🔧"
 
     # Simulate invalid .git folder
     runez.touch("bad-project/.git/HEAD/foo", logger=None)
     cli.run("tmux_status -pbad-project")
     assert cli.succeeded
-    assert "┆" not in cli.logged.stdout
+    assert cli.logged.stdout.contents().strip() == ""
 
 
 @pytest.mark.parametrize(

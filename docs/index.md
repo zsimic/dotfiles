@@ -11,7 +11,7 @@ the [chezmoi documentation](https://www.chezmoi.io/) covers the underlying tool.
   interrupted-run recovery.
 - [Reuse this setup](./reuse/index.md) — adapt the personal base for someone else or compose it
   underneath a private work overlay.
-- [Tools](./tools/index.md) — automated and exploratory inventories, Rust installation lifecycle,
+- [Tools](./tools/index.md) — automated and exploratory inventories, Homebrew maintenance,
   and terminal setup.
 - [Development](./dev/index.md) — repository design, working conventions, tests, and how to adapt
   the pattern.

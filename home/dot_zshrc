@@ -32,7 +32,6 @@ zstyle ':completion:*' completer _complete
 
 [ -r "$HOME/.config/shell-settings.sh" ] && . "$HOME/.config/shell-settings.sh"
 
-fpath+=("$HOME/.local/share/zsh/site-functions")
 for brew_folder in /opt/homebrew /home/linuxbrew/.linuxbrew; do
     if [ -d "$brew_folder" ]; then
         [ -d $brew_folder/share/zsh/site-functions ] && fpath+=($brew_folder/share/zsh/site-functions)
@@ -42,12 +41,7 @@ done
 unset brew_folder
 
 autoload -Uz compinit
-zcompdump_file="$HOME/.cache/zsh/zcompdump-$ZSH_VERSION"
-if [ -f "$zcompdump_file" ]; then
-    compinit -C -d "$zcompdump_file"
-else
-    compinit -d "$zcompdump_file"
-fi
+compinit -D
 
 # Load plugins after compinit
 source "$HOME/.local/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
