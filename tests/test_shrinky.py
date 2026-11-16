@@ -11,6 +11,17 @@ import runez
 SHRINKY = "home/bin/gremlins/executable_shrinky"
 
 
+def shrinky_module():
+    script = Path(__file__).parent.parent / SHRINKY
+    loader = importlib.machinery.SourceFileLoader("shrinky_module", str(script))
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    assert spec
+    assert spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def test_clean_path(cli):
     cli.main = SHRINKY
     runez.touch("foo/bar/readme.txt")
@@ -131,16 +142,9 @@ def test_own_venv(cli):
     ],
 )
 def test_shortening(full_path, expected):
-    script = Path(__file__).parent.parent / SHRINKY
-    loader = importlib.machinery.SourceFileLoader("shrinky_module", str(script))
-    spec = importlib.util.spec_from_loader(loader.name, loader)
-    assert spec
-    assert spec.loader
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-
+    module = shrinky_module()
     prefix, *parts = full_path.split("/")
-    assert "/".join(module.shortened_path(prefix, parts)) == expected
+    assert "/".join(module.shortened_path(prefix, parts, max_parts=6)) == expected
 
 
 def test_tmux(cli, monkeypatch):
@@ -169,6 +173,10 @@ def test_tmux(cli, monkeypatch):
     assert "]g123#[default]" in cli.logged.stdout
     assert "┆" in cli.logged.stdout
 
+    cli.run("tmux_short -pfoo/my-project/bar/baz")
+    assert cli.succeeded
+    assert cli.logged.stdout.contents() == "my-project/baz"
+
     # Simulate git detached head
     runez.write("foo/my-project/.git/HEAD", "g124", logger=None)
     cli.run("tmux_status -pfoo/my-project")
@@ -181,3 +189,21 @@ def test_tmux(cli, monkeypatch):
     cli.run("tmux_status -pbad-project")
     assert cli.succeeded
     assert "┆" not in cli.logged.stdout
+
+
+@pytest.mark.parametrize(
+    ("expected", "uptime"),
+    [
+        ("3d 12h", "22:52  up 3 days, 12:34, 2 users, load averages: 3.26 2.58 2.64"),
+        ("2h 7m", " 10:23:45 up  2:07,  1 user"),
+        ("5m", " 10:23:45 up 5 min,  load average: 0.01, 0.02, 0.00"),
+        ("1m", "10:23  up 1 min, 1 user, load averages: 0.01 0.02 0.00"),
+        ("2h", "10:23  up 2 hrs, 1 user, load averages: 0.01 0.02 0.00"),
+        ("1d 4m", "10:23  up 1 day, 4 mins, 2 users, load averages: 0.01 0.02 0.00"),
+        ("7d", "10:23  up 7 days, 1 session, load averages: 0.01 0.02 0.00"),
+    ],
+)
+def test_uptime(expected, uptime):
+    module = shrinky_module()
+    actual = module.rendered_uptime(uptime, colored=False)
+    assert actual == expected

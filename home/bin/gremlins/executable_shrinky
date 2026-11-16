@@ -4,11 +4,14 @@ Standalone script used to render PS1 parts and shortened folder names for tmux w
 Must work fast, with system python, std libs only
 """
 
+from __future__ import annotations
+
 import contextlib
 import os
 import socket
 import sys
 from pathlib import Path
+from typing import NoReturn
 
 
 class Logger:
@@ -33,7 +36,7 @@ class Logger:
             cls.logger.debug(message, *args)
 
     @classmethod
-    def fail(cls, msg, exit_code=1, exc_info=None):
+    def fail(cls, msg, exit_code=1, exc_info=None) -> NoReturn:
         print(msg, file=sys.stderr)
         if cls.logger:
             cls.logger.error(msg, exc_info=exc_info)
@@ -41,11 +44,11 @@ class Logger:
         sys.exit(exit_code)
 
 
-def run_program(*args: str):
+def run_program(*args: str) -> str:
     import subprocess
 
     Logger.debug("Running: %s", args)
-    output = None
+    output = ""
     with contextlib.suppress(Exception):
         p = subprocess.run(args, capture_output=True, shell=False, text=True)  # noqa: S603
         output = p.stdout and p.stdout.strip()
@@ -54,7 +57,7 @@ def run_program(*args: str):
     return output
 
 
-def get_path(path: str):
+def get_path(path: str) -> Path:
     if path:
         if path.startswith('"') and path.endswith('"'):
             path = path.strip('"')
@@ -64,7 +67,7 @@ def get_path(path: str):
     return Path(path or os.getcwd())
 
 
-def get_py_venv_version(venv_path) -> str:
+def get_py_venv_version(venv_path: Path) -> str:
     """Fast Python Version detection without subprocess calls, looking for lib/pythonM.m"""
     version = "?"
     for lib_path in (venv_path / "lib", venv_path / "lib64"):
@@ -77,36 +80,35 @@ def get_py_venv_version(venv_path) -> str:
     return version
 
 
-def git_branch_name(folder):
+def git_branch_name(folder: Path) -> str | None:
     git_folder = git_root(folder)
     head_file = git_folder and git_folder / "HEAD"
-    if not head_file or not head_file.exists():
-        return None
+    if head_file and head_file.exists():
+        try:
+            content = head_file.read_text().strip()
+            if content.startswith("ref: "):
+                return content.rpartition("/")[2]  # "ref: refs/heads/<branch-name>"
 
-    try:
-        content = head_file.read_text().strip()
-        if content.startswith("ref: "):
-            return content.rpartition("/")[2]  # "ref: refs/heads/<branch-name>"
+            return content[:5]  # Detached HEAD (SHA)
 
-        return content[:5]  # Detached HEAD (SHA)
-
-    except OSError:
-        return None
+        except OSError:
+            return None
 
 
-def git_root(folder: Path):
+def git_root(folder: Path) -> Path | None:
     for parent in (folder, *folder.parents):
         folder = parent / ".git"
         if folder.is_dir():
             return folder
 
 
-def scm_root(folder: Path):
+def scm_root(folder: Path) -> Path | None:
     folder = git_root(folder)
-    return folder and folder.parent
+    if folder:
+        return folder.parent
 
 
-def capped_text(text: str, max_size: int):
+def capped_text(text: str, max_size: int) -> str:
     if max_size and text and len(text) > max_size:
         text = f"…{text[-max_size:]}"
 
@@ -114,19 +116,19 @@ def capped_text(text: str, max_size: int):
 
 
 class ColorBit:
-    def __init__(self, name, open_marker, close_marker, wrapper_fmt=None):
+    def __init__(self, name: str, open_marker: str, close_marker: str, wrapper_fmt=""):
         self.name = name
         self.open_marker = open_marker
         self.close_marker = close_marker
         self.wrapper_fmt = wrapper_fmt
 
-    def wrapped(self, marker):
+    def wrapped(self, marker: str) -> str:
         if self.wrapper_fmt:
             marker = self.wrapper_fmt % marker
 
         return marker
 
-    def __call__(self, text):
+    def __call__(self, text: str) -> str:
         open_marker = self.wrapped(self.open_marker)
         close_marker = self.wrapped(self.close_marker)
         return f"{open_marker}{text}{close_marker}"
@@ -134,11 +136,11 @@ class ColorBit:
 
 class ColorSet:
     available = ("bold", "dim", "blue", "green", "yellow", "red", "cyan")  # magenta
-    __ttyc = None  # type: ColorSet
+    __ttyc: ColorSet | None = None
 
     def __init__(self, name, bits):
         self.name = name
-        self.bits = bits  # type: dict[str, ColorBit]
+        self.bits: dict[str, ColorBit] = bits
         self.bold = self.bits["bold"]
         self.dim = self.bits["dim"]
         self.blue = self.bits["blue"]
@@ -148,14 +150,15 @@ class ColorSet:
         self.cyan = self.bits["cyan"]
 
     @classmethod
-    def ttyc(cls):
+    def ttyc(cls) -> ColorSet:
         if cls.__ttyc is None:
             cls.__ttyc = cls.tty_color_set()
 
+        assert cls.__ttyc
         return cls.__ttyc
 
     @classmethod
-    def tty_color_set(cls, name="tty-colors", wrapper_fmt=None):
+    def tty_color_set(cls, name="tty-colors", wrapper_fmt="") -> ColorSet:
         codes = {"bold": 1, "dim": 2, "blue": 34, "green": 32, "yellow": 33, "red": 31, "cyan": 36}
         code_format = "\x1b[%sm"
         bits = {}
@@ -167,17 +170,17 @@ class ColorSet:
         return cls(name, bits)
 
     @classmethod
-    def color_set_by_name(cls, color_set_name):
+    def color_set_by_name(cls, color_set_name: str | None):
         if color_set_name == "zsh":
             codes = {"bold": ("%B", "%b"), "dim": ("%{\x1b[2m%}", "%{\x1b[22m%}")}
             bits = {k: ColorBit(k, *codes.get(k, ("%%F{%s}" % k, "%f"))) for k in cls.available}
             return cls("zsh-ps1", bits)
 
-        if color_set_name == "tty":
-            return cls.ttyc()
-
         if color_set_name == "bash":
             return cls.tty_color_set(name="bash-ps1", wrapper_fmt="\\[%s\\]")
+
+        if color_set_name == "tty":
+            return cls.ttyc()
 
         if not color_set_name or color_set_name == "plain":
             return cls("plain", {k: ColorBit(k, "", "") for k in cls.available})
@@ -185,7 +188,7 @@ class ColorSet:
         Logger.fail(f"No color set for '{color_set_name}'")
 
 
-def shortened_path(prefix, parts, max_parts=6):
+def shortened_path(prefix: str, parts, max_parts=9):
     yield prefix
     if len(parts) > max_parts:
         yield "…"
@@ -200,7 +203,7 @@ def shortened_path(prefix, parts, max_parts=6):
             yield part
 
 
-def folder_parts(folder: Path):
+def folder_parts(folder: Path) -> tuple[str, tuple[str]]:
     try:
         return "~", folder.relative_to(get_path("~")).parts
 
@@ -209,7 +212,7 @@ def folder_parts(folder: Path):
 
 
 class CommandRenderer:
-    flags = {}
+    flags: dict[str, str]
 
 
 class PathCleaner(CommandRenderer):
@@ -218,7 +221,7 @@ class PathCleaner(CommandRenderer):
 
     def cmd_clean_path(self):
         """Remove duplicates in PATH (but keep order)"""
-        path = self.path or os.environ.get("PATH")
+        path = self.path or os.environ.get("PATH") or ""
         seen = set()
         for folder in path.split(os.pathsep):
             folder = get_path(folder)
@@ -229,7 +232,7 @@ class PathCleaner(CommandRenderer):
 
 
 class Ps1Renderer(CommandRenderer):
-    example = "ps1 -czsh -p.. -ozsimic,zoran -ufoo"
+    # example: ps1 -czsh -p.. -ozsimic,zoran -ufoo
     flags = {"c": "color", "o": "owner", "p": "pwd", "u": "user", "v": "venv", "x": "exit_code"}
 
     color = ""
@@ -305,43 +308,42 @@ class Ps1Renderer(CommandRenderer):
 
 
 class TmuxBranchSpec:
-    def __init__(self, spec):
-        self.spec = spec
-        color, _, branches = spec.partition(":")
-        self.icon = color and color[0]
-        self.color = color and color[1:]
-        self.branches = branches.split(",") if branches else None
+    def __init__(self, icon: str, color: str):
+        self.icon = icon
+        self.color = color
 
 
 class TmuxBranchSpecs:
-    def __init__(self, specs):
-        specs = specs or TmuxRenderer.branch_spec
-        self.specs = specs.split("+")
-        self.default = None
+    def __init__(self):
+        # Other icons: 🔀🧐🚨🚧📌🔧📄💡🍻️💫🩹🎨
+        self.default = TmuxBranchSpec("🔧", "magenta")
         self.by_branch = {}
-        for spec in self.specs:
-            spec = TmuxBranchSpec(spec)
-            if spec.branches:
-                for branch in spec.branches:
-                    self.by_branch[branch] = spec
+        self.add_branch_spec("✨", "cyan", "main")
+        self.add_branch_spec("🏷", "cyan", "master")
+        self.add_branch_spec("🚨", "purple", "publish")
+        self.add_branch_spec("🚨", "purple", "release")
 
-            else:
-                self.default = spec
+    def add_branch_spec(self, icon: str, color: str, branch: str):
+        spec = TmuxBranchSpec(icon, color)
+        self.by_branch[branch] = spec
 
-    def get_spec(self, branch):
+    def get_spec(self, branch) -> TmuxBranchSpec:
         return self.by_branch.get(branch, self.default)
 
 
-def rendered_uptime(stdout):
+def rendered_uptime(stdout, colored=True) -> str:
     i = stdout.index("up")
     stdout = stdout[i + 2 :].strip()
     up = list(uptime_bits(stdout))
-    up = " ".join(up[:2])
-    up = tmux_colored(up or "-uptime?-", "default,dim", 10)
-    return f"{up}🔌"  # 🕤⏳🪫🔋🔌
+    up = " ".join(up[:2]) or "-uptime?-"
+    if colored:
+        up = tmux_colored(up, "default,dim", 10)
+        up = f"{up}🔌"  # 🕤⏳🪫🔋🔌
+
+    return up
 
 
-def tmux_colored(text, fg: str, max_size: int):
+def tmux_colored(text: str, fg: str, max_size: int) -> str:
     text = capped_text(text, max_size)
     if fg:
         text = f"#[fg={fg}]{text}#[default]"
@@ -349,7 +351,7 @@ def tmux_colored(text, fg: str, max_size: int):
     return text
 
 
-def uptime_bits(text):
+def uptime_bits(text: str):
     for bit in text.split(","):
         bit = bit.strip()
         if bit:
@@ -368,19 +370,17 @@ def uptime_bits(text):
 
 
 class TmuxRenderer(CommandRenderer):
-    # Other icons: 🔀🧐🚨🚧📌🔧📄💡🍻🏷️💫🩹🎨
-    branch_spec = "🔧magenta+✨cyan:main+🚨green:release,publish"
     path = ""
-    flags = {"b": "branch_spec", "p": "path"}
+    flags = {"p": "path"}
 
-    def rendered_branch(self, folder):
+    @staticmethod
+    def rendered_branch(folder: Path) -> str | None:
         branch_name = git_branch_name(folder)
-        if not branch_name:
-            return None
-
-        specs = TmuxBranchSpecs(self.branch_spec)
-        spec = specs.get_spec(branch_name)
-        return spec and f"{tmux_colored(branch_name, spec.color, 24)}{spec.icon}"
+        if branch_name:
+            specs = TmuxBranchSpecs()
+            spec = specs.get_spec(branch_name)
+            if spec:
+                return f"{tmux_colored(branch_name, spec.color, 24)}{spec.icon}"
 
     def cmd_tmux_status(self):
         """
@@ -394,7 +394,7 @@ class TmuxRenderer(CommandRenderer):
             yield self.rendered_branch(folder)
 
         uptime = run_program("uptime")
-        if uptime and "up" in uptime:
+        if "up" in uptime:
             yield rendered_uptime(uptime)
 
     def cmd_tmux_short(self):
@@ -415,7 +415,7 @@ class TmuxRenderer(CommandRenderer):
 
 
 class CommandDef:
-    def __init__(self, base_cls, name, delimiter):
+    def __init__(self, base_cls: type[CommandRenderer], name: str, delimiter: str):
         self.name = name
         self.base_cls = base_cls
         self.delimiter = delimiter
@@ -432,7 +432,7 @@ class CommandDef:
         doc = func.__doc__ or "?"
         return doc
 
-    def summary(self):
+    def summary(self) -> str:
         return self.get_doc().strip().splitlines()[0]
 
     def run_with_args(self, args):
@@ -466,18 +466,18 @@ class CommandDef:
 
 class CommandParser:
     def __init__(self):
-        self.available_commands = {}
+        self.available_commands: dict[str, CommandDef] = {}
 
-    def add_command(self, cmd, delimiter=""):
+    def add_command(self, cmd: type[CommandRenderer], delimiter=""):
         for k in dir(cmd):
             if k.startswith("cmd_"):
                 name = k[4:]
                 cmd_def = CommandDef(cmd, name, delimiter)
                 self.available_commands[name] = cmd_def
 
-    def get_command(self, name, fatal=True):
+    def get_command(self, name: str) -> CommandDef:
         cmd = self.available_commands.get(name)
-        if cmd is None and fatal:
+        if cmd is None:
             Logger.fail(f"Unknown command '{name}'")
 
         return cmd
@@ -496,7 +496,7 @@ class CommandParser:
         if exit_code is not None:
             sys.exit(exit_code)
 
-    def run_args(self, args):
+    def run_args(self, args: list[str]):
         if not args:
             self.show_help("No command provided", exit_code=1)
 

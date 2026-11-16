@@ -7,7 +7,8 @@ STARTUP = Path(__file__).resolve().parent.parent / "home/dot_config/python/start
 
 def load_startup_module():
     spec = importlib.util.spec_from_file_location("python_startup_module", STARTUP)
-    assert spec and spec.loader  # noqa: PT018
+    assert spec
+    assert spec.loader
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
