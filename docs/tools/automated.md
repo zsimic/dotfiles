@@ -8,11 +8,14 @@ See [exploratory] for more tools mentions.
 
 ## Homebrew formulae
 
+👤: installed on a subset of personal machines
+
 | Tool | Language | Use |
 | --- | --- | --- |
 | [atuin] | Rust | Searchable, SQLite-backed shell history |
 | [bat] | Rust | `cat` with syntax highlighting and paging |
 | [btop] | C++ | Interactive resource monitor |
+| [container] 👤 | Swift | Linux containers in lightweight VMs on macOS only |
 | [dua-cli] | Rust | Interactive disk-usage inspection |
 | [duf] | Go | Disk usage/free summary |
 | [eza] | Rust | Modern `ls` replacement |
@@ -25,14 +28,8 @@ See [exploratory] for more tools mentions.
 | [tokei] | Rust | Source-code statistics |
 | [tre-command] | Rust | Tree view with sensible ignores |
 | [xh] | Rust | Friendly HTTP client |
+| [uv] 👤 | Rust | Python package and project management |
 | [zoxide] | Rust | Frecency-based directory jumping |
-
-Additionally installed on a subset of personal machines:
-
-| Tool | Language | Use |
-| --- | --- | --- |
-| [container] | Swift | Run Linux containers in lightweight VMs on macOS only |
-| [uv] | Rust | Python package and project management |
 
 [atuin]: https://github.com/atuinsh/atuin
 [bat]: https://github.com/sharkdp/bat
@@ -55,52 +52,39 @@ Additionally installed on a subset of personal machines:
 
 ## macOS casks
 
-Chezmoi installs or adopts missing casks without upgrading existing ones. Monthly maintenance leaves
-self-updating casks to their own updaters and upgrades only casks that do not declare `auto_updates`.
-
-Installed on every macOS target:
+🔄: updated through Homebrew (casks that do not declare `auto_updates`)
 
 | Cask | Language | Use |
 | --- | --- | --- |
-| [AppCleaner] | Unverified | Application uninstaller and cleanup tool |
-| [Symbols Only Nerd Font][symbols-font] | N/A (font) | Icon glyphs for terminal prompts and tools |
-| [Ghostty] | [Zig, Swift][ghostty-source] | Primary terminal emulator |
-| [Google Chrome][chrome] | C++ (Chromium core) | Browser |
-| [iTerm2] | [Objective-C][iterm-source] | Retained terminal emulator |
+| [1Password] 👤 | Rust, React | Password manager |
+| [AppCleaner] | Objective-C | Application uninstaller and cleanup tool |
+| [Discord] 👤 | React | Chat |
+| [Firefox] 👤 | C++, Rust, JavaScript | Browser |
+| [Ghostty] | Zig, Swift | Primary terminal emulator |
+| [Google Chrome] | C++ (Chromium core) | Browser |
+| [IINA] 👤 | Swift | Media player |
+| [iTerm2] | Objective-C | Retained terminal emulator |
+| [OnyX] 👤🔄 | Objective-C | macOS maintenance utility |
+| [QuickLook Video] 👤🔄 | Swift, Objective-C | Quick Look video support |
+| [Raycast] | React, Rust, Swift | Launcher and productivity tool |
 | [Shottr] | Swift | Screenshot utility |
-| [Sublime Text][sublime] | C++ | Text editor |
-| [Raycast] | Rust+others | Launcher and productivity tool |
+| [Sublime Text] | C++ | Text editor |
+| [Nerd Font] 🔄 | - | Icon glyphs for terminal prompts and tools |
 
-[AppCleaner]: https://formulae.brew.sh/cask/appcleaner
-[symbols-font]: https://formulae.brew.sh/cask/font-symbols-only-nerd-font
-[Ghostty]: https://formulae.brew.sh/cask/ghostty
-[ghostty-source]: https://github.com/ghostty-org/ghostty
-[chrome]: https://formulae.brew.sh/cask/google-chrome
-[iTerm2]: https://formulae.brew.sh/cask/iterm2
-[iterm-source]: https://github.com/gnachman/iTerm2
-[Shottr]: https://formulae.brew.sh/cask/shottr
-[sublime]: https://formulae.brew.sh/cask/sublime-text
-[Raycast]: https://formulae.brew.sh/cask/raycast
-
-Additionally installed on a subset of personal machines:
-
-| Cask | Language | Use |
-| --- | --- | --- |
-| [1Password] | Rust, React | Password manager |
-| [Discord] | React | Chat |
-| [Firefox] | C++, Rust, JavaScript | Browser |
-| [IINA] | [Swift][iina-source] | Media player |
-| [OnyX] | Objective-C | macOS maintenance utility |
-| [QuickLook Video][quicklook-video] | [Swift, Objective-C][quicklook-source] | Quick Look video support |
-
-[1Password]: https://formulae.brew.sh/cask/1password
-[Discord]: https://formulae.brew.sh/cask/discord
-[Firefox]: https://formulae.brew.sh/cask/firefox
-[IINA]: https://formulae.brew.sh/cask/iina
-[iina-source]: https://github.com/iina/iina
-[OnyX]: https://formulae.brew.sh/cask/onyx
-[quicklook-video]: https://formulae.brew.sh/cask/quicklook-video
-[quicklook-source]: https://github.com/Marginal/QuickLookVideo
+[1Password]: https://1password.com/
+[AppCleaner]: https://freemacsoft.net/appcleaner/
+[Discord]: https://discord.com/
+[Firefox]: https://www.mozilla.org/firefox/
+[Ghostty]: https://github.com/ghostty-org/ghostty
+[Google Chrome]: https://www.google.com/chrome/
+[IINA]: https://github.com/iina/iina
+[iTerm2]: https://github.com/gnachman/iTerm2
+[OnyX]: https://www.titanium-software.fr/en/onyx.html
+[QuickLook Video]: https://github.com/Marginal/QuickLookVideo
+[Raycast]: https://raycast.com/
+[Shottr]: https://shottr.cc/
+[Sublime Text]: https://www.sublimetext.com/
+[Nerd Font]: https://github.com/ryanoasis/nerd-fonts
 
 ## Apply and monthly maintenance
 
