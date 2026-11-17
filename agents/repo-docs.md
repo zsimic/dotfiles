@@ -5,7 +5,7 @@ for its maintainers. Architecture, cross-file flows, the "why", gotchas, where t
 User-facing reference belongs in the `README.md` (the one a package index renders, so no links to repo
 files there).
 
-## The code is the authority
+## Code is the authority
 
 - A page says **where to look** and **what is surprising once there**; it never restates what one file
   already says plainly. Point at the source instead ("see `--help`", "in `pyproject.toml`").
