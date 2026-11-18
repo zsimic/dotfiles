@@ -13,6 +13,8 @@ the [chezmoi documentation](https://www.chezmoi.io/) covers the underlying tool.
   underneath a private work overlay.
 - [Tools](./tools/index.md) — automated and exploratory inventories, Homebrew maintenance,
   and terminal setup.
+- [Agent instructions](./agents.md) — short notes rendered into every coding agent's global
+  instructions file.
 - [Development](./dev/index.md) — repository design, working conventions, tests, and how to adapt
   the pattern.
 - [Repository overview](../README.md) — the design choices, daily workflow, and important entry points.
@@ -21,6 +23,7 @@ the [chezmoi documentation](https://www.chezmoi.io/) covers the underlying tool.
 
 - [`home/`](../home/) — managed home-directory state; macOS-only lifecycle scripts are under
   `home/.chezmoiscripts/darwin/`.
+- [`agents/`](../agents/) — fragments rendered into coding agents' instructions.
 - [`bootstrap.sh`](../bootstrap.sh) — fresh-machine entry point.
 - [`cz.sh`](../cz.sh) — daily chezmoi wrapper.
 - [`tests/`](../tests/) — automated tests for Python helpers and shell-facing utilities.

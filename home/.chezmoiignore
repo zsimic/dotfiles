@@ -10,3 +10,16 @@ Library
 .chezmoiscripts/personal/**
 .local/bin/.pk
 {{- end }}
+{{- /* Agent instruction files, only for agents that are installed (see docs/agents.md) */ -}}
+{{- if not (lookPath "claude") }}
+.claude
+{{- end }}
+{{- if not (lookPath "codex") }}
+.codex
+{{- end }}
+{{- if not (lookPath "opencode") }}
+.config/opencode
+{{- end }}
+{{- if not (lookPath "pi") }}
+.pi
+{{- end }}
