@@ -26,7 +26,7 @@ case "$action" in
         [[ -n "$work_only" ]] || "$personal_wrapper" pull
         PULL=1 TITLE=work "$status_helper" "$script_dir"
         ;;
-    apply|diff|init|managed|status|unmanaged|update)
+    apply|diff|managed|status|unmanaged|update)
         if [[ -z "$work_only" ]]; then
             echo "---- personal $action: ----"
             "$personal_wrapper" "$@"
