@@ -1,29 +1,13 @@
 # Documentation
 
-This repository is a small, public-safe chezmoi source state for keeping a mostly shared bash and
-zsh environment, selected tool configuration, and macOS applications consistent across machines.
-These notes assume familiarity with dotfiles and use this page as the map;
-the [chezmoi documentation](https://www.chezmoi.io/) covers the underlying tool.
+A small, public-safe chezmoi source state keeping bash and zsh, CLI tools, and macOS applications
+consistent across machines. Repo layout is in the [README](../README.md#layout); the
+[chezmoi documentation](https://www.chezmoi.io/) covers the underlying tool.
 
-## Sections and guides
-
-- [Bootstrap](./bootstrap.md) — ordered, copy-pasteable checklist for a fresh machine and
-  interrupted-run recovery.
-- [Reuse this setup](./reuse/index.md) — adapt the personal base for someone else or compose it
-  underneath a private work overlay.
-- [Tools](./tools/index.md) — automated and exploratory inventories, Homebrew maintenance,
-  and terminal setup.
-- [Agent instructions](./agents.md) — short notes rendered into every coding agent's global
+- [Bootstrap](./bootstrap.md): fresh-machine checklist.
+- [Development](./dev/index.md): working conventions, read before changing anything.
+- [Agent instructions](./agents.md): `agents/` fragments rendered into every coding agent's global
   instructions file.
-- [Development](./dev/index.md) — repository design, working conventions, tests, and how to adapt
-  the pattern.
-- [Repository overview](../README.md) — the design choices, daily workflow, and important entry points.
-
-## Source map
-
-- [`home/`](../home/) — managed home-directory state; macOS-only lifecycle scripts are under
-  `home/.chezmoiscripts/darwin/`.
-- [`agents/`](../agents/) — fragments rendered into coding agents' instructions.
-- [`bootstrap.sh`](../bootstrap.sh) — fresh-machine entry point.
-- [`cz.sh`](../cz.sh) — daily chezmoi wrapper.
-- [`tests/`](../tests/) — automated tests for Python helpers and shell-facing utilities.
+- [Tools](./tools/index.md): tool inventory, Homebrew and Python maintenance, terminals.
+- [Reuse this setup](./reuse/index.md): adapt this base for someone else, or run it underneath a
+  private work overlay.

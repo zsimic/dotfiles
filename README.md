@@ -34,6 +34,8 @@ cz update   # pull and apply
 
 - [`home/`](./home/) — chezmoi source state, lifecycle scripts, and managed configuration.
 - [`bootstrap.sh`](./bootstrap.sh) — installs Homebrew and chezmoi, then applies this repository.
+- [`agents/`](./agents/) — notes rendered into every coding agent's instructions, see
+  [agent instructions](./docs/agents.md).
 - [`resources/`](./resources/) — source material used by managed configuration.
 - [`tests/`](./tests/) — tests for the non-trivial helpers; run `tox` or `tox -e style`.
 - [`docs/`](./docs/) — concise operational documentation.

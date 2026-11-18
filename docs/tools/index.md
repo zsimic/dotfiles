@@ -1,17 +1,12 @@
 # Tools
 
-This section is the human-readable inventory of software managed or considered by this repository.
-The linked source files remain authoritative; these pages explain the choices and lifecycle around
-them.
+Human-readable inventory of the software this repo manages or considers; the linked source files are
+authoritative, these pages explain the choices and lifecycle around them.
 
-- [Automated](./automated.md) — Homebrew formulae and macOS casks installed by chezmoi, plus their lifecycle.
-- [Exploratory](./exploratory.md) — useful tools that are not currently part of the automated desired state.
-- [Python maintenance](./python.md) — upgrade uv-managed Pythons and remove superseded stable patches.
-- [Terminals](./terminals.md) — the Ghostty-first setup, tmux session launcher, and retained iTerm2
-  configuration.
+- [Automated](./automated.md): Homebrew formulae and macOS casks chezmoi installs, and their maintenance.
+- [Exploratory](./exploratory.md): candidates not in the automated state, and retired tools.
+- [Python maintenance](./python.md): uv-managed Python upgrades and pickley's interpreter selection.
+- [Terminals](./terminals.md): Ghostty with tmux, and the retained iTerm2 setup.
 
-Sources of truth:
-
-- [Brewfile](../../home/dot_config/homebrew/Brewfile)
-- [brew.env](../../home/dot_config/homebrew/brew.env)
-- [chezmoi lifecycle scripts](../../home/.chezmoiscripts/)
+Sources of truth: [Brewfile](../../home/dot_config/homebrew/Brewfile),
+[brew.env](../../home/dot_config/homebrew/brew.env), [lifecycle hooks](../../home/.chezmoiscripts/).

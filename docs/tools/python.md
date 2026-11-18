@@ -1,92 +1,42 @@
 # Python maintenance
 
-[upgrade-uv-pythons] upgrades Python implementations already installed by uv, then uninstalls superseded
-versions. It uses uv's normal storage and CPython minor-version symlinks.
+## uv-managed Pythons
+
+[upgrade-uv-pythons] moves every Python uv already has to its latest known patch, then uninstalls the
+superseded ones. It previews by default; `--commit` acts. On personal machines the [weekly hook] runs it
+with `--commit` on the first apply of each seven-day period (apply-driven, not scheduled) and whenever the
+helper changes.
+
+Decisions behind it:
+
+- It never adds a minor or implementation, and never downgrades: install or remove those by hand
+  (`uv python install 3.15`, `uv python install pypy@3.12`, `uv python uninstall 3.10`).
+- It uses `uv python install` with exact keys rather than `uv python upgrade`, which only handles
+  CPython; PyPy, GraalPy and Pyodide get the same treatment.
+- Installing a prerelease opts that minor into prereleases until its final release; stable installs
+  never adopt them.
+- It reads uv's bundled catalog offline with `--no-config`, so the working directory and uv config files
+  don't affect it (environment overrides like `UV_PYTHON_INSTALL_DIR` still do). Upgrading uv itself is
+  out of scope.
+- Known gaps: a new PyPy or GraalPy build with the same Python version isn't detected. Venvs pinned to
+  an exact patch (and non-CPython venvs) may need recreating after cleanup, an accepted tradeoff on
+  personal machines; uv CPython venvs normally follow the minor-version symlink.
 
 [upgrade-uv-pythons]: ../../home/bin/gremlins/executable_upgrade-uv-pythons
-
-```sh
-~/bin/gremlins/upgrade-uv-pythons
-~/bin/gremlins/upgrade-uv-pythons --commit
-```
-
-The default is a read-only preview: `dryrun mode by default, use --commit to enact these changes`.
-It shows exact installations to add, retain, and remove using the installed uv's bundled download
-catalog. Only `--commit` installs or uninstalls anything.
-
-Output groups minor versions and pending changes into compact lines, for example:
-
-```text
-dryrun mode by default, use --commit to enact these changes
-up-to-date: 3.14, 3.13, 3.12, 3.10, pypy-3.12
-Would uninstall: 3.12.13, 3.13.13, 3.14.2
-```
-
-Pending installs and removals include the patch version. Non-CPython names carry their implementation
-prefix. Free-threaded builds use the compact `t` suffix (such as `3.15t`); other non-default builds
-keep their variant suffix. uv commands still use the full installation keys.
-Prereleases display their full version, such as `3.16.0a1`, even in the up-to-date summary.
-
-Catalog downloads are limited to uv's current platform and architecture. `--offline` prevents network
-access while listing, and `--no-cache` avoids persistent cache writes during previews. `--no-config`
-ignores project and user uv configuration files so the working directory does not affect maintenance.
-Environment overrides such as `UV_PYTHON_INSTALL_DIR` still apply; the flag does not force default storage.
+[weekly hook]: ../../home/.chezmoiscripts/personal/run_onchange_after_95-weekly-upgrade-uv-pythons.sh.tmpl
 
 ## Pickley interpreter selection
 
-On personal machines, chezmoi manages [pickley's configuration] at `~/.local/bin/.pk/config.json`.
-It searches `~/.local/bin` for Python installations. Select the preferred Python with relative links:
+On personal machines, [pickley's configuration] makes it look for Pythons in `~/.local/bin`, where uv
+maintains the versioned links. Choose the default with relative links; pickley follows `python3 ->
+python3.15` on its own, so no `preferred_pythons` setting is needed:
 
 ```sh
 ln -sf python3.15 ~/.local/bin/python3
 ln -sf python3.15 ~/.local/bin/python
 ```
 
+Existing CLI environments keep their Python until reinstalled; `pickley diagnostics` shows the
+selection and `pickley -n install -f mgit` previews a forced reinstall.
+
 [pickley's configuration]: ../../home/dot_local/bin/dot_pk/config.json
-
-Pickley follows `python3 -> pythonM.m` automatically, so no `preferred_pythons` setting is needed.
-uv maintains the versioned links; the relative links above select the default.
-Existing CLI environments are unchanged until reinstalled.
-
-Inspect the selection and preview a forced reinstall with:
-
-```sh
-pickley diagnostics
-pickley -n install -f mgit
-```
-
-## Policy
-
-- Install and remove implementation/minor families manually, for example `uv python install 3.15`,
-  `uv python install pypy@3.12`, or `uv python uninstall 3.10`. Automatically downloaded Pythons are
-  also part of uv's installed inventory.
-- Select the latest stable Python patch known to the installed uv for each installed implementation,
-  minor, build variant, OS, architecture, and libc. Never introduce another minor or implementation,
-  or downgrade a newer installed version.
-- Installing a prerelease opts that minor into alpha, beta, and release-candidate updates until it
-  reaches a final release (`a1 < a2 < b1 < rc1 < final`). Stable installations do not adopt prereleases
-  automatically. Superseded prereleases are cleaned up just like older patches.
-- Use `uv python install` with exact installation keys. Unlike `uv python upgrade`, this also handles
-  PyPy, GraalPy, and Pyodide. uv maintains CPython's minor links when installing newer patches.
-- After all installs succeed, inventory again and verify the new installations are present. Retain
-  the newest installed version in each family and uninstall older versions using exact keys.
-- Stop on errors before cleanup. Upgrading uv itself is outside this helper's scope.
-
-The version tracked here is the Python language version exposed by uv's catalog. A new PyPy or
-GraalPy build with the same Python version/key is not detected or reinstalled by this helper.
-
-New uv CPython virtual environments normally use a stable minor-version symlink and follow patch
-upgrades. Old environments or environments tied to an exact patch may need recreation after cleanup;
-this is an accepted tradeoff on personal machines. uv does not provide transparent patch upgrades
-for alternative implementations, so their environments may also need recreation.
-
-The [weekly personal hook] calls the helper with `--commit` on the first apply in each seven-day
-Unix-time period. Changes to the helper also trigger a run. This is apply-driven, without a background
-scheduler; the first apply after adding the hook runs it immediately.
-
-[weekly personal hook]: ../../home/.chezmoiscripts/personal/run_onchange_after_95-weekly-upgrade-uv-pythons.sh.tmpl
-
-See uv's [Python upgrade documentation] for its implementation limitations, minor symlinks, and
-virtual environment behavior.
-
-[Python upgrade documentation]: https://docs.astral.sh/uv/concepts/python-versions/#upgrading-python-versions

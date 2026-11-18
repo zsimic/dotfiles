@@ -10,7 +10,8 @@ small markdown fragments and rendered into each agent's global instructions file
   from both repos, sorted by file name; a same-named overlay fragment replaces the base one. Each
   agent's file (`~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, `~/.config/opencode/AGENTS.md`,
   `~/.pi/agent/AGENTS.md`) is a one-line `.tmpl` including it, and
-  [`.chezmoiignore`](../home/.chezmoiignore) skips agents that aren't installed.
+  [`.chezmoiignore`](../home/.chezmoiignore) skips agents that aren't installed (so after installing
+  one, run `cz apply`).
 - **Order**: the number only sets the merge order; usually one fragment per repo, `00-dotfiles.md`
   here and `50-…` in the overlay.
 - **On-demand docs**: an un-numbered `agents/*.md` is not rendered; reference it by path from a

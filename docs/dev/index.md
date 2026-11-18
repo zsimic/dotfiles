@@ -1,85 +1,50 @@
-# Development and adaptation
+# Development
 
-This section is the working contract for humans and LLMs changing the repository. The setup is
-intentionally minimal, public-safe, and centered on obvious files plus narrow chezmoi lifecycle
-hooks.
+Working conventions for anyone, human or agent, changing this repo.
 
 ## Design
 
-- This repository manages personal dotfiles with [chezmoi](https://www.chezmoi.io/) and must remain
-  safe to publish.
-- Zsh is preferred, but bash remains supported. Keep PATH and shared behavior aligned through
+- The repo is public: it holds only what is safe to publish. Secrets, tokens, keys, machine
+  credentials, exported secure-defaults databases, and anything work-related (internal URLs, hosts,
+  service names) live elsewhere; work additions go in the [work overlay](../reuse/work-overlay.md).
+- Zsh is the daily shell, bash a supported peer: shared PATH and settings go in
   [`shell-path.sh`](../../home/dot_config/shell-path.sh) and
-  [`shell-settings.sh`](../../home/dot_config/shell-settings.sh).
-- Avoid shell frameworks and dependencies that do not earn their maintenance cost.
-- Never add secrets, tokens, private keys, machine-specific credentials, or exported secure-defaults databases.
-- Prefer plain tracked files when static files work. Use a readable `.tmpl` when it makes the
-  overall shape simpler.
-- Prefer one clear template to multiple plain files plus glue when the template remains readable.
-- Keep template structure and rendered output obvious. Files should remain pleasant to edit in a
-  normal IDE.
-- Use Python for non-trivial logic, parsing, or work that benefits from tests.
-- Favor simple, standard-library-heavy solutions over extra dependencies.
+  [`shell-settings.sh`](../../home/dot_config/shell-settings.sh), keeping important environment
+  settings at parity.
+- No shell frameworks, few dependencies. Non-trivial logic, parsing, or anything worth testing is
+  standard-library Python.
+- Plain files when static works; a readable `.tmpl` when it makes the overall shape simpler (one clear
+  template beats several plain files plus glue).
 
-## Repository layout
+## Layout
 
-- [`home/`](../../home/) mirrors the target home directory as chezmoi source state.
-- Group platform-specific files under platform-specific directories when practical.
-- [`home/.chezmoiscripts/`](../../home/.chezmoiscripts/) contains lifecycle hooks; macOS hooks stay
-  under `darwin/`.
-- [`resources/`](../../resources/) contains checked-in source material that is not independently
-  materialized in `$HOME`; it is not for generated output.
-- [`tests/`](../../tests/) contains automated tests for Python helpers and similar logic.
-- Preserve chezmoi naming such as `dot_*`, `executable_*`, and `run_*`.
+- `home/` holds only materialized home-directory state; repo-only sources live elsewhere, e.g.
+  `resources/` for checked-in source material (never generated output).
+- macOS-only targets are listed in the non-darwin block of [`.chezmoiignore`](../../home/.chezmoiignore)
+  (macOS hooks also sit under `home/.chezmoiscripts/darwin/`); whole-file splits beat template
+  conditionals when clearer. Homebrew and the rest also run on Linux.
+- "Personal machines" are my home machines. The gates selecting them (currently a username check) are an
+  implementation detail, and can only be verified by applying on several machines: leave them as is.
+- Repo paths use `"$HOME/.config"` directly; XDG variables may be set for tools that benefit, but
+  nothing here depends on them.
 
-## Chezmoi conventions
+## Chezmoi hooks
 
-- Default to `run_onchange_` for side effects that should run when their managed input changes.
-- Use another `run_*` variant only when `run_onchange_` is clearly the wrong lifecycle.
-- Keep hook side effects narrow, predictable, and tied to specific managed files. Every hook must be
-  idempotent and safe to rerun.
-- Prefer a dedicated `run_onchange_after_*` hook when an application must restart after a configuration change.
-- Prefer whole-file platform splits plus [`.chezmoiignore`](../../home/.chezmoiignore) when that is
-  clearer than template conditionals. Keep a single template when it is the simpler shape.
-- Never embed secrets in templates or chezmoi data values.
-- Use [`.chezmoiremove`](../../home/.chezmoiremove) for target files that should disappear after a layout change.
-- Keep only materialized home-directory state under `home/`; keep repository-only sources elsewhere.
+- `run_onchange_` by default, tied to the managed file that drives it; another `run_*` variant only
+  when `run_onchange_` is clearly the wrong lifecycle. A config change that needs an app restart gets
+  its own `run_onchange_after_*` hook.
+- Every hook and shell script is idempotent and safe to rerun.
+- Targets retired by a layout change go in [`.chezmoiremove`](../../home/.chezmoiremove).
 
-## Shell conventions
+## Changes
 
-- Follow best-practice shell conventions and improve the setup incrementally rather than through
-  unnecessary broad rewrites.
-- Use `"$HOME/.config"` directly rather than routing repository paths through XDG variables.
-- XDG variables may be defined for tools that benefit from them, but repository paths must not
-  depend on an alternate XDG layout.
-- Keep shell scripts idempotent and safe to rerun.
-- Preserve bash/zsh parity for important environment settings, while using shell-native
-  implementation where appropriate.
-
-## Testing
-
-- After Python changes, run `tox` plus `tox -e style` for linting and formatting checks.
-- Add focused tests for new Python logic when practical.
-- Aim for full coverage when reasonable; call out any coverage gap explicitly.
-- Keep test fixtures small and readable.
-
-## Change discipline
-
-- Make the smallest coherent change and preserve the surrounding style unless there is a clear
-  maintenance or reliability win.
-- Apply a new convention consistently within the affected area.
-- When adding a tool, script, or layout pattern, update the relevant documentation or tests in the
-  same change.
-- Agents never commit, merge, or rewrite Git history. Leave changes uncommitted for inspection with
-  `git diff`.
-- Keep Markdown source lines at 114 characters or fewer, including tables and link definitions.
-  Reflow prose or use reference-style links when needed.
-
-## Reusing the setup
-
-[Reuse this setup](../reuse/index.md) is the external-facing guide for adapting this repository into
-a new personal setup. It also documents the two-repository wrapper used to apply a shared personal
-base before a private work overlay without weakening the public repository boundary.
-
-An LLM following that guide should ask for repository URLs and ownership decisions, inspect
-existing destination files, and ask before applying changes to the live home directory.
+- After Python changes, run `tox` and `tox -e style`. New Python logic gets focused tests; aim for full
+  coverage and call out any gap.
+- A new script or layout pattern updates its docs or tests in the same change. New tools: see
+  [Automated tools](../tools/automated.md); one agents should prefer also goes in
+  [`agents/00-dotfiles.md`](../../agents/00-dotfiles.md).
+- Changes stay local and uncommitted by default (see [`agents/00-dotfiles.md`](../../agents/00-dotfiles.md)).
+  Don't run `cz apply`: remind the user to, they follow along with `cz diff`.
+- Markdown lines stay at 114 characters or fewer, tables and link definitions included (reflow, or use
+  reference-style links); no tool enforces it.
+- Helping someone adapt this repo: follow [Reuse this setup](../reuse/index.md).

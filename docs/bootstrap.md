@@ -1,20 +1,18 @@
 # Bootstrap
 
-Fresh-machine checklist:
-
-1. On macOS, use an administrator account. Do not run the whole bootstrap with `sudo`.
-2. Run:
+1. On macOS, use an administrator account, without `sudo` for the whole run: the script asks for
+   authorization for the first Homebrew install, and Homebrew may ask again when adopting apps already
+   in `/Applications`.
+2. Run [`bootstrap.sh`](../bootstrap.sh); it skips what is already installed, so rerun it after an
+   interruption:
 
    ```zsh
    zsh -c "$(curl -fsSL https://raw.githubusercontent.com/zsimic/dotfiles/main/bootstrap.sh)"
    ```
 
-3. Let Homebrew and chezmoi finish, then reload the shell: `exec zsh -l`, verify with `cz`
+3. Reload the shell with `exec zsh -l`, then check with `cz`.
+4. On macOS, finish by hand (needs privileges chezmoi doesn't have):
+   - Accessibility → Zoom: enable the trackpad and scroll-gesture modifier.
 
-On macOS, the script requests administrator authorization for the first Homebrew install. Homebrew
-may ask again when adopting applications already in `/Applications`.
-
-4. Manual additional steps on mac (can't be automated without privs)
-
-- Accessibility
-  - Zoom -> enable trackpad + scroll gesture modifier
+The final `chezmoi init --apply` only runs on personal machines; see [Reuse](./reuse/index.md) for
+anyone else.

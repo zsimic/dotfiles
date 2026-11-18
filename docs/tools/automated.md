@@ -1,14 +1,18 @@
 # Automated tools
 
-This is a readable inventory of the current desired state. The [Brewfile] is authoritative.
-See [exploratory] for more tools mentions.
+A readable overview of the tools in use, for a mental map; the [Brewfile] is the source of truth, and
+its gates decide which machines get what (the icons below only hint at it).
+
+New tools are usually added to the Brewfile by hand, in the right gate: that choice is only verifiable by
+applying on several machines. Agents help keep these tables in sync with it, spot drift, and discuss
+candidates (see [exploratory]).
 
 [Brewfile]: ../../home/dot_config/homebrew/Brewfile
 [exploratory]: ./exploratory.md
 
 ## Homebrew formulae
 
-👤: installed on a subset of personal machines
+👤: mostly on personal machines
 
 | Tool | Language | Use |
 | --- | --- | --- |
@@ -52,7 +56,8 @@ See [exploratory] for more tools mentions.
 
 ## macOS casks
 
-🔄: updated through Homebrew (casks that do not declare `auto_updates`)
+🔄: updated through Homebrew, as the cask doesn't declare `auto_updates` (check with
+`brew info --json=v2 --cask <name>`)
 
 | Cask | Language | Use |
 | --- | --- | --- |
@@ -88,34 +93,17 @@ See [exploratory] for more tools mentions.
 
 ## Apply and monthly maintenance
 
-The shared [brew.env] applies to manual Homebrew commands and chezmoi maintenance. This setup exports
-`XDG_CONFIG_HOME=$HOME/.config`, so Homebrew reads `~/.config/homebrew/brew.env` automatically.
-It hides environment hints, leaves casks declaring `auto_updates` to their own updaters, and defers
-automatic install/upgrade cleanup to the explicit monthly cleanup step. Manual `brew upgrade` follows
-these same defaults; use `--greedy-auto-updates` to include self-updating casks explicitly, and
-`brew cleanup` to clean up between monthly runs. Only the automation scripts set `HOMEBREW_NO_ASK`,
-preserving normal confirmation prompts for manual commands. See [Homebrew's environment documentation].
-
-Other shared defaults disable analytics, highlight `brew cat` output with `bat`, quiet automatic update
-reports, and show formula installation times. `brew install` leaves already-installed packages at their
-current versions; use `brew upgrade` to update them.
-
-The [brew install hook] includes the Brewfile's hash, so it runs on the first apply and whenever the
-inventory changes. Existing packages are left at their installed versions during this step.
-
-The [monthly hook] renders the current year and month into the script. The first `chezmoi apply` in
-a new month runs [monthly-upgrade] to update Homebrew, upgrade packages, and clean old artifacts.
-It runs `brew autoremove` for unused formula dependencies, then standard `brew cleanup` to remove old
-installed versions and stale downloads. Cache retention is set to 60 days: aged downloads are removed
-on the next cleanup after that threshold, while obsolete downloads can be removed sooner.
-This is apply-driven, not a background scheduler. Run it explicitly with:
-
-```zsh
-~/bin/gremlins/monthly-upgrade
-```
+- Homebrew reads [brew.env] on its own (this setup exports `XDG_CONFIG_HOME=$HOME/.config`), so its
+  defaults apply to manual commands and automation alike; the file comments each setting.
+- The [brew install hook] embeds the Brewfile's hash: it runs on first apply and whenever the inventory
+  changes, installing what is missing without upgrading anything.
+- The [monthly hook] renders the current month, so the first apply of each month runs
+  [monthly-upgrade] (update, upgrade, autoremove, cleanup). It is apply-driven, not scheduled; run it
+  by hand any time.
+- Only the automation sets `HOMEBREW_NO_ASK`, so manual commands keep their prompts. Casks declaring
+  `auto_updates` are left to their own updaters; `brew upgrade --greedy-auto-updates` includes them.
 
 [brew install hook]: ../../home/.chezmoiscripts/run_onchange_after_02-install-brew-tools.sh.tmpl
 [monthly hook]: ../../home/.chezmoiscripts/run_onchange_after_90-monthly-upgrade.sh.tmpl
 [monthly-upgrade]: ../../home/bin/gremlins/executable_monthly-upgrade
 [brew.env]: ../../home/dot_config/homebrew/brew.env
-[Homebrew's environment documentation]: https://docs.brew.sh/Manpage#environment
