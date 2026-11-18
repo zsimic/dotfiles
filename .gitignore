@@ -4,7 +4,7 @@
 .*cache
 .*version
 .DS_Store
-.egg*
+*.egg*
 .idea
 .tox
 .venv

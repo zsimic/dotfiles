@@ -16,6 +16,9 @@ dev = [
     { include-group = "test" },
 ]
 
+[tool.setuptools]
+packages = []  # Not a python package, avoids setuptools' flat-layout auto-discovery error
+
 [tool.ty.environment]
 root = ["./home", "./scripts", "./tests"]
 
