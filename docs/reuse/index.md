@@ -35,12 +35,13 @@ Use the same pattern for new integration points:
 | `~/.local/shell-path.sh` | [shell-path] | Work-only PATH and environment |
 | `~/.local/aliases.sh` | [shell-settings] | Work-only aliases and functions |
 | `~/.config/git/config-work` | [git-config] | Work identity, hosts, and Git behavior |
-| `agents/[0-9]*.md` in the work repo | [agents.md] | Work notes for coding agents |
+| `mix/agents/50-*.md` in the work repo | [mix] | Work notes for coding agents |
+| `mix/gh-hosts/50-*.yml` in the work repo | [mix] | Work `gh` hosts |
 
 [shell-path]: ../../home/dot_config/shell-path.sh
 [shell-settings]: ../../home/dot_config/shell-settings.sh
 [git-config]: ../../home/dot_config/git/config
-[agents.md]: ../agents.md
+[mix]: ../mix.md
 
 ## Before changing anything
 

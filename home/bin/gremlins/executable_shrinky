@@ -194,7 +194,7 @@ def shortened_path(prefix: str, parts, max_parts=9):
         yield "…"
         parts = parts[-max_parts:]
 
-    pivot = len(parts) - 3
+    pivot = len(parts) - 4
     for i, part in enumerate(parts):
         if i < pivot:
             yield part[0] if part[0] not in (".", "_") else part[0:2]

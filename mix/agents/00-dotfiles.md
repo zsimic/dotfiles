@@ -11,6 +11,6 @@ copy in `$HOME`.
   applying or deploying them to the user (remind them instead): they follow along with `git diff`.
   Commit or open PRs only when the user or the task (e.g. a ticket) asks for it.
 - Scratch files go in `_tmp/` at the repo root (git-ignored everywhere), never `/tmp`.
-- github.com remotes stay on https, pushes go over ssh via `pushInsteadOf`: see `{dotfiles}/agents/github.md`.
+- github.com remotes stay on https, pushes go over ssh via `pushInsteadOf`: see `{here}/github.md`.
 - Creating or refreshing repo docs: read the “Code is the authority” guidance in
-  `{dotfiles}/agents/repo-docs.md` first.
+  `{here}/repo-docs.md` first.

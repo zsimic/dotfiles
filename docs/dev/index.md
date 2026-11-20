@@ -42,8 +42,9 @@ Working conventions for anyone, human or agent, changing this repo.
   coverage and call out any gap.
 - A new script or layout pattern updates its docs or tests in the same change. New tools: see
   [Automated tools](../tools/automated.md); one agents should prefer also goes in
-  [`agents/00-dotfiles.md`](../../agents/00-dotfiles.md).
-- Changes stay local and uncommitted by default (see [`agents/00-dotfiles.md`](../../agents/00-dotfiles.md)).
+  [`00-dotfiles.md`](../../mix/agents/00-dotfiles.md).
+- Changes stay local and uncommitted by default
+  (see [`00-dotfiles.md`](../../mix/agents/00-dotfiles.md)).
   Don't run `cz apply`: remind the user to, they follow along with `cz diff`.
 - Markdown lines stay at 114 characters or fewer, tables and link definitions included (reflow, or use
   reference-style links); no tool enforces it.

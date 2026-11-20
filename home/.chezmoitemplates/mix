@@ -1,0 +1,12 @@
+{{- /* Concatenate mix/<name>/[0-9]* from this repo and the work overlay, see docs/mix.md */ -}}
+{{- $fragments := dict -}}
+{{- range $repo := list (env "CHEZMOI_WORKING_TREE") (joinPath (env "CHEZMOI_HOME_DIR") ".local/share/chezmoi") -}}
+{{-   range glob (joinPath $repo "mix" $ "[0-9]*") -}}
+{{-     $_ := set $fragments (base .) . -}}
+{{-   end -}}
+{{- end -}}
+{{- range $i, $key := keys $fragments | sortAlpha -}}
+{{-   $path := get $fragments $key -}}
+{{-   if $i }}{{ "\n\n" }}{{ end -}}
+{{    include $path | replace "{here}" (dir $path) | trim -}}
+{{- end -}}

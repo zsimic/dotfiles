@@ -24,6 +24,7 @@ candidates (see [exploratory]).
 | [duf] | Go | Disk usage/free summary |
 | [eza] | Rust | Modern `ls` replacement |
 | [fd] | Rust | Fast, friendly `find` replacement |
+| [gh] | Go | GitHub’s official command line tool |
 | [git-delta] | Rust | Syntax-aware pager for Git and diffs; executable is `delta` |
 | [jaq] | Rust | `jq` clone focused on speed and correctness |
 | [pstree] | C | Process hierarchy display |
@@ -43,6 +44,7 @@ candidates (see [exploratory]).
 [duf]: https://github.com/muesli/duf
 [eza]: https://github.com/eza-community/eza
 [fd]: https://github.com/sharkdp/fd
+[gh]: https://github.com/cli/cli
 [git-delta]: https://github.com/dandavison/delta
 [jaq]: https://github.com/01mf02/jaq
 [pstree]: https://github.com/FredHucht/pstree
