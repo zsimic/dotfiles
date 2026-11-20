@@ -144,7 +144,7 @@ def test_own_venv(cli):
 def test_shortening(full_path, expected):
     module = shrinky_module()
     prefix, *parts = full_path.split("/")
-    assert "/".join(module.shortened_path(prefix, parts, max_parts=6)) == expected
+    assert "/".join(module.shortened_path(prefix, parts, pivot=3, max_parts=6)) == expected
 
 
 def test_tmux(cli, monkeypatch):

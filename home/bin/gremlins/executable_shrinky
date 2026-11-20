@@ -188,13 +188,13 @@ class ColorSet:
         Logger.fail(f"No color set for '{color_set_name}'")
 
 
-def shortened_path(prefix: str, parts, max_parts=9):
+def shortened_path(prefix: str, parts, pivot=4, max_parts=9):
     yield prefix
     if len(parts) > max_parts:
         yield "…"
         parts = parts[-max_parts:]
 
-    pivot = len(parts) - 4
+    pivot = len(parts) - pivot
     for i, part in enumerate(parts):
         if i < pivot:
             yield part[0] if part[0] not in (".", "_") else part[0:2]
