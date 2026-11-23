@@ -21,6 +21,11 @@ every turn): yellow from 150k, red from 300k, as a nudge to start a new session.
 expires 1h after the last request) on a big context: the next message re-sends all of it at full price, a good
 moment to `/clear`. Thresholds are `ClaudeRenderer` class attributes.
 
+Keep it cheap: render from the payload only, no expensive work like reading the transcript (`transcript_path`)
+on every refresh. A clear need comes first, then we'll see. Example: session-wide in/out tokens aren't in the
+payload (`total_*_tokens` and `current_usage` are the last request only), they'd have to be summed from the
+transcript, so they're not shown.
+
 Thinking can't be turned off on recent models (Opus/Sonnet/Haiku 5.5, Fable): `thinking.enabled` stays `true`
 there, `/effort` is the knob that matters (see [model config][model-config]). Hence only "thinking off" is shown.
 

@@ -553,7 +553,9 @@ class ClaudeRenderer(CommandRenderer):
         if resets_at:
             from datetime import datetime
 
-            text += self.colors.dim(f" ↻{datetime.fromtimestamp(resets_at).strftime(reset_format)}")
+            reset_time = f"↻{datetime.fromtimestamp(resets_at).strftime(reset_format)}"
+            reset_time = self.colors.composed(("dim", "cyan"))(reset_time)
+            text += f" {reset_time}"
 
         return text
 
