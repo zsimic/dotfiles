@@ -24,7 +24,7 @@ def shrinky_module():
 
 def test_clean_path(cli):
     cli.main = SHRINKY
-    runez.touch("foo/bar/readme.txt")
+    runez.touch("foo/bar/readme.txt", logger=None)
     cli.run("clean_path -pfoo:baz:foo/bar:baz2:/foo/bar/baz")
     assert cli.succeeded
     assert cli.logged.stdout.contents() == "foo:foo/bar"
@@ -216,7 +216,7 @@ def test_uptime(expected, uptime):
 
 
 def claude_statusline(cli, payload: str) -> str:
-    runez.write("sample.json", payload)
+    runez.write("sample.json", payload, logger=None)
     cli.run("claude_statusline -cplain -isample.json")
     assert cli.succeeded
     return cli.logged.stdout.contents()
@@ -241,23 +241,33 @@ def test_claude_statusline(cli, monkeypatch):
     # Ad-hoc payloads below only check the part they exercise
     # Missing fields don't break the line
     output = claude_statusline(cli, '{"model": {"id": "claude-x"}, "thinking": null, "cost": {"total_cost_usd": 25.4}}')
-    assert output.startswith("claude-x  ctx -  left 5h -  7d -")
-    assert output.endswith("cost: $25  -")
+    assert output == "claude-x  cost: $25"
 
     # Fast mode, fresh session with no cost yet
     payload = '{"fast_mode": true, "model": {"id": "claude-x"}, "cost": {"total_cost_usd": 0, "total_duration_ms": 1000}}'
     output = claude_statusline(cli, payload)
-    assert output.startswith("claude-x ⚡  ctx")
-    assert output.endswith("cost: -  0m")
+    assert output == "claude-x ⚡  cost: -  0m"
 
     # Big context with a cold prompt cache
     payload = '{"model": {"id": "claude-x"}, "context_window": {"total_input_tokens": 320000}, "prompt_cache": {"warm": false}}'
     output = claude_statusline(cli, payload)
-    assert output.startswith("claude-x  ctx 🧊 320k  left")
+    assert output == "claude-x  ctx 🧊 320k"
 
     # Thinking turned off (possible on older models only)
     output = claude_statusline(cli, '{"model": {"id": "claude-x"}, "thinking": {"enabled": false}}')
-    assert output.startswith("🫥 claude-x  ctx")
+    assert output == "🫥 claude-x"
+
+
+def test_claude_statusline_failed(cli):
+    cli.main = SHRINKY
+    runez.write("oops.json", "oops, this not json", logger=None)
+    cli.run("claude_statusline -cplain -ioops.json")
+    assert cli.succeeded  # Exit code 0, so Claude Code shows the message
+    assert "claude_statusline failed: JSONDecodeError" in cli.logged.stdout
+
+    cli.run("claude_statusline -cplain -inot-there.json")
+    assert cli.succeeded
+    assert "claude_statusline failed: FileNotFoundError" in cli.logged.stdout
 
 
 @pytest.mark.parametrize(

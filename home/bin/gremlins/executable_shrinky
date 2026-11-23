@@ -472,10 +472,7 @@ def rendered_dollar_amount(usd: float | None, pivot=20) -> str:
     return "-" if not usd else f"${usd:.2f}" if usd < pivot else f"${usd:.0f}"
 
 
-def rendered_duration(ms: float | None) -> str:
-    if ms is None:
-        return "-"
-
+def rendered_duration(ms: float) -> str:
     hours, minutes = divmod(round(ms / 60000), 60)
     return f"{hours}h{minutes:02}m" if hours else f"{minutes}m"
 
@@ -529,52 +526,57 @@ class ClaudeRenderer(CommandRenderer):
 
     def rendered_context(self, data: dict):
         context_window = data.get("context_window") or {}
-        prompt_cache = data.get("prompt_cache") or {}
         tokens = context_window.get("total_input_tokens")
+        if not isinstance(tokens, int):
+            return
+
+        prompt_cache = data.get("prompt_cache") or {}
         # Context size (in tokens), nudge towards starting a new session (answers get less focused, every turn re-reads whole context)
         text = self.colors.composed((140_000, 200_000), tokens)(rendered_tokens(tokens))
 
         # Flag a cold prompt cache (next message re-sends the whole context) on a big enough context
-        if tokens is not None and prompt_cache.get("warm") is False and tokens >= 40_000:
+        if prompt_cache.get("warm") is False and tokens >= 40_000:
             text = f"🧊 {text}"
 
         hit_ratio = prompt_cache.get("hit_ratio")
-        if hit_ratio is not None:  # Temporary, to see how it evolves
+        if isinstance(hit_ratio, float):  # Temporary, to see how it evolves
             # Prompt cache hit percentage: green above 90%, red below 80%
             text += f" {self.rendered_percentage('(cache hit)', hit_ratio * 100, color=('dim', (90, 80)))}"
 
         yield f"{self.colors.dim('ctx')} {text}"
 
-    def rendered_limit(self, name: str, limit: dict, reset_format: str) -> str:
-        used = limit.get("used_percentage")
-        # Percentage of usage limit left: green above 50%, red below 15%
-        text = self.rendered_percentage(name, None if used is None else 100 - used, (50, 15))
-        resets_at = limit.get("resets_at")
-        if resets_at:
-            from datetime import datetime
+    def rendered_limit(self, name: str, limit: dict, reset_format: str) -> str | None:
+        from datetime import datetime
 
+        used = limit.get("used_percentage")
+        resets_at = limit.get("resets_at")
+        if isinstance(used, (int, float)) and isinstance(resets_at, (int, float)):
+            # Percentage of usage limit left: green above 50%, red below 15%
+            text = self.rendered_percentage(name, 100 - used, (50, 15))
             reset_time = f"↻{datetime.fromtimestamp(resets_at).strftime(reset_format)}"
             reset_time = self.colors.composed(("dim", "cyan"))(reset_time)
             text += f" {reset_time}"
 
-        return text
+            return text
 
-    def rendered_limits(self, limits: dict):
-        five_hour = self.rendered_limit("5h", limits.get("five_hour") or {}, "%H:%M")
-        seven_day = self.rendered_limit("7d", limits.get("seven_day") or {}, "%a %H:%M")
-        yield f"{self.colors.dim('left')} {five_hour}  {seven_day}"
+    def rendered_limits(self, rate_limits: dict):
+        if rate_limits:
+            five_hour = self.rendered_limit("5h", rate_limits.get("five_hour") or {}, "%H:%M")
+            seven_day = self.rendered_limit("7d", rate_limits.get("seven_day") or {}, "%a %H:%M")
+            if five_hour and seven_day:
+                yield f"{self.colors.dim('left')} {five_hour}  {seven_day}"
 
     def rendered_cost(self, cost: dict):
         if cost:
-            usd = cost.get("total_cost_usd") or None
-            ms = cost.get("total_duration_ms")
-            hours = None if ms is None else ms / 3_600_000
-
             # Session cost (API-equivalent, in $): green below $5, red above $20
+            usd = cost.get("total_cost_usd") or None
             yield f"{self.colors.dim('cost:')} {self.colors.composed(('dim', (5, 20)), usd)(rendered_dollar_amount(usd))}"
 
-            # Session duration (wall clock, in hours): green below 2h, red above 8h
-            yield self.colors.composed(("dim", (2, 8)), hours)(rendered_duration(ms))
+            ms = cost.get("total_duration_ms") or 0
+            if ms:
+                # Session duration (wall clock, in hours): green below 2h, red above 8h
+                hours = ms / 3_600_000
+                yield self.colors.composed(("dim", (2, 8)), hours)(rendered_duration(ms))
 
     def cmd_claude_statusline(self):
         """
@@ -587,14 +589,20 @@ class ClaudeRenderer(CommandRenderer):
         """
         import json
 
-        with open(self.input or sys.stdin.fileno()) as fh:
-            data = json.load(fh)
-
         self.colors = ColorSet.color_set_by_name(self.color)
-        yield from self.rendered_model(data)
-        yield from self.rendered_context(data)
-        yield from self.rendered_limits(data.get("rate_limits") or {})
-        yield from self.rendered_cost(data.get("cost") or {})
+        try:
+            with open(self.input or sys.stdin.fileno()) as fh:
+                data = json.load(fh)
+                yield from self.rendered_model(data)
+                yield from self.rendered_context(data)
+                yield from self.rendered_limits(data.get("rate_limits"))
+                yield from self.rendered_cost(data.get("cost"))
+
+        except Exception as e:
+            # Show the problem in the status line itself (a crash would leave it blank), and still exit 0 so Claude Code displays it
+            error = f"{type(e).__name__} {e}"
+            yield f"{self.colors.red('shrinky claude_statusline failed:')} {error[:120].strip()}"
+            return
 
 
 class CommandDef:
