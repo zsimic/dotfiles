@@ -13,7 +13,8 @@ files there).
   seconds from the file. Never paste generated output (`--help`, API dumps): it drifts like code.
 - Keep what no single file tells: cross-file flows, why a weird thing is that way, footguns, entry
   points, findings that took an experiment to establish, and approaches tried and rejected (with why,
-  so nobody retries them).
+  so nobody retries them). A repo that holds domain state and will grow also gets an object-model
+  page, see [`code-design.md`](./code-design.md).
 - Verify every fact against the code; never trust existing docs. Don't describe unimplemented designs
   as behavior (a short "known gaps" page is fine).
 - Reader-test before finishing: give a fresh subagent (no context) only the docs and 3-5 realistic
