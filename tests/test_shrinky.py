@@ -213,3 +213,98 @@ def test_uptime(expected, uptime):
     module = shrinky_module()
     actual = module.rendered_uptime(uptime, colored=False)
     assert actual == expected
+
+
+def claude_statusline(cli, payload: str) -> str:
+    runez.write("sample.json", payload)
+    cli.run("claude_statusline -cplain -isample.json")
+    assert cli.succeeded
+    return cli.logged.stdout.contents()
+
+
+def test_claude_statusline(cli, monkeypatch):
+    cli.main = SHRINKY
+    monkeypatch.setenv("TZ", "UTC")
+    sample = cli.tests_path("samples/claude-statusline.json")
+
+    # Full line from a real capture: the one place to update when tweaking the look
+    cli.run("claude_statusline", "-cplain", f"-i{sample}")
+    assert cli.succeeded
+    expected = "Opus 5.5 (medium)  ctx 99k (cache hit 96%)  left 5h 94% ↻05:00  7d 99% ↻Sun 18:00  cost: $1.97  1h28m"
+    assert cli.logged.stdout.contents() == expected
+
+    # Colored by default (exact colors are not pinned down here, so they can be tweaked freely)
+    cli.run("claude_statusline", f"-i{sample}")
+    assert cli.succeeded
+    assert "\x1b[" in cli.logged.stdout.contents()
+
+    # Ad-hoc payloads below only check the part they exercise
+    # Missing fields don't break the line
+    output = claude_statusline(cli, '{"model": {"id": "claude-x"}, "thinking": null, "cost": {"total_cost_usd": 25.4}}')
+    assert output.startswith("claude-x  ctx -  left 5h -  7d -")
+    assert output.endswith("cost: $25  -")
+
+    # Fast mode, fresh session with no cost yet
+    payload = '{"fast_mode": true, "model": {"id": "claude-x"}, "cost": {"total_cost_usd": 0, "total_duration_ms": 1000}}'
+    output = claude_statusline(cli, payload)
+    assert output.startswith("claude-x ⚡  ctx")
+    assert output.endswith("cost: -  0m")
+
+    # Big context with a cold prompt cache
+    payload = '{"model": {"id": "claude-x"}, "context_window": {"total_input_tokens": 320000}, "prompt_cache": {"warm": false}}'
+    output = claude_statusline(cli, payload)
+    assert output.startswith("claude-x  ctx 🧊 320k  left")
+
+    # Thinking turned off (possible on older models only)
+    output = claude_statusline(cli, '{"model": {"id": "claude-x"}, "thinking": {"enabled": false}}')
+    assert output.startswith("🫥 claude-x  ctx")
+
+
+@pytest.mark.parametrize(
+    ("tokens", "expected"),
+    [
+        (None, "-"),
+        (850, "850"),
+        (99_034, "99k"),
+        (999_499, "999k"),
+        (999_500, "1.0M"),
+        (1_234_567, "1.2M"),
+    ],
+)
+def test_rendered_tokens(tokens, expected):
+    assert shrinky_module().rendered_tokens(tokens) == expected
+
+
+@pytest.mark.parametrize(
+    ("value", "bounds", "expected"),
+    [
+        (None, (10, 20), "dim"),
+        (None, (20, 10), "dim"),
+        (5, (10, 20), "green"),
+        (5, (20, 10), "red"),
+        (10, (10, 20), "yellow"),
+        (15, (20, 10), "yellow"),
+        (20, (10, 20), "yellow"),
+        (25, (10, 20), "red"),
+        (25, (20, 10), "green"),
+        (5, (10, 10), "green"),
+        (10, (10, 10), "yellow"),
+        (15, (10, 10), "red"),
+    ],
+)
+def test_graded(value, bounds, expected):
+    colors = shrinky_module().ColorSet.ttyc()
+    assert colors.graded(value, bounds).name == expected
+
+
+def test_composed():
+    module = shrinky_module()
+    bits = {k: module.ColorBit(k, f"<{k}>", f"</{k}>") for k in module.ColorSet.available}
+    colors = module.ColorSet("tags", bits)
+    assert colors.composed(None)("x") == "x"
+    assert colors.composed("dim")("x") == "<dim>x</dim>"
+    with pytest.raises(ValueError, match="Unknown color 'dimm'"):
+        colors.composed("dimm")
+    assert colors.composed(colors.red)("x") == "<red>x</red>"
+    assert colors.composed((10, 20), 5)("x") == "<green>x</green>"
+    assert colors.composed(("bold", (10, 20)), 25)("x") == "<red><bold>x</bold></red>"

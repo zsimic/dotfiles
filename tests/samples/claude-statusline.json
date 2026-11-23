@@ -1,0 +1,75 @@
+{
+  "session_id": "sha",
+  "transcript_path": "/Users/zoran/.claude/projects/.../sha.jsonl",
+  "cwd": "/Users/...",
+  "scratchpad_dir": "/private/tmp/.../sha/scratchpad",
+  "prompt_id": "sha",
+  "effort": {
+    "level": "medium"
+  },
+  "session_name": "...",
+  "model": {
+    "id": "claude-opus-5-5",
+    "display_name": "Opus 5.5"
+  },
+  "workspace": {
+    "current_dir": "/Users/...",
+    "project_dir": "/Users/...",
+    "added_dirs": []
+  },
+  "version": "2.1.330",
+  "output_style": {
+    "name": "default"
+  },
+  "cost": {
+    "total_cost_usd": 1.9658872,
+    "total_duration_ms": 5275180,
+    "total_api_duration_ms": 242893,
+    "total_lines_added": 215,
+    "total_lines_removed": 35
+  },
+  "context_window": {
+    "total_input_tokens": 99034,
+    "total_output_tokens": 760,
+    "context_window_size": 1000000,
+    "current_usage": {
+      "input_tokens": 4,
+      "output_tokens": 760,
+      "cache_creation_input_tokens": 28,
+      "cache_read_input_tokens": 99002
+    },
+    "used_percentage": 10,
+    "remaining_percentage": 90
+  },
+  "exceeds_200k_tokens": false,
+  "prompt_cache": {
+    "warm": true,
+    "caching_observed": true,
+    "ttl": "1h",
+    "expires_at": 1795401210,
+    "requests": 37,
+    "misses": 0,
+    "expected_rebuilds": 0,
+    "hit_ratio": 0.9636664270199395,
+    "cache_write_tokens": 95125,
+    "miss_recache_tokens": 0,
+    "last_miss_at": null,
+    "last_miss_cause": null,
+    "miss_causes": {},
+    "recache_tokens_if_cold": 99034
+  },
+  "fast_mode": false,
+  "thinking": {
+    "enabled": true
+  },
+  "rate_limits": {
+    "five_hour": {
+      "used_percentage": 6,
+      "resets_at": 1795410000
+    },
+    "seven_day": {
+      "used_percentage": 1,
+      "resets_at": 1795975200
+    }
+  }
+}

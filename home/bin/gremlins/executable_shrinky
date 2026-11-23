@@ -134,6 +134,11 @@ class ColorBit:
         return f"{open_marker}{text}{close_marker}"
 
 
+def is_bounds(value) -> bool:
+    """Is `value` a pair of numbers (as used by `ColorSet.graded()`)?"""
+    return isinstance(value, tuple) and len(value) == 2 and all(isinstance(x, (int, float)) for x in value)
+
+
 class ColorSet:
     available = ("bold", "dim", "blue", "green", "yellow", "red", "cyan")  # magenta
     __ttyc: ColorSet | None = None
@@ -148,6 +153,54 @@ class ColorSet:
         self.yellow = self.bits["yellow"]
         self.red = self.bits["red"]
         self.cyan = self.bits["cyan"]
+
+    def graded(self, value: float | None, bounds: tuple[float, float]) -> ColorBit:
+        """
+        Color for `value` on a green/yellow/red scale, `bounds` being `(green_until, red_from)`: yellow in between
+        (inclusive), green or red outside. The order tells the direction: `(150, 300)` means big is bad, `(50, 20)` means
+        big is good (with equal bounds, big is bad). Dim when there's no value.
+        """
+        if value is None:
+            return self.dim
+
+        low, high = sorted(bounds)
+        if low <= value <= high:
+            return self.yellow
+
+        big_is_good = bounds[0] > bounds[1]
+        is_good = (value > high) == big_is_good
+        return self.green if is_good else self.red
+
+    def composed(self, style, value: float | None = None):
+        """
+        Function coloring a text as per `style`, which can be:
+        - None: text is returned as-is
+        - a color name ("dim"), or a `ColorBit` (self.dim)
+        - bounds to grade `value` with, see `graded()`: (10, 20)
+        - a tuple combining the above: ("dim", (10, 20))
+        """
+        parts = style if isinstance(style, tuple) and not is_bounds(style) else (style,)
+        bits = []
+        for part in parts:
+            if isinstance(part, str):
+                if part not in self.bits:
+                    raise ValueError(f"Unknown color '{part}', available: {', '.join(self.available)}")
+
+                part = self.bits[part]
+
+            elif is_bounds(part):
+                part = self.graded(value, part)
+
+            if part:
+                bits.append(part)
+
+        def colored(text: str) -> str:
+            for bit in bits:
+                text = bit(text)
+
+            return text
+
+        return colored
 
     @classmethod
     def ttyc(cls) -> ColorSet:
@@ -414,6 +467,134 @@ class TmuxRenderer(CommandRenderer):
         yield capped_text(folder, max_size=20)
 
 
+def rendered_dollar_amount(usd: float | None, pivot=20) -> str:
+    """Show dollar amount, don't bother showing cents for amounts bigger than `pivot`"""
+    return "-" if not usd else f"${usd:.2f}" if usd < pivot else f"${usd:.0f}"
+
+
+def rendered_duration(ms: float | None) -> str:
+    if ms is None:
+        return "-"
+
+    hours, minutes = divmod(round(ms / 60000), 60)
+    return f"{hours}h{minutes:02}m" if hours else f"{minutes}m"
+
+
+def rendered_tokens(tokens: int | None) -> str:
+    if tokens is None:
+        return "-"
+
+    if tokens < 1000:
+        return str(tokens)
+
+    return f"{round(tokens / 1000)}k" if tokens < 999_500 else f"{tokens / 1_000_000:.1f}M"
+
+
+class ClaudeRenderer(CommandRenderer):
+    flags = {"c": "color", "i": "input"}
+    color = "tty"
+    input = ""
+
+    colors: ColorSet
+
+    def rendered_percentage(self, label: str, value: float | None, color=None) -> str:
+        """
+        Dim `label`, followed by `value` as a percentage, colored as per `color` (see `ColorSet.composed()`).
+        A label in parentheses wraps the whole: "(cache hit)" renders as "(cache hit 96%)".
+        """
+        text = self.colors.composed(color, value)("-" if value is None else f"{round(value)}%")
+
+        if label.startswith("("):
+            return f"{self.colors.dim(label[:-1])} {text}{self.colors.dim(')')}"
+
+        return f"{self.colors.dim(label)} {text}"
+
+    def rendered_model(self, data: dict):
+        model = data.get("model") or {}
+        effort = data.get("effort") or {}
+        model = self.colors.green(model.get("display_name") or model.get("id") or "?")
+        if (data.get("thinking") or {}).get("enabled") is False:
+            model = f"🫥 {model}"  # Thinking is always on with recent models, flag it when it's off
+
+        if data.get("fast_mode"):
+            model = f"{model} ⚡"
+
+        effort = effort.get("level")
+        if effort:
+            effort = f"({effort})"
+            effort = self.colors.cyan(effort)
+            model = f"{model} {effort}"
+
+        yield model
+
+    def rendered_context(self, data: dict):
+        context_window = data.get("context_window") or {}
+        prompt_cache = data.get("prompt_cache") or {}
+        tokens = context_window.get("total_input_tokens")
+        # Context size (in tokens), nudge towards starting a new session (answers get less focused, every turn re-reads whole context)
+        text = self.colors.composed((140_000, 200_000), tokens)(rendered_tokens(tokens))
+
+        # Flag a cold prompt cache (next message re-sends the whole context) on a big enough context
+        if tokens is not None and prompt_cache.get("warm") is False and tokens >= 40_000:
+            text = f"🧊 {text}"
+
+        hit_ratio = prompt_cache.get("hit_ratio")
+        if hit_ratio is not None:  # Temporary, to see how it evolves
+            # Prompt cache hit percentage: green above 90%, red below 80%
+            text += f" {self.rendered_percentage('(cache hit)', hit_ratio * 100, color=('dim', (90, 80)))}"
+
+        yield f"{self.colors.dim('ctx')} {text}"
+
+    def rendered_limit(self, name: str, limit: dict, reset_format: str) -> str:
+        used = limit.get("used_percentage")
+        # Percentage of usage limit left: green above 50%, red below 15%
+        text = self.rendered_percentage(name, None if used is None else 100 - used, (50, 15))
+        resets_at = limit.get("resets_at")
+        if resets_at:
+            from datetime import datetime
+
+            text += self.colors.dim(f" ↻{datetime.fromtimestamp(resets_at).strftime(reset_format)}")
+
+        return text
+
+    def rendered_limits(self, limits: dict):
+        five_hour = self.rendered_limit("5h", limits.get("five_hour") or {}, "%H:%M")
+        seven_day = self.rendered_limit("7d", limits.get("seven_day") or {}, "%a %H:%M")
+        yield f"{self.colors.dim('left')} {five_hour}  {seven_day}"
+
+    def rendered_cost(self, cost: dict):
+        if cost:
+            usd = cost.get("total_cost_usd") or None
+            ms = cost.get("total_duration_ms")
+            hours = None if ms is None else ms / 3_600_000
+
+            # Session cost (API-equivalent, in $): green below $5, red above $20
+            yield f"{self.colors.dim('cost:')} {self.colors.composed(('dim', (5, 20)), usd)(rendered_dollar_amount(usd))}"
+
+            # Session duration (wall clock, in hours): green below 2h, red above 8h
+            yield self.colors.composed(("dim", (2, 8)), hours)(rendered_duration(ms))
+
+    def cmd_claude_statusline(self):
+        """
+        Claude Code status line: thinking off, model (effort), context size (cold cache), 5h/7d usage limits left with their reset times,
+        session cost and duration
+
+        Reads Claude Code's session JSON from stdin, or from file given via -i
+        Example (~/.claude/settings.json):
+          "statusLine": {"type": "command", "command": "/usr/bin/python3 ~/bin/gremlins/shrinky claude_statusline"}
+        """
+        import json
+
+        with open(self.input or sys.stdin.fileno()) as fh:
+            data = json.load(fh)
+
+        self.colors = ColorSet.color_set_by_name(self.color)
+        yield from self.rendered_model(data)
+        yield from self.rendered_context(data)
+        yield from self.rendered_limits(data.get("rate_limits") or {})
+        yield from self.rendered_cost(data.get("cost") or {})
+
+
 class CommandDef:
     def __init__(self, base_cls: type[CommandRenderer], name: str, delimiter: str):
         self.name = name
@@ -522,6 +703,7 @@ class CommandParser:
 
 def main(args=None):
     parser = CommandParser()
+    parser.add_command(ClaudeRenderer, delimiter="  ")
     parser.add_command(PathCleaner, delimiter=os.pathsep)
     parser.add_command(Ps1Renderer)
     parser.add_command(TmuxRenderer, delimiter="┆")
