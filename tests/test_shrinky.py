@@ -259,6 +259,49 @@ def test_claude_statusline(cli, monkeypatch):
     assert output == "🫥 claude-x"
 
 
+@pytest.mark.parametrize(
+    ("url", "expected"),
+    [
+        ("http://go/aipi", "go/aipi"),
+        ("https://platform.claude.com/dashboard", "claude.com/dashboard"),
+        ("https://www.example.com/", "example.com"),
+        ("https://git.example.org/a/b/", "example.org/a/b"),
+        ("go/aipi", "go/aipi"),
+    ],
+)
+def test_short_url(url, expected):
+    assert shrinky_module().short_url(url) == expected
+
+
+@pytest.mark.parametrize(
+    ("spec", "expected"),
+    [
+        ("http://go/aipi", ("go/aipi", "http://go/aipi")),
+        ("usage=https://claude.ai/settings/usage", ("usage", "https://claude.ai/settings/usage")),
+        ("my-usage=https://x.com/?a=b", ("my-usage", "https://x.com/?a=b")),
+        ("https://x.com/?a=b", ("x.com", "https://x.com/?a=b")),
+    ],
+)
+def test_label_and_url(spec, expected):
+    assert shrinky_module().label_and_url(spec) == expected
+
+
+def test_claude_statusline_url(cli):
+    cli.main = SHRINKY
+    runez.write("sample.json", '{"model": {"id": "claude-x"}}', logger=None)
+    cli.run("claude_statusline -cplain -isample.json -uhttp://go/aipi")
+    assert cli.logged.stdout.contents() == "claude-x  go/aipi"
+
+    cli.run("claude_statusline -isample.json -uhttp://go/aipi")
+    assert "\x1b]8;;http://go/aipi\x07go/aipi\x1b]8;;\x07" in cli.logged.stdout.contents()
+
+    cli.run("claude_statusline -cplain -isample.json -uusage=https://claude.ai/settings/usage")
+    assert cli.logged.stdout.contents() == "claude-x  usage"
+
+    cli.run("claude_statusline -isample.json -uusage=https://claude.ai/settings/usage")
+    assert "\x1b]8;;https://claude.ai/settings/usage\x07usage\x1b]8;;\x07" in cli.logged.stdout.contents()
+
+
 def test_claude_statusline_extras(cli):
     cli.main = SHRINKY
     now_ms = time.time() * 1000

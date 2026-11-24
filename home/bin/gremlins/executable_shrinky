@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import contextlib
 import os
+import re
 import socket
 import sys
 from pathlib import Path
@@ -477,6 +478,28 @@ def rendered_duration(ms: float) -> str:
     return f"{hours}h{minutes:02}m" if hours else f"{minutes}m"
 
 
+def short_url(url: str) -> str:
+    """Shortened `url` for display: no scheme, no leading subdomain (but keep single-label hosts like go/), no trailing slash"""
+    from urllib.parse import urlsplit
+
+    parts = urlsplit(url if "://" in url else f"//{url}")
+    host = parts.hostname or ""
+    labels = host.split(".")
+    if len(labels) > 2:
+        host = ".".join(labels[-2:])
+
+    return f"{host}{parts.path}".rstrip("/")
+
+
+def label_and_url(spec: str) -> tuple[str, str]:
+    """Split `-u` value: `label=url` (label is a single word), or just a url (then label is its short form)"""
+    label, sep, url = spec.partition("=")
+    if sep and re.fullmatch(r"[\w-]+", label):
+        return label, url
+
+    return short_url(spec), spec
+
+
 def rendered_age(hours: float) -> str:
     return f"{round(hours * 60)}m" if hours < 1 else f"{round(hours)}h" if hours < 48 else f"{round(hours / 24)}d"
 
@@ -492,10 +515,11 @@ def rendered_tokens(tokens: int | None) -> str:
 
 
 class ClaudeRenderer(CommandRenderer):
-    flags = {"c": "color", "i": "input", "x": "extras"}
+    flags = {"c": "color", "i": "input", "u": "url", "x": "extras"}
     color = "tty"
     extras = ""  # Optional json file with extra data to show (keys: totalUsd, asOfEpochMs, fetchedAtEpochMs), merged under "extras"
     input = ""
+    url = ""  # Optional `[label=]url` to show at the end of the line (as OSC 8 hyperlink, unless plain colors)
 
     colors: ColorSet
 
@@ -607,6 +631,13 @@ class ClaudeRenderer(CommandRenderer):
             amount = self.colors.composed(('dim', (500, 1600)), usd)(f"{amount} MTD")
             yield f"{warn}{self.colors.dim('all:')} {amount}{age}"
 
+    def rendered_url(self):
+        text, url = label_and_url(self.url)
+        if self.colors.name != "plain":
+            text = f"\x1b]8;;{url}\x07{text}\x1b]8;;\x07"
+
+        yield self.colors.blue(text)
+
     def load_extras(self) -> dict | None:
         import json
 
@@ -621,6 +652,7 @@ class ClaudeRenderer(CommandRenderer):
         session cost and duration
 
         Reads Claude Code's session JSON from stdin, or from file given via -i
+        With -u<url>: also show shortened clickable OSC 8 link, example: -uhttps://claude.ai/settings/usage shows claude.ai/settings/usage
         With -x<json file>: also show spend from a custom cached file (not coming from claude cli)
         Example (~/.claude/settings.json):
           "statusLine": {"type": "command", "command": "/usr/bin/python3 ~/bin/gremlins/shrinky claude_statusline"}
@@ -637,6 +669,9 @@ class ClaudeRenderer(CommandRenderer):
                 yield from self.rendered_cost(data.get("cost"))
                 if self.extras:
                     yield from self.rendered_extras(self.load_extras())
+
+                if self.url:
+                    yield from self.rendered_url()
 
         except Exception as e:
             # Show the problem in the status line itself (a crash would leave it blank), and still exit 0 so Claude Code displays it
