@@ -4,9 +4,8 @@ This machine is set up by chezmoi-managed dotfiles (see `~/.local/share/chezmoi/
 a file they manage, this instructions file included, edit its source in the dotfiles repo, not the
 copy in `$HOME`.
 
-- CLI tools installed, prefer them when they fit: `rg` (stops at 100 matches per file, add
-  `--max-count=0` for all), `fd`, `bat`, `eza`, `tre`, `tokei`, `xh`, `delta`, `duf`, `dua`, `uv`.
-  If a missing open-source tool would have helped, say so and offer to add it to the dotfiles.
+- `rg` and `fd` are installed on this machine, `rg` caps results at 100 matching lines per file (via ~/.config/ripgrep).
+  When completeness matters, use   `rg --no-config --hidden -g '!.git/' --smart-case` with your pattern and paths.
 - In any repo, by default leave edits local and uncommitted (no commits, pushes or PRs), and leave
   applying or deploying them to the user (remind them instead): they follow along with `git diff`.
   Commit or open PRs only when the user or the task (e.g. a ticket) asks for it.
