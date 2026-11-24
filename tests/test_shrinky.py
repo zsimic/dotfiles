@@ -3,6 +3,7 @@ import importlib.util
 import os
 import socket
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -256,6 +257,33 @@ def test_claude_statusline(cli, monkeypatch):
     # Thinking turned off (possible on older models only)
     output = claude_statusline(cli, '{"model": {"id": "claude-x"}, "thinking": {"enabled": false}}')
     assert output == "🫥 claude-x"
+
+
+def test_claude_statusline_extras(cli):
+    cli.main = SHRINKY
+    now_ms = time.time() * 1000
+    hour = 3_600_000
+    runez.write("sample.json", '{"model": {"id": "claude-x"}}', logger=None)
+
+    def with_extras(extras: str) -> str:
+        runez.write("extras.json", extras, logger=None)
+        cli.run("claude_statusline -cplain -isample.json -xextras.json")
+        assert cli.succeeded
+        return cli.logged.stdout.contents()
+
+    # Spend with age of the reading
+    output = with_extras(f'{{"totalUsd": 431.46, "asOfEpochMs": {now_ms - 19 * hour}, "fetchedAtEpochMs": {now_ms - hour}}}')
+    assert output == "claude-x  all: $431 MTD (19h ago)"
+
+    # No refresh in over a day: warn
+    output = with_extras(f'{{"totalUsd": 431.46, "asOfEpochMs": {now_ms - 30 * hour}, "fetchedAtEpochMs": {now_ms - 30 * hour}}}')
+    assert output == "claude-x  ⚠️ all: $431 MTD (30h ago)"
+
+    # Reading without a total is left out, unreadable file is flagged
+    assert with_extras("{}") == "claude-x"
+    assert with_extras("oops") == "claude-x  ⚠️ spend"
+    cli.run("claude_statusline -cplain -isample.json -xnot-there.json")
+    assert cli.logged.stdout.contents() == "claude-x  ⚠️ spend"
 
 
 def test_claude_statusline_failed(cli):

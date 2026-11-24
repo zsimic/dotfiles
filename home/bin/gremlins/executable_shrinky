@@ -477,6 +477,10 @@ def rendered_duration(ms: float) -> str:
     return f"{hours}h{minutes:02}m" if hours else f"{minutes}m"
 
 
+def rendered_age(hours: float) -> str:
+    return f"{round(hours * 60)}m" if hours < 1 else f"{round(hours)}h" if hours < 48 else f"{round(hours / 24)}d"
+
+
 def rendered_tokens(tokens: int | None) -> str:
     if tokens is None:
         return "-"
@@ -488,8 +492,9 @@ def rendered_tokens(tokens: int | None) -> str:
 
 
 class ClaudeRenderer(CommandRenderer):
-    flags = {"c": "color", "i": "input"}
+    flags = {"c": "color", "i": "input", "x": "extras"}
     color = "tty"
+    extras = ""  # Optional json file with extra data to show (keys: totalUsd, asOfEpochMs, fetchedAtEpochMs), merged under "extras"
     input = ""
 
     colors: ColorSet
@@ -578,12 +583,45 @@ class ClaudeRenderer(CommandRenderer):
                 hours = ms / 3_600_000
                 yield self.colors.composed(("dim", (2, 8)), hours)(rendered_duration(ms))
 
+    def rendered_extras(self, extras: dict | None):
+        """Spend from custom `extras`; ⚠️ if the reading looks unavailable or stale"""
+        if extras is None:
+            yield self.colors.yellow("⚠️ spend")
+            return
+
+        usd = extras.get("totalUsd")
+        if usd:
+            import time
+
+            now_ms = time.time() * 1000
+            as_of = extras.get("asOfEpochMs")
+            age = ""
+            if as_of:
+                hours = max(0, (now_ms - as_of) / 3_600_000)
+                age = f" {self.colors.composed(('dim', (12, 24)), hours)(f'({rendered_age(hours)} ago)')}"
+
+            # Stale when reported reading older than a day
+            fetched_at = extras.get("fetchedAtEpochMs") or as_of or 0
+            warn = f"{self.colors.yellow('⚠️')} " if now_ms - fetched_at > 24 * 3_600_000 else ""
+            amount = rendered_dollar_amount(usd)
+            amount = self.colors.composed(('dim', (500, 1600)), usd)(f"{amount} MTD")
+            yield f"{warn}{self.colors.dim('all:')} {amount}{age}"
+
+    def load_extras(self) -> dict | None:
+        import json
+
+        with contextlib.suppress(OSError, ValueError):
+            data = json.loads(get_path(self.extras).read_text())
+            if isinstance(data, dict):
+                return data
+
     def cmd_claude_statusline(self):
         """
         Claude Code status line: thinking off, model (effort), context size (cold cache), 5h/7d usage limits left with their reset times,
         session cost and duration
 
         Reads Claude Code's session JSON from stdin, or from file given via -i
+        With -x<json file>: also show spend from a custom cached file (not coming from claude cli)
         Example (~/.claude/settings.json):
           "statusLine": {"type": "command", "command": "/usr/bin/python3 ~/bin/gremlins/shrinky claude_statusline"}
         """
@@ -591,12 +629,14 @@ class ClaudeRenderer(CommandRenderer):
 
         self.colors = ColorSet.color_set_by_name(self.color)
         try:
-            with open(self.input or sys.stdin.fileno()) as fh:
+            with open(get_path(self.input) if self.input else sys.stdin.fileno()) as fh:
                 data = json.load(fh)
                 yield from self.rendered_model(data)
                 yield from self.rendered_context(data)
                 yield from self.rendered_limits(data.get("rate_limits"))
                 yield from self.rendered_cost(data.get("cost"))
+                if self.extras:
+                    yield from self.rendered_extras(self.load_extras())
 
         except Exception as e:
             # Show the problem in the status line itself (a crash would leave it blank), and still exit 0 so Claude Code displays it
