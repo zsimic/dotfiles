@@ -231,7 +231,7 @@ def test_claude_statusline(cli, monkeypatch):
     # Full line from a real capture: the one place to update when tweaking the look
     cli.run("claude_statusline", "-cplain", f"-i{sample}")
     assert cli.succeeded
-    expected = "Opus 5.5 (medium)  ctx 99k (cache hit 96%)  left 5h 94% ↻05:00  7d 99% ↻Sun 18:00  cost: $1.97  1h28m"
+    expected = "Opus 5.5 (medium)  ctx 99k (cache hit 96%)  left 5h 94% ↻05:00  7d 99% ↻Sun 18:00  cost: $1.97 1h28m"
     assert cli.logged.stdout.contents() == expected
 
     # Colored by default (exact colors are not pinned down here, so they can be tweaked freely)
@@ -247,7 +247,7 @@ def test_claude_statusline(cli, monkeypatch):
     # Fast mode, fresh session with no cost yet
     payload = '{"fast_mode": true, "model": {"id": "claude-x"}, "cost": {"total_cost_usd": 0, "total_duration_ms": 1000}}'
     output = claude_statusline(cli, payload)
-    assert output == "claude-x ⚡  cost: -  0m"
+    assert output == "claude-x ⚡  cost: - 0m"
 
     # Big context with a cold prompt cache
     payload = '{"model": {"id": "claude-x"}, "context_window": {"total_input_tokens": 320000}, "prompt_cache": {"warm": false}}'
@@ -314,16 +314,17 @@ def test_claude_statusline_extras(cli):
         assert cli.succeeded
         return cli.logged.stdout.contents()
 
-    # Spend with age of the reading
-    output = with_extras(f'{{"totalUsd": 431.46, "asOfEpochMs": {now_ms - 19 * hour}, "fetchedAtEpochMs": {now_ms - hour}}}')
-    assert output == "claude-x  all: $431 MTD (19h ago)"
+    # Spend with age of the reading (fetched recently)
+    ancient_time = now_ms - 40 * hour
+    output = with_extras(f'{{"totalUsd": 123.46, "asOfEpochMs": {ancient_time}, "fetchedAtEpochMs": {now_ms - hour}}}')
+    assert output == "claude-x  MTD: $123 (40h ago)"
 
     # No refresh in over a day: warn
-    output = with_extras(f'{{"totalUsd": 431.46, "asOfEpochMs": {now_ms - 30 * hour}, "fetchedAtEpochMs": {now_ms - 30 * hour}}}')
-    assert output == "claude-x  ⚠️ all: $431 MTD (30h ago)"
+    output = with_extras(f'{{"totalUsd": 123.46, "asOfEpochMs": {ancient_time}, "fetchedAtEpochMs": {ancient_time}}}')
+    assert output == "claude-x  ⚠️ MTD: $123 (40h ago)"
 
     # Reading without a total is left out, unreadable file is flagged
-    assert with_extras("{}") == "claude-x"
+    assert with_extras("{}") == "claude-x  ⚠️ spend"
     assert with_extras("oops") == "claude-x  ⚠️ spend"
     cli.run("claude_statusline -cplain -isample.json -xnot-there.json")
     assert cli.logged.stdout.contents() == "claude-x  ⚠️ spend"

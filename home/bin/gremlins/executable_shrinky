@@ -597,39 +597,41 @@ class ClaudeRenderer(CommandRenderer):
 
     def rendered_cost(self, cost: dict):
         if cost:
-            # Session cost (API-equivalent, in $): green below $5, red above $20
             usd = cost.get("total_cost_usd") or None
-            yield f"{self.colors.dim('cost:')} {self.colors.composed(('dim', (5, 20)), usd)(rendered_dollar_amount(usd))}"
-
+            amount = self.colors.composed(("dim", (5, 20)), usd)(rendered_dollar_amount(usd))
+            text = f"{self.colors.dim('cost:')} {amount}"
             ms = cost.get("total_duration_ms") or 0
             if ms:
-                # Session duration (wall clock, in hours): green below 2h, red above 8h
                 hours = ms / 3_600_000
-                yield self.colors.composed(("dim", (2, 8)), hours)(rendered_duration(ms))
+                duration = self.colors.composed(("dim", (6, 12)), hours)(rendered_duration(ms))
+                text = f"{text} {duration}"
+
+            yield text
 
     def rendered_extras(self, extras: dict | None):
         """Spend from custom `extras`; ⚠️ if the reading looks unavailable or stale"""
-        if extras is None:
+        import time
+
+        usd = extras.get("totalUsd") if extras else None
+        if usd is None:
             yield self.colors.yellow("⚠️ spend")
             return
 
-        usd = extras.get("totalUsd")
-        if usd:
-            import time
+        now_ms = time.time() * 1000
+        as_of = extras.get("asOfEpochMs") or 0
+        age = ""
+        if as_of:
+            hours = max(0, (now_ms - as_of) / 3_600_000)
+            age = f" {self.colors.composed(('dim', (20, 36)), hours)(f'({rendered_age(hours)} ago)')}"
 
-            now_ms = time.time() * 1000
-            as_of = extras.get("asOfEpochMs")
-            age = ""
-            if as_of:
-                hours = max(0, (now_ms - as_of) / 3_600_000)
-                age = f" {self.colors.composed(('dim', (12, 24)), hours)(f'({rendered_age(hours)} ago)')}"
-
+        fetched_at = extras.get("fetchedAtEpochMs") or as_of
+        label = self.colors.dim("MTD:")
+        if now_ms - fetched_at > 24 * 3_600_000:
             # Stale when reported reading older than a day
-            fetched_at = extras.get("fetchedAtEpochMs") or as_of or 0
-            warn = f"{self.colors.yellow('⚠️')} " if now_ms - fetched_at > 24 * 3_600_000 else ""
-            amount = rendered_dollar_amount(usd)
-            amount = self.colors.composed(('dim', (500, 1600)), usd)(f"{amount} MTD")
-            yield f"{warn}{self.colors.dim('all:')} {amount}{age}"
+            label = f"⚠️ {label}"
+
+        amount = self.colors.composed(("dim", (1000, 1600)), usd)(rendered_dollar_amount(usd))
+        yield f"{label} {amount}{age}"
 
     def rendered_url(self):
         text, url = label_and_url(self.url)
