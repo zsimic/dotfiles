@@ -1,0 +1,234 @@
+#!/usr/bin/env python3
+"""Show how many tokens each model gobbled up (and what it cost), summed over a period, via ccusage."""
+
+from __future__ import annotations
+
+import argparse
+import datetime
+import json
+import os
+import subprocess
+import sys
+from dataclasses import dataclass, field
+
+AGENTS = ("codex", "claude")
+DEFAULT_DAYS = 30
+COST_BOUNDS = (100, 200)  # Cost is green below 100, yellow up to 200, red above
+
+
+def with_units(count: float) -> str:
+    """Human friendly `count`: 146M instead of 146234567 (same rendering as runez's represented_with_units)"""
+    exponent = 0
+    while count >= 1000 and exponent < len("KMGTP"):
+        count /= 1000
+        exponent += 1
+
+    if not exponent:
+        return f"{count:g}"
+
+    text = f"{count:.{0 if count > 9 else 1}f}"
+    if "." in text:
+        text = text.rstrip("0").rstrip(".")
+
+    return text + "KMGTP"[exponent - 1]
+
+
+class ColorBit:
+    """One color (or style), as its ANSI open and close markers (empty for plain text)"""
+
+    def __init__(self, name: str, open_marker: str, close_marker: str):
+        self.name = name
+        self.open_marker = open_marker
+        self.close_marker = close_marker
+
+    def __call__(self, text: str) -> str:
+        return f"{self.open_marker}{text}{self.close_marker}"
+
+
+class ColorSet:
+    """Colors to render with: ANSI for a terminal, or plain (same idea as `ColorSet` in shrinky)"""
+
+    codes = {"bold": 1, "dim": 2, "green": 32, "yellow": 33, "red": 31}
+
+    def __init__(self, name: str, bits: dict[str, ColorBit]):
+        self.name = name
+        self.bold = bits["bold"]
+        self.dim = bits["dim"]
+        self.green = bits["green"]
+        self.yellow = bits["yellow"]
+        self.red = bits["red"]
+
+    def graded(self, value: float, bounds: tuple[float, float]) -> ColorBit:
+        """Green below `bounds[0]`, yellow up to `bounds[1]` (inclusive), red above"""
+        if value < bounds[0]:
+            return self.green
+
+        return self.yellow if value <= bounds[1] else self.red
+
+    @classmethod
+    def tty(cls) -> ColorSet:
+        bits = {}
+        for name, code in cls.codes.items():
+            clear = 39 if code > 9 else 22
+            bits[name] = ColorBit(name, f"\x1b[{code}m", f"\x1b[{clear}m")
+
+        return cls("tty", bits)
+
+    @classmethod
+    def plain(cls) -> ColorSet:
+        return cls("plain", {name: ColorBit(name, "", "") for name in cls.codes})
+
+    @classmethod
+    def for_output(cls, color: bool | None) -> ColorSet:
+        """Colors to use: as per `color` when explicitly given, otherwise ANSI if stdout is a terminal (and NO_COLOR unset)"""
+        if color is None:
+            color = sys.stdout.isatty() and not os.environ.get("NO_COLOR")
+
+        return cls.tty() if color else cls.plain()
+
+
+@dataclass
+class ModelUsage:
+    """Tokens and cost one model accumulated, for one agent"""
+
+    agent: str
+    model: str
+    input: int = 0
+    output: int = 0
+    cache_write: int = 0
+    cache_read: int = 0
+    cost: float = 0.0
+
+    def add(self, breakdown: dict):
+        """Accumulate one ccusage 'modelBreakdowns' entry"""
+        self.input += breakdown.get("inputTokens", 0)
+        self.output += breakdown.get("outputTokens", 0)
+        self.cache_write += breakdown.get("cacheCreationTokens", 0)
+        self.cache_read += breakdown.get("cacheReadTokens", 0)
+        self.cost += breakdown.get("cost", 0.0)
+
+    def absorb(self, other: ModelUsage):
+        """Accumulate `other` into this usage (used for the totals row)"""
+        self.input += other.input
+        self.output += other.output
+        self.cache_write += other.cache_write
+        self.cache_read += other.cache_read
+        self.cost += other.cost
+
+    @property
+    def total(self) -> int:
+        return self.input + self.output + self.cache_write + self.cache_read
+
+    def cells(self) -> list[str]:
+        counts = (self.input, self.output, self.cache_write, self.cache_read, self.total)
+        return [self.agent, self.model, *map(with_units, counts), f"${self.cost:,.2f}"]
+
+
+@dataclass
+class UsageReport:
+    """Per-model usage of the selected agents since a given date"""
+
+    agents: tuple[str, ...]
+    since: datetime.date
+    usages: dict[tuple[str, str], ModelUsage] = field(default_factory=dict)
+
+    HEADERS = ("Agent", "Model", "Input", "Output", "Cache write", "Cache read", "Total", "Cost")
+
+    def add_ccusage_report(self, report: dict):
+        """Accumulate the output of `ccusage daily --json --by-agent`"""
+        for day in report.get("daily", []):
+            for agent_row in day.get("agents", []):
+                agent = agent_row.get("agent")
+                if agent in self.agents:
+                    for breakdown in agent_row.get("modelBreakdowns", []):
+                        key = (agent, breakdown["modelName"])
+                        usage = self.usages.get(key)
+                        if usage is None:
+                            usage = self.usages[key] = ModelUsage(agent, breakdown["modelName"])
+
+                        usage.add(breakdown)
+
+    def load(self):
+        cmd = ["ccusage", "daily", "--json", "--by-agent", "--since", self.since.strftime("%Y%m%d")]
+        try:
+            output = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout
+
+        except FileNotFoundError:
+            sys.exit("ccusage is not installed: brew install ccusage")
+
+        except subprocess.CalledProcessError as e:
+            sys.exit(f"{' '.join(cmd)} failed:\n{e.stderr.strip()}")
+
+        self.add_ccusage_report(json.loads(output))
+
+    def sorted_usages(self) -> list[ModelUsage]:
+        return sorted(self.usages.values(), key=lambda u: (-u.cost, -u.total, u.agent, u.model))
+
+    def rendered(self, colors: ColorSet) -> str:
+        title = colors.bold(f"Token usage since {self.since} ({', '.join(self.agents)})")
+        usages = self.sorted_usages()
+        if not usages:
+            return f"{title}: nothing was eaten"
+
+        totals = ModelUsage("", "Total")
+        for usage in usages:
+            totals.absorb(usage)
+
+        rows = [list(self.HEADERS), *(u.cells() for u in usages)]
+        if len(usages) > 1:
+            rows.append(totals.cells())
+
+        widths = [max(len(row[i]) for row in rows) for i in range(len(self.HEADERS))]
+        separator = colors.dim("  ".join("-" * w for w in widths))
+        lines = [title, ""]
+        for n, row in enumerate(rows):
+            # Agent and model are left-aligned, numbers right-aligned; pad before coloring, ANSI markers have no width
+            cells = [c.ljust(w) if i < 2 else c.rjust(w) for i, (c, w) in enumerate(zip(row, widths))]
+            if n == 0 or n > len(usages):  # Header or totals row
+                if n:
+                    lines.append(separator)
+
+                lines.append(colors.bold("  ".join(cells).rstrip()))
+                if not n:
+                    lines.append(separator)
+
+            else:
+                cells[-1] = colors.graded(usages[n - 1].cost, COST_BOUNDS)(cells[-1])
+                lines.append("  ".join(cells))
+
+        return "\n".join(lines)
+
+
+def since_date(text: str) -> datetime.date:
+    try:
+        return datetime.date.fromisoformat(text) if "-" in text else datetime.datetime.strptime(text, "%Y%m%d").date()
+
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"invalid date '{text}', expecting YYYY-MM-DD or YYYYMMDD") from None
+
+
+def agent_name(text: str) -> str:
+    # Not argparse `choices`: python3.9 rejects an empty nargs="*" list with those
+    if text not in AGENTS:
+        raise argparse.ArgumentTypeError(f"invalid agent '{text}', choose from: {', '.join(AGENTS)}")
+
+    return text
+
+
+def main(args=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    period = parser.add_mutually_exclusive_group()
+    period.add_argument("--since", "-s", type=since_date, help="Report usage since this date (YYYY-MM-DD)")
+    period.add_argument("--days", "-d", type=int, default=DEFAULT_DAYS, help="Report last N days (default: %(default)s)")
+    parser.add_argument("--color", action=argparse.BooleanOptionalAction, help="Color output (default: when stdout is a terminal)")
+    parser.add_argument("agents", nargs="*", type=agent_name, metavar="AGENT", help=f"Agent(s) to report on: {', '.join(AGENTS)}")
+    args = parser.parse_args(args)
+
+    since = args.since or datetime.datetime.now().astimezone().date() - datetime.timedelta(days=args.days - 1)
+    report = UsageReport(tuple(args.agents or AGENTS), since)
+    report.load()
+    print(report.rendered(ColorSet.for_output(args.color)))
+
+
+if __name__ == "__main__":
+    main()
