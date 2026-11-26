@@ -74,6 +74,7 @@ bindkey '^[[4~' end-of-line
 bindkey '^[[3;5~' kill-line  # ctrl+delete
 bindkey '^H' backward-kill-word  # Ctrl+Backspace
 bindkey '^[[127;5u' backward-kill-word  # CSI-u for ctrl+backspace
+bindkey '^[[5;30012~' redisplay  # cmd-c-bridge: swallow Ghostty's Cmd+C sequence when not in tmux (see ghostty/config)
 
 (( $+commands[zoxide] )) && eval "$(zoxide init --cmd cd zsh)"
 

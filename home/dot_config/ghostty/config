@@ -31,6 +31,11 @@ keybind = super+r=reload_config
 keybind = cmd+left=csi:1;3D
 keybind = cmd+right=csi:1;3C
 
+# cmd-c-bridge: Cmd+C copies Ghostty's own (shift+drag) selection, then sends ESC[5;30012~ so that tmux
+# copies its mouse selection (User0 in tmux.conf), outside of tmux zsh swallows it (.zshrc)
+keybind = super+c=copy_to_clipboard:mixed
+keybind = chain=csi:5;30012~
+
 # Python 3.14+ pyrepl doesn't read .editrc, so map Ctrl+Delete to Ctrl+K.
 keybind = ctrl+delete=text:\x0b
 
