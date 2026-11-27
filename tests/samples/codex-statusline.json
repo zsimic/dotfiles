@@ -1,0 +1,72 @@
+{
+  "jsonrpc": "2.0",
+  "id": 7,
+  "method": "resources/read",
+  "params": {
+    "uri": "ui://shrinky/footer",
+    "_meta": {
+      "com.openai/codex-statusline-state": {
+        "account": {
+          "rate_limits": [
+            {
+              "limit_id": "codex",
+              "limit_name": null,
+              "primary_limit": {
+                "used_percent": 6.5,
+                "window_minutes": 300,
+                "resets_at": 1795669200
+              },
+              "secondary_limit": {
+                "used_percent": 18,
+                "window_minutes": 10080,
+                "resets_at": 1795968000
+              }
+            }
+          ]
+        },
+        "app": {
+          "cli_version": "0.172.0",
+          "display_mode": "standard"
+        },
+        "config": {
+          "statusline_items": ["model-with-reasoning", "context-remaining", "current-dir"]
+        },
+        "thread": {
+          "id": "019ac000-0000-7000-8000-000000000001",
+          "name": null,
+          "agent": {"state": "ready"},
+          "model": {
+            "display_name": "GPT-6.2 Sol",
+            "id": "gpt-6.2-sol",
+            "provider": "openai",
+            "reasoning_level": "medium",
+            "service_tier": "normal"
+          },
+          "workspace": {"cwd": "/home/example/projects/demo"},
+          "usage": {
+            "context": {
+              "context_window_size": 272000,
+              "used_tokens": 99034,
+              "used_percentage": 36
+            },
+            "total": {
+              "total_input_tokens": 210000,
+              "cache_read_input_tokens": 175000,
+              "cache_write_input_tokens": 0,
+              "other_input_tokens": 35000,
+              "output_tokens": 3400
+            },
+            "cost": {"total_cost_usd": 1.97}
+          },
+          "approval": {"policy": "on-request", "reviewer": "user"},
+          "permissions": {
+            "display_name": "Default",
+            "type": "managed",
+            "file_system": {"type": "restricted"},
+            "network": "restricted"
+          }
+        }
+      }
+    }
+  }
+}
