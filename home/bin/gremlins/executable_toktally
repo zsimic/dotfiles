@@ -11,7 +11,6 @@ import subprocess
 import sys
 from dataclasses import dataclass, field
 
-AGENTS = ("codex", "claude")
 DEFAULT_DAYS = 30
 COST_BOUNDS = (100, 200)  # Cost is green below 100, yellow up to 200, red above
 
@@ -128,9 +127,10 @@ class ModelUsage:
 class UsageReport:
     """Per-model usage of the selected agents since a given date"""
 
-    agents: tuple[str, ...]
+    agents: tuple[str, ...] | None
     since: datetime.date
     usages: dict[tuple[str, str], ModelUsage] = field(default_factory=dict)
+    model_filter: str | None = None  # An empty string selects model order without filtering.
 
     HEADERS = ("Agent", "Model", "Input", "Output", "Cache write", "Cache read", "Total", "Cost")
 
@@ -139,14 +139,20 @@ class UsageReport:
         for day in report.get("daily", []):
             for agent_row in day.get("agents", []):
                 agent = agent_row.get("agent")
-                if agent in self.agents:
-                    for breakdown in agent_row.get("modelBreakdowns", []):
-                        key = (agent, breakdown["modelName"])
-                        usage = self.usages.get(key)
-                        if usage is None:
-                            usage = self.usages[key] = ModelUsage(agent, breakdown["modelName"])
+                if not agent or (self.agents is not None and agent not in self.agents):
+                    continue
 
-                        usage.add(breakdown)
+                for breakdown in agent_row.get("modelBreakdowns", []):
+                    model = breakdown["modelName"]
+                    if self.model_filter and self.model_filter not in model:
+                        continue
+
+                    key = (agent, model)
+                    usage = self.usages.get(key)
+                    if usage is None:
+                        usage = self.usages[key] = ModelUsage(agent, model)
+
+                    usage.add(breakdown)
 
     def load(self):
         cmd = ["ccusage", "daily", "--json", "--by-agent", "--since", self.since.strftime("%Y%m%d")]
@@ -162,10 +168,15 @@ class UsageReport:
         self.add_ccusage_report(json.loads(output))
 
     def sorted_usages(self) -> list[ModelUsage]:
+        if self.model_filter is not None:
+            return sorted(self.usages.values(), key=lambda u: (u.model, u.agent))
+
         return sorted(self.usages.values(), key=lambda u: (-u.cost, -u.total, u.agent, u.model))
 
     def rendered(self, colors: ColorSet) -> str:
-        title = colors.bold(f"Token usage since {self.since} ({', '.join(self.agents)})")
+        agents = "all agents" if self.agents is None else ", ".join(self.agents)
+        scope = f"{agents}, model contains {self.model_filter!r}" if self.model_filter else agents
+        title = colors.bold(f"Token usage since {self.since} ({scope})")
         usages = self.sorted_usages()
         if not usages:
             return f"{title}: nothing was eaten"
@@ -207,12 +218,12 @@ def since_date(text: str) -> datetime.date:
         raise argparse.ArgumentTypeError(f"invalid date '{text}', expecting YYYY-MM-DD or YYYYMMDD") from None
 
 
-def agent_name(text: str) -> str:
-    # Not argparse `choices`: python3.9 rejects an empty nargs="*" list with those
-    if text not in AGENTS:
-        raise argparse.ArgumentTypeError(f"invalid agent '{text}', choose from: {', '.join(AGENTS)}")
+def agent_names(text: str) -> tuple[str, ...]:
+    agents = tuple(name.strip() for name in text.split(","))
+    if "" in agents:
+        raise argparse.ArgumentTypeError("expected comma-separated agent names")
 
-    return text
+    return agents
 
 
 def main(args=None):
@@ -221,11 +232,16 @@ def main(args=None):
     period.add_argument("--since", "-s", type=since_date, help="Report usage since this date (YYYY-MM-DD)")
     period.add_argument("--days", "-d", type=int, default=DEFAULT_DAYS, help="Report last N days (default: %(default)s)")
     parser.add_argument("--color", action=argparse.BooleanOptionalAction, help="Color output (default: when stdout is a terminal)")
-    parser.add_argument("agents", nargs="*", type=agent_name, metavar="AGENT", help=f"Agent(s) to report on: {', '.join(AGENTS)}")
+    parser.add_argument(
+        "-a", "--agent", type=agent_names, metavar="AGENTS", help="Comma-separated ccusage agent names (default: all agents)"
+    )
+    parser.add_argument(
+        "-m", "--model", nargs="?", const="", metavar="TEXT", help="Sort by model name and optionally filter by a case-sensitive substring"
+    )
     args = parser.parse_args(args)
 
     since = args.since or datetime.datetime.now().astimezone().date() - datetime.timedelta(days=args.days - 1)
-    report = UsageReport(tuple(args.agents or AGENTS), since)
+    report = UsageReport(args.agent, since, model_filter=args.model)
     report.load()
     print(report.rendered(ColorSet.for_output(args.color)))
 

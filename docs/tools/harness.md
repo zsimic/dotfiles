@@ -23,8 +23,9 @@
 
 ## Token usage
 
-[toktally] sums [ccusage] reports per model over a period (default: last 30 days), for codex and claude,
-or just the agents named: `toktally`, `toktally claude`, `toktally -d 7`, `toktally --since 2026-11-01`.
+[toktally] sums [ccusage] reports per model over a period (default: last 30 days) for every agent ccusage reports.
+Rows are sorted by cost by default. Use `toktally -m` to sort by model name, or `toktally -mgpt` to also filter
+to names containing `gpt`. Combine either with `-a codex,claude` to select agents. See `toktally --help` for options.
 Token counts are shown with units (`146M`), cost in USD as ccusage computes it, colored green under $100,
 yellow up to $200, red above (only on a terminal, `--color`/`--no-color` to force).
 

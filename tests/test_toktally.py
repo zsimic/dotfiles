@@ -176,28 +176,76 @@ def test_main_defaults(toktally, monkeypatch, capsys):
     toktally["main"]([])  # Captured stdout is not a tty: no colors
     since = datetime.datetime.now().astimezone().date() - datetime.timedelta(days=29)
     assert calls == [["ccusage", "daily", "--json", "--by-agent", "--since", since.strftime("%Y%m%d")]]
-    output = capsys.readouterr().out
-    assert output.startswith(f"Token usage since {since} (codex, claude)")
-    assert "gpt-6.2-astra" in output
+    lines = capsys.readouterr().out.splitlines()
+    assert lines[0] == f"Token usage since {since} (all agents)"
+    assert [line.split()[1] for line in lines[4:-2]] == ["claude-opus-5-5", "gpt-6.2-astra", "whatever", "claude-haiku-5-5"]
+    assert lines[-1].endswith("$46.75")
 
 
 def test_main_agent_and_since(toktally, monkeypatch, capsys):
     calls = fake_ccusage(toktally, monkeypatch, SAMPLE)
-    toktally["main"](["claude", "--since", "2026-11-20", "--color"])
+    toktally["main"](["-a", "codex,claude", "--since", "2026-11-20", "--color"])
     assert calls[0][-1] == "20261120"
     output = capsys.readouterr().out
-    assert output.startswith("\x1b[1mToken usage since 2026-11-20 (claude)")
+    assert output.startswith("\x1b[1mToken usage since 2026-11-20 (codex, claude)")
+    assert "gpt-6.2-astra" in output
+    assert "claude-opus-5-5" in output
+    assert "opencode" not in output
+    assert output.splitlines()[-1].endswith("$45.75\x1b[22m")
+
+
+def test_main_agent_accepts_reported_names(toktally, monkeypatch, capsys):
+    fake_ccusage(toktally, monkeypatch, SAMPLE)
+    toktally["main"](["--agent", "opencode", "--no-color"])
+    output = capsys.readouterr().out
+    assert "whatever" in output
     assert "gpt-6.2-astra" not in output
+    assert "claude-opus-5-5" not in output
 
 
-def test_main_rejects_unknown_agent_and_mixed_period(toktally, capsys):
+def test_main_model_filter(toktally, monkeypatch, capsys):
+    fake_ccusage(toktally, monkeypatch, SAMPLE)
+    toktally["main"](["-mgpt", "--no-color"])
+    lines = capsys.readouterr().out.splitlines()
+    assert lines[0].endswith("(all agents, model contains 'gpt')")
+    assert len(lines) == 5
+    assert lines[-1].split()[:2] == ["codex", "gpt-6.2-astra"]
+
+
+@pytest.mark.parametrize("args", [["-m"], ["--model"], ["-m", ""]])
+def test_main_model_sort(toktally, monkeypatch, capsys, args):
+    fake_ccusage(toktally, monkeypatch, SAMPLE)
+    toktally["main"]([*args, "--no-color"])
+    lines = capsys.readouterr().out.splitlines()
+    assert [line.split()[1] for line in lines[4:-2]] == ["claude-haiku-5-5", "claude-opus-5-5", "gpt-6.2-astra", "whatever"]
+    assert lines[-1].endswith("$46.75")
+
+
+def test_main_combines_agent_and_model_filters(toktally, monkeypatch, capsys):
+    fake_ccusage(toktally, monkeypatch, SAMPLE)
+    toktally["main"](["-a", "claude,opencode", "--model", "-", "--no-color"])
+    lines = capsys.readouterr().out.splitlines()
+    assert [line.split()[:2] for line in lines[4:6]] == [
+        ["claude", "claude-haiku-5-5"],
+        ["claude", "claude-opus-5-5"],
+    ]
+    assert len(lines) == 8
+    assert lines[-1].endswith("$42.25")
+
+
+@pytest.mark.parametrize(
+    ("args", "error"),
+    [
+        (["claude"], "unrecognized arguments: claude"),
+        (["-a", "codex,"], "expected comma-separated agent names"),
+        (["--days", "3", "--since", "2026-11-01"], "not allowed with argument"),
+    ],
+)
+def test_main_rejects_invalid_arguments(toktally, capsys, args, error):
     with pytest.raises(SystemExit):
-        toktally["main"](["bogus"])
+        toktally["main"](args)
 
-    with pytest.raises(SystemExit):
-        toktally["main"](["--days", "3", "--since", "2026-11-01"])
-
-    assert "not allowed with argument" in capsys.readouterr().err
+    assert error in capsys.readouterr().err
 
 
 def test_ccusage_missing(toktally, monkeypatch):
